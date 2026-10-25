@@ -1,0 +1,7 @@
+node_modules/
+frontend/dist/
+build/bin/
+*.db
+*.db-wal
+*.db-shm
+.shots/

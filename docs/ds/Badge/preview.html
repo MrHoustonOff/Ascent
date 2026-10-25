@@ -1,0 +1,10 @@
+<!-- @dsCard group="Данные" height=160 subtitle="Статусы всегда со словом и иконкой" -->
+<!doctype html><html><head><meta charset="utf-8"><style>
+html,body{margin:0}body{display:grid;grid-template-columns:1fr 1fr}
+.pane{background:var(--surface-window);color:var(--ink);padding:24px;display:flex;flex-direction:column;gap:16px;align-items:flex-start;min-width:0}
+.lbl{font:600 11px/14px var(--font-sans);letter-spacing:.04em;text-transform:uppercase;color:var(--ink-muted)}
+.rowx{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+</style></head><body>
+<div class="pane as-root" data-theme="light"><div class="lbl">Светлая</div><div class="rowx"><span class="as-badge">Впереди</span><span class="as-badge as-badge--accent">В процессе</span><span class="as-badge as-badge--success"><svg class="as-glyph" viewBox="0 0 10 10" aria-hidden="true"><path d="M1.8 5.4l2.2 2.2 4.4-4.8"/></svg>Готово</span><span class="as-badge as-badge--streak">Серия 12</span><span class="as-badge as-badge--danger">Ошибка сохранения</span></div></div>
+<div class="pane as-root" data-theme="dark"><div class="lbl">Тёмная</div><div class="rowx"><span class="as-badge">Впереди</span><span class="as-badge as-badge--accent">В процессе</span><span class="as-badge as-badge--success"><svg class="as-glyph" viewBox="0 0 10 10" aria-hidden="true"><path d="M1.8 5.4l2.2 2.2 4.4-4.8"/></svg>Готово</span><span class="as-badge as-badge--streak">Серия 12</span><span class="as-badge as-badge--danger">Ошибка сохранения</span></div></div>
+<script>window.Ascent&&Ascent.wire(document)</script></body></html>

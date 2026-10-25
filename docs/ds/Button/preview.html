@@ -1,0 +1,14 @@
+<!-- @dsCard group="Действия" height=260 subtitle="Primary, Secondary, Ghost, Danger; размеры и состояния" -->
+<!doctype html><html><head><meta charset="utf-8"><style>
+html,body{margin:0}body{display:grid;grid-template-columns:1fr 1fr}
+.pane{background:var(--surface-window);color:var(--ink);padding:24px;display:flex;flex-direction:column;gap:16px;align-items:flex-start;min-width:0}
+.lbl{font:600 11px/14px var(--font-sans);letter-spacing:.04em;text-transform:uppercase;color:var(--ink-muted)}
+.rowx{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+</style></head><body>
+<div class="pane as-root" data-theme="light"><div class="lbl">Светлая</div><div class="rowx"><button class="as-btn as-btn--primary as-btn--lg"><svg class="as-icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M5 3.2v9.6L12.6 8z" fill="currentColor"/></svg>Продолжить · 12 мин</button><button class="as-btn as-btn--primary">Начать урок</button></div>
+ <div class="rowx"><button class="as-btn as-btn--secondary">Повторить</button><button class="as-btn as-btn--ghost">Пропустить на сегодня</button><button class="as-btn as-btn--danger">Сбросить прогресс</button></div>
+ <div class="rowx"><button class="as-btn as-btn--primary" disabled>Недоступно</button><button class="as-btn as-btn--secondary" style="outline:2px solid var(--focus-ring);outline-offset:2px">В фокусе</button></div></div>
+<div class="pane as-root" data-theme="dark"><div class="lbl">Тёмная</div><div class="rowx"><button class="as-btn as-btn--primary as-btn--lg"><svg class="as-icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M5 3.2v9.6L12.6 8z" fill="currentColor"/></svg>Продолжить · 12 мин</button><button class="as-btn as-btn--primary">Начать урок</button></div>
+ <div class="rowx"><button class="as-btn as-btn--secondary">Повторить</button><button class="as-btn as-btn--ghost">Пропустить на сегодня</button><button class="as-btn as-btn--danger">Сбросить прогресс</button></div>
+ <div class="rowx"><button class="as-btn as-btn--primary" disabled>Недоступно</button><button class="as-btn as-btn--secondary" style="outline:2px solid var(--focus-ring);outline-offset:2px">В фокусе</button></div></div>
+<script>window.Ascent&&Ascent.wire(document)</script></body></html>

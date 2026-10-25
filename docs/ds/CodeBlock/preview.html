@@ -1,0 +1,28 @@
+<!-- @dsCard group="Данные" height=360 subtitle="Код Go в моноширинном шрифте" -->
+<!doctype html><html><head><meta charset="utf-8"><style>
+html,body{margin:0}body{display:grid;grid-template-columns:1fr 1fr}
+.pane{background:var(--surface-window);color:var(--ink);padding:24px;display:flex;flex-direction:column;gap:16px;align-items:flex-start;min-width:0}
+.lbl{font:600 11px/14px var(--font-sans);letter-spacing:.04em;text-transform:uppercase;color:var(--ink-muted)}
+.rowx{display:flex;flex-wrap:wrap;gap:12px;align-items:center}.pane{padding:24px 16px}
+</style></head><body>
+<div class="pane as-root" data-theme="light"><div class="lbl">Светлая</div><div class="as-code" style="width:100%"><div class="as-code__head"><span>main.go</span><button class="as-btn as-btn--ghost" style="min-height:24px;padding:2px 8px;font-size:12px">Копировать</button></div><pre><span class="tk-kw">package</span> main
+
+<span class="tk-kw">import</span> <span class="tk-str">"fmt"</span>
+
+<span class="tk-cm">// Точка входа</span>
+<span class="tk-kw">func</span> main() {
+    nums := []<span class="tk-kw">int</span>{1, 2, 3}
+    nums = <span class="tk-kw">append</span>(nums, 4)
+    fmt.Println(nums)
+}</pre></div></div>
+<div class="pane as-root" data-theme="dark"><div class="lbl">Тёмная</div><div class="as-code" style="width:100%"><div class="as-code__head"><span>main.go</span><button class="as-btn as-btn--ghost" style="min-height:24px;padding:2px 8px;font-size:12px">Копировать</button></div><pre><span class="tk-kw">package</span> main
+
+<span class="tk-kw">import</span> <span class="tk-str">"fmt"</span>
+
+<span class="tk-cm">// Точка входа</span>
+<span class="tk-kw">func</span> main() {
+    nums := []<span class="tk-kw">int</span>{1, 2, 3}
+    nums = <span class="tk-kw">append</span>(nums, 4)
+    fmt.Println(nums)
+}</pre></div></div>
+<script>window.Ascent&&Ascent.wire(document)</script></body></html>

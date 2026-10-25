@@ -1,0 +1,14 @@
+<!-- @dsCard group="Формы" height=240 subtitle="Поле ввода: обычное, в фокусе, с ошибкой" -->
+<!doctype html><html><head><meta charset="utf-8"><style>
+html,body{margin:0}body{display:grid;grid-template-columns:1fr 1fr}
+.pane{background:var(--surface-window);color:var(--ink);padding:24px;display:flex;flex-direction:column;gap:16px;align-items:flex-start;min-width:0}
+.lbl{font:600 11px/14px var(--font-sans);letter-spacing:.04em;text-transform:uppercase;color:var(--ink-muted)}
+.rowx{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+</style></head><body>
+<div class="pane as-root" data-theme="light"><div class="lbl">Светлая</div><div class="as-field"><label class="as-label">Имя модуля</label><input class="as-input" placeholder="Например, «Горутины»"><span class="as-hint">Можно изменить позже.</span></div>
+ <div class="as-field"><label class="as-label">Цель на неделю</label><input class="as-input" value="Срезы" style="border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)"></div>
+ <div class="as-field"><label class="as-label">Минут в день</label><input class="as-input" value="0" aria-invalid="true"><span class="as-hint as-hint--error">Укажите хотя бы 5 минут</span></div></div>
+<div class="pane as-root" data-theme="dark"><div class="lbl">Тёмная</div><div class="as-field"><label class="as-label">Имя модуля</label><input class="as-input" placeholder="Например, «Горутины»"><span class="as-hint">Можно изменить позже.</span></div>
+ <div class="as-field"><label class="as-label">Цель на неделю</label><input class="as-input" value="Срезы" style="border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)"></div>
+ <div class="as-field"><label class="as-label">Минут в день</label><input class="as-input" value="0" aria-invalid="true"><span class="as-hint as-hint--error">Укажите хотя бы 5 минут</span></div></div>
+<script>window.Ascent&&Ascent.wire(document)</script></body></html>

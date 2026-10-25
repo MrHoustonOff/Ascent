@@ -1,0 +1,34 @@
+<!-- @dsCard height=320 -->
+<!doctype html><html><head><meta charset="utf-8"><style>
+html,body{margin:0}
+.cv{position:relative;width:960px;height:320px;background:var(--surface-window);overflow:hidden;font-family:var(--font-sans)}
+.txt{position:absolute;left:32px;bottom:32px;width:440px}
+.name{margin:0;font:700 120px/.95 var(--font-sans);letter-spacing:-.04em;color:var(--ink)}
+.tag{margin:12px 0 0;font:400 14px/20px var(--font-sans);color:var(--ink-muted)}
+svg{position:absolute;left:0;top:0}
+.b-accent{fill:var(--accent)}.b-ink{fill:var(--ink)}.b-streak{fill:var(--streak)}.b-soft{fill:var(--accent-soft)}
+.p-soft{fill:var(--accent-soft)}.p-acc{fill:var(--accent)}.p-str{fill:var(--streak)}
+.r-xl{rx:var(--radius-xl)}.r-lg{rx:var(--radius-lg)}
+</style></head><body>
+<div class="cv">
+<svg width="960" height="320" viewBox="0 0 960 320" aria-hidden="true">
+<!--
+blocks: accent 232×176 (identity), ink 104×104, streak 104×64, accent-soft 72×176; gaps space-2/space-4.
+arrangement: flush staggered slab with two satellites on the right, pills climb underneath.
+pattern: rising pills (radius-pill) — the sentence: Ascent is about small steps that add up, so the pattern is six steps with one warm summit.
+steps and radii: pitch 56 = 40 pill + space-4, radius-xl on slab, radius-lg on satellites, pill rx = half width.
+-->
+<rect class="b-accent r-xl" x="496" y="24" width="232" height="176"/>
+<rect class="b-ink r-lg" x="744" y="24" width="104" height="104"/>
+<rect class="b-streak r-lg" x="744" y="136" width="104" height="64"/>
+<rect class="b-soft r-xl" x="864" y="24" width="72" height="176"/>
+<rect class="p-soft" x="496" y="256" width="40" height="40" rx="20"/>
+<rect class="p-soft" x="552" y="248" width="40" height="48" rx="20"/>
+<rect class="p-acc" x="608" y="240" width="40" height="56" rx="20"/>
+<rect class="p-acc" x="664" y="232" width="40" height="64" rx="20"/>
+<rect class="p-acc" x="720" y="224" width="40" height="72" rx="20"/>
+<rect class="p-str" x="776" y="216" width="40" height="80" rx="20"/>
+</svg>
+<div class="txt"><h1 class="name">Ascent</h1><p class="tag">Один урок в день. Остальное подождёт.</p></div>
+</div>
+</body></html>

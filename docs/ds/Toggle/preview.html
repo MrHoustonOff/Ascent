@@ -1,0 +1,12 @@
+<!-- @dsCard group="Формы" height=200 subtitle="Переключатель с подписью" -->
+<!doctype html><html><head><meta charset="utf-8"><style>
+html,body{margin:0}body{display:grid;grid-template-columns:1fr 1fr}
+.pane{background:var(--surface-window);color:var(--ink);padding:24px;display:flex;flex-direction:column;gap:16px;align-items:flex-start;min-width:0}
+.lbl{font:600 11px/14px var(--font-sans);letter-spacing:.04em;text-transform:uppercase;color:var(--ink-muted)}
+.rowx{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+</style></head><body>
+<div class="pane as-root" data-theme="light"><div class="lbl">Светлая</div><label class="as-row"><button class="as-toggle" role="switch" aria-checked="true" aria-label="Мягкий режим"></button>Мягкий режим: не больше одного урока в день</label>
+ <label class="as-row"><button class="as-toggle" role="switch" aria-checked="false" aria-label="Напоминания"></button>Напомнить вечером</label></div>
+<div class="pane as-root" data-theme="dark"><div class="lbl">Тёмная</div><label class="as-row"><button class="as-toggle" role="switch" aria-checked="true" aria-label="Мягкий режим"></button>Мягкий режим: не больше одного урока в день</label>
+ <label class="as-row"><button class="as-toggle" role="switch" aria-checked="false" aria-label="Напоминания"></button>Напомнить вечером</label></div>
+<script>window.Ascent&&Ascent.wire(document)</script></body></html>

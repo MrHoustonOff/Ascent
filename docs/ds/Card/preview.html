@@ -1,0 +1,12 @@
+<!-- @dsCard group="Контейнеры" height=260 subtitle="Карточка и большая карточка" -->
+<!doctype html><html><head><meta charset="utf-8"><style>
+html,body{margin:0}body{display:grid;grid-template-columns:1fr 1fr}
+.pane{background:var(--surface-window);color:var(--ink);padding:24px;display:flex;flex-direction:column;gap:16px;align-items:flex-start;min-width:0}
+.lbl{font:600 11px/14px var(--font-sans);letter-spacing:.04em;text-transform:uppercase;color:var(--ink-muted)}
+.rowx{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+</style></head><body>
+<div class="pane as-root" data-theme="light"><div class="lbl">Светлая</div><div class="as-card" style="width:100%"><div class="as-eyebrow">Продолжить</div><h3 class="as-h-headline">Срезы и массивы</h3><p class="as-p-callout">Осталось 12 минут. Вы остановились на append.</p></div>
+ <div class="as-card as-card--lg" style="width:100%"><div class="as-eyebrow">Сегодня</div><h3 class="as-h-title1">Достаточно одного урока</h3><p class="as-p-callout">Остальное подождёт. Вы уже сделали больше, чем вчера.</p></div></div>
+<div class="pane as-root" data-theme="dark"><div class="lbl">Тёмная</div><div class="as-card" style="width:100%"><div class="as-eyebrow">Продолжить</div><h3 class="as-h-headline">Срезы и массивы</h3><p class="as-p-callout">Осталось 12 минут. Вы остановились на append.</p></div>
+ <div class="as-card as-card--lg" style="width:100%"><div class="as-eyebrow">Сегодня</div><h3 class="as-h-title1">Достаточно одного урока</h3><p class="as-p-callout">Остальное подождёт. Вы уже сделали больше, чем вчера.</p></div></div>
+<script>window.Ascent&&Ascent.wire(document)</script></body></html>

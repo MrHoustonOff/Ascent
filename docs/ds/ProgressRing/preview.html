@@ -1,0 +1,12 @@
+<!-- @dsCard group="Прогресс" height=240 subtitle="Кольцо и линейный прогресс" -->
+<!doctype html><html><head><meta charset="utf-8"><style>
+html,body{margin:0}body{display:grid;grid-template-columns:1fr 1fr}
+.pane{background:var(--surface-window);color:var(--ink);padding:24px;display:flex;flex-direction:column;gap:16px;align-items:flex-start;min-width:0}
+.lbl{font:600 11px/14px var(--font-sans);letter-spacing:.04em;text-transform:uppercase;color:var(--ink-muted)}
+.rowx{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+</style></head><body>
+<div class="pane as-root" data-theme="light"><div class="lbl">Светлая</div><div class="rowx" style="gap:24px"><div class="as-ring"><svg viewBox="0 0 96 96"><circle class="as-ring__track" cx="48" cy="48" r="40"/><circle class="as-ring__value" cx="48" cy="48" r="40" stroke-dasharray="62.8 999"/></svg><div class="as-ring__label"><span>2/8<small>модулей</small></span></div></div><div class="as-ring"><svg viewBox="0 0 96 96"><circle class="as-ring__track" cx="48" cy="48" r="40"/><circle class="as-ring__value" cx="48" cy="48" r="40" stroke-dasharray="150.8 999"/></svg><div class="as-ring__label"><span>60%<small>урока</small></span></div></div></div>
+ <div style="width:100%"><div class="as-eyebrow" style="margin-bottom:6px">Модуль 2 · 3 из 5 уроков</div><div class="as-bar" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100"><i style="width:60%"></i></div></div></div>
+<div class="pane as-root" data-theme="dark"><div class="lbl">Тёмная</div><div class="rowx" style="gap:24px"><div class="as-ring"><svg viewBox="0 0 96 96"><circle class="as-ring__track" cx="48" cy="48" r="40"/><circle class="as-ring__value" cx="48" cy="48" r="40" stroke-dasharray="62.8 999"/></svg><div class="as-ring__label"><span>2/8<small>модулей</small></span></div></div><div class="as-ring"><svg viewBox="0 0 96 96"><circle class="as-ring__track" cx="48" cy="48" r="40"/><circle class="as-ring__value" cx="48" cy="48" r="40" stroke-dasharray="150.8 999"/></svg><div class="as-ring__label"><span>60%<small>урока</small></span></div></div></div>
+ <div style="width:100%"><div class="as-eyebrow" style="margin-bottom:6px">Модуль 2 · 3 из 5 уроков</div><div class="as-bar" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100"><i style="width:60%"></i></div></div></div>
+<script>window.Ascent&&Ascent.wire(document)</script></body></html>
