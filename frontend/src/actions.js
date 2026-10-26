@@ -2,6 +2,7 @@
 import { api } from './api.js';
 import { S, setUndo, emit } from './state.js';
 import { toast, toastError } from './ui/toast.js';
+import { showAchievements } from './ui/achwindow.js';
 
 export function go(hash) {
   if (location.hash === hash) emit();
@@ -38,12 +39,10 @@ export async function copy(kind, ref = '', quiet = false) {
 export function celebrate(p) {
   if (!p) return;
   // Одно событие — один тост: несколько поводов сводим вместе, чтобы не закрыть главную кнопку.
-  const ach = (p.achievements || []);
-  const achLine = ach.length ? (ach.length === 1 ? 'Новое достижение: ' + ach[0].name : `Новых достижений: ${ach.length}`) : '';
-  const look = ach.length ? { label: 'Посмотреть', onClick: () => go('#/achievements') } : null;
-  if (p.blockClosed) toast({ title: 'Блок закрыт', body: achLine || (p.nextId ? 'Следующий — ' + p.nextId + '.' : ''), kind: 'streak', action: look });
-  else if (p.themeClosed) toast({ title: 'Тема закрыта', body: achLine || 'Вы ответили на все вопросы темы.', kind: 'streak', action: look });
-  else if (ach.length) toast({ title: 'Новое достижение', body: ach.length === 1 ? ach[0].name : achLine, kind: 'streak', action: look });
+  // достижения — отдельным окном (очередью, если их несколько), закрытие темы или блока — тостом
+  if (p.blockClosed) toast({ title: 'Блок закрыт', body: p.nextId ? 'Следующий — ' + p.nextId + '.' : '', kind: 'streak' });
+  else if (p.themeClosed) toast({ title: 'Тема закрыта', body: 'Вы ответили на все вопросы темы.', kind: 'streak' });
+  if ((p.achievements || []).length) showAchievements(p.achievements);
 }
 
 async function safe(fn) {

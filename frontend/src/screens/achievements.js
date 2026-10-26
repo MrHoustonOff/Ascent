@@ -1,6 +1,7 @@
 import { api } from '../api.js';
 import { h, pluralRu } from '../ui/dom.js';
 import { achBadge } from '../ui/achicons.js';
+import { showAchievements } from '../ui/achwindow.js';
 
 let filter = 'all';
 
@@ -32,7 +33,8 @@ function card(x) {
     return h('div', { class: 'as-ach is-locked', role: 'group', 'aria-label': 'Секретное достижение' }, badge,
       h('div', { class: 'as-ach__body' }, h('div', { class: 'as-ach__name' }, 'Секретное достижение'), h('div', { class: 'as-ach__desc' }, 'Узнаете, когда откроете.')));
   }
-  return h('div', { class: 'as-ach' + (x.new ? ' is-new' : ''), role: 'group', 'aria-label': x.name }, badge,
+  // щелчок — то же окно, что при открытии: с задником этого достижения
+  return h('button', { class: 'as-ach as-ach--btn' + (x.new ? ' is-new' : ''), 'aria-label': x.name + ' — открыть', onclick: () => showAchievements([{ ...x, when: x.when === 'ранее' ? '' : x.when }], { replay: true }) }, badge,
     h('div', { class: 'as-ach__body' },
       h('div', { class: 'as-ach__name' }, x.name, x.new ? h('span', { class: 'as-badge as-badge--accent' }, 'Новое') : null),
       h('div', { class: 'as-ach__desc' }, x.desc),

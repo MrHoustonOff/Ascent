@@ -676,3 +676,30 @@ html,body{margin:0;height:100%;overflow:hidden;background:var(--surface-window)}
 .as-recap__del{width:28px;height:28px;font-size:13px;color:var(--ink-muted)}
 .as-recap__del:hover{color:var(--danger,#c0392b)}
 .as-recap__restore{align-self:center;flex:none}
+
+/* ---------- окно достижения ---------- */
+.as-ach--btn{font:inherit;color:inherit;text-align:left;cursor:default;border:0;width:100%}
+.as-ach--btn:hover{filter:brightness(1.03)}
+.as-ach--btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.as-achwin__scrim{z-index:70;background:rgba(10,12,16,.62);backdrop-filter:blur(3px)}
+.as-achwin{position:relative;width:min(440px,calc(100vw - 32px));height:min(600px,calc(100vh - 40px));border-radius:28px;overflow:hidden;color:#fff;box-shadow:0 30px 80px #000a,0 0 0 1px #ffffff1f;animation:as-achwin-in .5s cubic-bezier(.2,1.3,.4,1) both;display:flex;flex-direction:column}
+.as-achwin__bg{position:absolute;inset:0;width:100%;height:100%}
+.as-achwin__body{position:relative;display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;padding:30px 30px 0;flex:1}
+.as-achwin__kicker{max-width:62%;font:700 11.5px/16px var(--font-sans);letter-spacing:.14em;text-transform:uppercase;opacity:.82}
+.as-achwin__badge{margin:14px 0 6px;filter:drop-shadow(0 10px 26px rgba(0,0,0,.45));animation:as-achwin-badge .9s .15s cubic-bezier(.2,1.5,.4,1) both}
+.as-achwin__badge svg{display:block}
+.as-achwin__name{margin:0;font:800 30px/36px var(--font-sans);letter-spacing:-.01em;text-wrap:balance;text-shadow:0 2px 14px rgba(0,0,0,.35);animation:as-rise .5s .3s both}
+.as-achwin__desc{margin:0;max-width:330px;font:400 15px/22px var(--font-sans);opacity:.9;text-wrap:pretty;animation:as-rise .5s .4s both}
+.as-achwin__when{font:500 12.5px/18px var(--font-sans);opacity:.7;animation:as-rise .5s .45s both}
+.as-achwin__gopher{position:absolute;left:14px;bottom:58px;transform-origin:50% 100%;animation:as-achwin-gopher .7s .35s cubic-bezier(.2,1.4,.4,1) both;pointer-events:none}
+.as-achwin__foot{position:relative;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 18px 18px;background:linear-gradient(transparent,rgba(0,0,0,.35))}
+.as-achwin__count{position:absolute;top:14px;right:16px;padding:3px 10px;border-radius:999px;background:rgba(0,0,0,.28);font:600 12px/16px var(--font-sans);white-space:nowrap}
+.as-achwin__btns{display:flex;gap:8px;margin-left:auto}
+.as-achwin__btns .as-btn--ghost{color:#fff}
+.as-achwin__burst{position:absolute;left:0;right:0;top:40%;height:0;pointer-events:none}
+.as-achwin__burst i{position:absolute;top:0;width:var(--w);height:calc(var(--w) * 1.6);border-radius:2px;opacity:0;animation:as-confetti var(--d) .2s cubic-bezier(.15,.7,.4,1) both}
+@keyframes as-achwin-in{from{opacity:0;transform:translateY(24px) scale(.9)}to{opacity:1;transform:none}}
+@keyframes as-achwin-badge{0%{opacity:0;transform:scale(.3) rotate(-25deg)}70%{opacity:1;transform:scale(1.08) rotate(4deg)}100%{transform:none}}
+@keyframes as-achwin-gopher{0%{opacity:0;transform:translateY(60px) scale(.8)}100%{opacity:1;transform:none}}
+@keyframes as-confetti{0%{opacity:1;transform:translate(0,0) rotate(0)}80%{opacity:1}100%{opacity:0;transform:translate(var(--x),calc(var(--y) * -1.6)) rotate(var(--r))}}
+@media (prefers-reduced-motion:reduce){.as-achwin,.as-achwin__badge,.as-achwin__gopher,.as-achwin__name,.as-achwin__desc,.as-achwin__when{animation:none}.as-achwin__burst{display:none}}
