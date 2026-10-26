@@ -1,0 +1,76 @@
+# Релиз: тег вида v1.2.3 → сборка и GitHub Release с готовыми файлами.
+#   git tag v1.2.3 && git push origin v1.2.3
+# Можно запустить и вручную (Actions → release → Run workflow), указав тег.
+name: release
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Тег релиза, например v1.0.1'
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.26'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: go test ./...
+      - run: go install github.com/wailsapp/wails/v2/cmd/wails@latest
+      - run: wails build -clean -platform windows/amd64 -o Ascent.exe
+      - run: wails build -platform windows/arm64 -o Ascent-arm64.exe
+        continue-on-error: true # ARM-сборка не должна блокировать релиз
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows
+          path: |
+            build/bin/Ascent.exe
+            build/bin/Ascent-arm64.exe
+
+  macos-web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.26'
+      - run: GOOS=darwin GOARCH=arm64 go build -trimpath -ldflags "-s -w" -o Ascent-mac-arm64 .
+      - run: GOOS=darwin GOARCH=amd64 go build -trimpath -ldflags "-s -w" -o Ascent-mac-intel .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos
+          path: Ascent-mac-*
+
+  publish:
+    needs: [windows, macos-web]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - run: ls -la dist
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.inputs.tag || github.ref_name }}
+          name: Ascent ${{ github.event.inputs.tag || github.ref_name }}
+          target_commitish: ${{ github.sha }}
+          generate_release_notes: true
+          body: |
+            **Windows:** скачайте `Ascent.exe` (обычный ПК) или `Ascent-arm64.exe` (Windows на ARM) и запустите.
+            Данные: `%APPDATA%\Ascent\` — прогресс сохраняется между версиями.
+
+            **macOS (веб-версия):** `Ascent-mac-arm64` (M1–M4) или `Ascent-mac-intel`. В терминале:
+            `chmod +x Ascent-mac-arm64 && xattr -d com.apple.quarantine Ascent-mac-arm64 && ./Ascent-mac-arm64`
+            Данные: `~/Library/Application Support/Ascent/`.
+          files: dist/*
