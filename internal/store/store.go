@@ -137,6 +137,8 @@ var Defaults = map[string]string{
 	"plan_version":      "",
 	"plan_synced_at":    "",
 	"onboarded":         "0",
+	"ui_zoom":           "100", // масштаб интерфейса, %
+	"zoom_gopher":       "1",   // гофер при смене масштаба
 }
 
 const DefaultHermesTemplate = "Тема {theme_id} {theme_title}\n{brief}\nУрок {lesson_id} — {lesson_title}{stars}\n{arrows}"

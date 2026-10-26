@@ -189,7 +189,7 @@ func (a *App) Settings() (map[string]string, error) {
 }
 
 var intRanges = map[string][2]int{
-	"day_start_hour": {0, 8}, "rest_per_week": {0, 2}, "project_days": {1, 14}, "milestone_stage": {1, 7},
+	"day_start_hour": {0, 8}, "rest_per_week": {0, 2}, "project_days": {1, 14}, "milestone_stage": {1, 7}, "ui_zoom": {70, 175},
 }
 
 func (a *App) SetSetting(key, value string) error {
@@ -203,6 +203,9 @@ func (a *App) SetSetting(key, value string) error {
 		if n < r[0] || n > r[1] {
 			return fmt.Errorf("значение вне диапазона %d–%d", r[0], r[1])
 		}
+	}
+	if key == "zoom_gopher" && value != "0" && value != "1" {
+		return fmt.Errorf("значение 0 или 1")
 	}
 	if key == "theme" && value != "light" && value != "dark" && value != "system" {
 		return fmt.Errorf("неизвестная тема")
@@ -369,12 +372,16 @@ func (a *App) ExportJSON() (string, error) {
 	for k, t := range s.in.Markers {
 		mk[k] = t.Format(time.RFC3339)
 	}
+	kq := map[string]string{}
+	for k, t := range s.kq {
+		kq[k] = t.Format(time.RFC3339)
+	}
 	rest := []string{}
 	for d := range s.in.Rest {
 		rest = append(rest, d)
 	}
 	sort.Strings(rest)
-	b, _ := json.MarshalIndent(map[string]any{"planVersion": a.plan.Version, "settings": s.set, "lessons": ls, "checks": chk, "markers": mk, "restDays": rest}, "", "  ")
+	b, _ := json.MarshalIndent(map[string]any{"planVersion": a.plan.Version, "settings": s.set, "lessons": ls, "checks": chk, "markers": mk, "konspektQuestions": kq, "restDays": rest}, "", "  ")
 	p := filepath.Join(dir, "ascent-"+a.Now().Format("2006-01-02")+".json")
 	return p, os.WriteFile(p, b, 0o644)
 }

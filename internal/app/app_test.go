@@ -240,3 +240,19 @@ func TestKonspekt(t *testing.T) {
 		t.Fatalf("прогон: %+v", r.Qs)
 	}
 }
+
+func TestZoomSettings(t *testing.T) {
+	a, _, _ := newApp(t)
+	if err := a.SetSetting("ui_zoom", "125"); err != nil {
+		t.Fatal(err)
+	}
+	if err := a.SetSetting("ui_zoom", "500"); err == nil {
+		t.Fatal("масштаб вне диапазона принят")
+	}
+	if err := a.SetSetting("zoom_gopher", "2"); err == nil {
+		t.Fatal("zoom_gopher принимает только 0 и 1")
+	}
+	if s, _ := a.Settings(); s["ui_zoom"] != "125" || s["zoom_gopher"] != "1" {
+		t.Fatalf("%v", s)
+	}
+}

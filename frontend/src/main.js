@@ -6,6 +6,7 @@ import { mountTitlebar } from './ui/titlebar.js';
 import { renderSidebar, revealInTree, pathHash } from './ui/sidebar.js';
 import { mountToasts, toast } from './ui/toast.js';
 import { openPalette } from './ui/palette.js';
+import { initZoom, bindZoomKeys, zoomK } from './ui/zoom.js';
 import { go, openId, refresh } from './actions.js';
 import * as today from './screens/today.js';
 import * as path from './screens/path.js';
@@ -54,7 +55,7 @@ function buildShell() {
 }
 
 function fit() {
-  const narrow = window.innerWidth < 1000;
+  const narrow = window.innerWidth / zoomK() < 1000; // в пикселях интерфейса, с учётом масштаба
   winEl.classList.toggle('is-narrow', narrow);
   if (!narrow) winEl.classList.remove('is-side-open');
 }
@@ -136,6 +137,8 @@ window.addEventListener('keydown', async (e) => {
 async function start() {
   try { S.settings = await api.Settings(); } catch (e) { console.error(e); S.settings = {}; }
   applyTheme();
+  initZoom(S.settings.ui_zoom || 100);
+  bindZoomKeys();
   buildShell();
   S.tree = await api.Tree();
   window.addEventListener('hashchange', renderRoute);

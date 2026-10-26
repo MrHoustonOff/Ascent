@@ -5,6 +5,7 @@ import { icon } from '../ui/icons.js';
 import { toast, toastError } from '../ui/toast.js';
 import { openDialog, confirmDialog } from '../ui/dialog.js';
 import { refresh } from '../actions.js';
+import { zoomPct, zoomStep, STEPS } from '../ui/zoom.js';
 
 const card = (title, ...kids) => h('section', { class: 'as-section' }, h('h2', { class: 'as-h2' }, title), h('div', { class: 'as-card', style: { gap: '4px' } }, kids));
 
@@ -41,6 +42,23 @@ const sw = (key, set) => {
   return b;
 };
 
+function zoomControl() {
+  const val = h('span', { class: 'as-zoomctl__val as-tnum' });
+  const minus = h('button', { class: 'as-iconbtn as-zoomctl__btn', 'aria-label': 'Мельче', title: 'Мельче (Ctrl + −)', onclick: () => zoomStep(-1) }, '−');
+  const plus = h('button', { class: 'as-iconbtn as-zoomctl__btn', 'aria-label': 'Крупнее', title: 'Крупнее (Ctrl + =)', onclick: () => zoomStep(1) }, '+');
+  const reset = h('button', { class: 'as-btn as-btn--ghost as-btn--sm', onclick: () => zoomStep(0) }, 'Сбросить');
+  const upd = () => {
+    const p = zoomPct();
+    val.textContent = p + ' %';
+    minus.disabled = p <= STEPS[0]; plus.disabled = p >= STEPS[STEPS.length - 1]; reset.disabled = p === 100;
+  };
+  upd();
+  const on = () => (wrap.isConnected ? upd() : document.removeEventListener('as-zoom', on));
+  document.addEventListener('as-zoom', on);
+  const wrap = h('div', { class: 'as-zoomctl' }, h('div', { class: 'as-zoomctl__group' }, minus, val, plus), reset);
+  return wrap;
+}
+
 export async function render(root) {
   const [set, info] = await Promise.all([api.Settings(), api.PlanInfo()]);
   const theme = set.theme;
@@ -64,7 +82,9 @@ export async function render(root) {
       h('h1', { class: 'large-title', style: { margin: '4px 0 0' } }, 'Как вам удобно'),
       h('p', { class: 'as-lead' }, 'Изменения сохраняются сразу.')),
 
-    card('Внешний вид', row('Тема оформления', null, tabs)),
+    card('Внешний вид', row('Тема оформления', null, tabs),
+      row('Масштаб интерфейса', 'Ctrl + = крупнее, Ctrl + − мельче, Ctrl + 0 — обычный размер. Работает и Ctrl + колесо мыши. Масштаб сохраняется.', zoomControl()),
+      row('Гофер при смене масштаба', 'Показывает табличку с гофером и процентом, пока меняется размер.', sw('zoom_gopher', set))),
 
     card('Ритм',
       row('Начало учебного дня', 'Час, с которого начинается новый день. Всё, что вы отметите после полуночи до этого часа, относится к вчерашнему дню.', num('day_start_hour', 0, 8, set)),
