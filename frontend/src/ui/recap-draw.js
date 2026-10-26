@@ -269,7 +269,7 @@ async function cardThemes(g, W, H, c, list, first, more) {
     y += rowH + 16 * u;
   }
   if (more) { g.fillStyle = S.muted; g.font = `500 ${32 * u}px ${S.font}`; g.fillText(`и ещё ${more} ${W_(more, 'тема', 'темы', 'тем')}`, 80 * u, y + 40 * u); }
-  const flip = rng() < 0.5;
+  const flip = !more && rng() < 0.5; // строку «и ещё N» слева не закрываем
   // над подписью внизу, чтобы не закрывать ник
   await drawGopher(g, poseFor('themes', d, rng), flip ? 170 * u : W - 170 * u, H - 112 * u, (sq ? 200 : 300) * u, flip ? 0.08 : -0.08, flip);
 }
