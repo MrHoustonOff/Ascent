@@ -37,11 +37,15 @@ export function openRecap() {
   const rnd = rngFrom(seed);
   const randStyle = pick(rnd, STYLE_KEYS);
   let kind = 'day', date = '', data = null, list = [], canvases = [], buildNo = 0;
+  // правки готовых страниц: id → { hidden, style }; сбрасываются при смене периода, формата или режима
+  let over = {};
+  const cardId = (c) => c.key === 'custom' ? 'custom:' + c.ci : c.key + ':' + (c.from || 0);
+  const reset = () => { over = {}; };
 
   const preview = h('div', { class: 'as-recap__pages' });
   const info = h('div', { class: 'caption as-subtle' }, '');
   const dateInp = h('input', { class: 'as-input', type: 'date', 'aria-label': 'Дата', style: { width: '160px' } });
-  dateInp.addEventListener('change', () => { date = dateInp.value; build(); });
+  dateInp.addEventListener('change', () => { date = dateInp.value; reset(); build(); });
   const toggles = h('div', { class: 'as-recap__chips' });
   const drawToggles = () => {
     clear(toggles);
@@ -57,10 +61,10 @@ export function openRecap() {
   drawToggles();
 
   const body = h('div', { class: 'as-recap__body' },
-    h('div', { class: 'as-rowx' }, seg(KINDS, kind, (k) => { kind = k; build(); }), dateInp),
+    h('div', { class: 'as-rowx' }, seg(KINDS, kind, (k) => { kind = k; reset(); build(); }), dateInp),
     h('div', { class: 'as-rowx' },
-      seg([['story', '9:16'], ['square', '1:1']], p.format, (v) => { p.format = v; savePrefs(p); build(); }),
-      seg([['carousel', 'Карусель'], ['one', 'Одна']], p.mode, (v) => { p.mode = v; savePrefs(p); build(); }),
+      seg([['story', '9:16'], ['square', '1:1']], p.format, (v) => { p.format = v; savePrefs(p); reset(); build(); }),
+      seg([['carousel', 'Карусель'], ['one', 'Одна']], p.mode, (v) => { p.mode = v; savePrefs(p); reset(); build(); }),
       seg([['random', 'Случайно'], ...STYLE_KEYS.map((k) => [k, STYLES[k].label])], p.style, (v) => { p.style = v; savePrefs(p); build(); })),
     toggles,
     preview,
@@ -92,12 +96,16 @@ export function openRecap() {
     try {
       data = await api.Recap(kind, date);
       if (!dateInp.value) dateInp.value = data.date;
-      list = planCards(data, { mode: p.mode, toggles: p.toggles, seed, format: p.format });
-      p.custom.forEach((c, i) => list.push({ key: 'custom', name: 'Своя карточка', card: c, ci: i }));
+      const all = planCards(data, { mode: p.mode, toggles: p.toggles, seed, format: p.format });
+      p.custom.forEach((c, i) => all.push({ key: 'custom', name: 'Своя карточка', card: c, ci: i }));
+      const hidden = all.filter((c) => over[cardId(c)]?.hidden).length;
+      list = all.filter((c) => !over[cardId(c)]?.hidden);
       const style = styleNow(), acc = accent();
       const out = [];
       for (let i = 0; i < list.length; i++) {
-        out.push(await drawCard(list[i], data, { format: p.format, style, acc, seed, index: i, total: list.length, full: p.mode === 'one' }));
+        const st = over[cardId(list[i])]?.style || style; // свой фон у страницы
+        const a = st === style ? acc : pick(rngFrom(seed + 5), STYLES[st].accents);
+        out.push(await drawCard(list[i], data, { format: p.format, style: st, acc: a, seed, index: i, total: list.length, full: p.mode === 'one' }));
         if (my !== buildNo) return;
       }
       canvases = out;
@@ -105,12 +113,23 @@ export function openRecap() {
       const [W, H] = FORMATS[p.format];
       out.forEach((cv, i) => {
         const img = h('img', { src: cv.toDataURL('image/png'), alt: list[i].name, class: 'as-recap__thumb', style: { aspectRatio: `${W} / ${H}` } });
-        const c = list[i];
-        preview.append(c.key !== 'custom' ? img : h('div', { class: 'as-recap__custom' }, img,
-          h('div', { class: 'as-recap__customtools' },
-            h('button', { class: 'as-btn as-btn--secondary as-btn--sm', onclick: () => edit(c.ci) }, 'Изменить'),
-            h('button', { class: 'as-btn as-btn--ghost as-btn--sm', onclick: () => { p.custom.splice(c.ci, 1); savePrefs(p); build(); } }, 'Убрать'))));
+        const c = list[i], id = cardId(c);
+        if (c.key === 'custom') {
+          preview.append(h('div', { class: 'as-recap__custom' }, img,
+            h('div', { class: 'as-recap__customtools' },
+              h('button', { class: 'as-btn as-btn--secondary as-btn--sm', onclick: () => edit(c.ci) }, 'Изменить'),
+              h('button', { class: 'as-btn as-btn--ghost as-btn--sm', onclick: () => { p.custom.splice(c.ci, 1); savePrefs(p); over = {}; build(); } }, 'Убрать'))));
+          return;
+        }
+        // фон страницы и удаление
+        const bg = h('select', { class: 'as-input as-recap__bgsel', 'aria-label': 'Фон страницы', title: 'Фон этой страницы' },
+          STYLE_KEYS.map((k) => h('option', { value: k, selected: k === (over[id]?.style || style) }, STYLES[k].label)));
+        bg.addEventListener('change', () => { over[id] = { ...over[id], style: bg.value }; build(); });
+        preview.append(h('div', { class: 'as-recap__custom' }, img,
+          h('div', { class: 'as-recap__customtools' }, bg,
+            h('button', { class: 'as-iconbtn as-recap__del', title: 'Удалить страницу', 'aria-label': 'Удалить страницу', onclick: () => { over[id] = { ...over[id], hidden: true }; build(); } }, '✕'))));
       });
+      if (hidden) preview.append(h('button', { class: 'as-btn as-btn--ghost as-btn--sm as-recap__restore', onclick: () => { for (const k in over) if (over[k].hidden) delete over[k].hidden; build(); } }, `Вернуть удалённые (${hidden})`));
       const n = out.length;
       info.textContent = `${data.title} · ${data.period} · ${n} ${pluralRu(n, 'картинка', 'картинки', 'картинок')} · ${STYLES[style].label.toLowerCase()}`;
     } catch (e) { console.error(e); clear(preview); preview.append(h('div', { class: 'as-recap__loading' }, 'Не удалось собрать итоги.')); }

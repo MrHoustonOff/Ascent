@@ -672,3 +672,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:var(--surface-window)}
 .as-editor__bg.is-journal{background:#FBF7EF;color:#1C1B19;font-family:Georgia,serif}
 .as-editor__actions{margin-top:auto;display:flex;justify-content:flex-end;gap:8px;padding-top:8px}
 @media (max-width:760px){.as-editor{grid-template-columns:1fr;grid-template-rows:1fr auto}.as-editor__side{border-left:0;border-top:1px solid var(--line);max-height:45vh}}
+.as-recap__bgsel{height:28px;padding:0 6px;font-size:12.5px;width:auto;min-width:0}
+.as-recap__del{width:28px;height:28px;font-size:13px;color:var(--ink-muted)}
+.as-recap__del:hover{color:var(--danger,#c0392b)}
+.as-recap__restore{align-self:center;flex:none}
