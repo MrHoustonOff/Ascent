@@ -106,5 +106,28 @@ func (a *App) FillDemo() error {
 		a.st.Now = func() time.Time { return day.Add(20 * time.Hour) }
 		_ = a.st.StartLesson(next.Lessons[1].ID)
 	}
+	// маркеры у полностью закрытых блоков
+	snp, err := a.snap()
+	if err != nil {
+		return err
+	}
+	a.st.Now = func() time.Time { return day.Add(12*time.Hour + 30*time.Minute) }
+	for _, b := range a.plan.Blocks {
+		if len(b.Themes) == 0 {
+			continue
+		}
+		all := true
+		for _, th := range b.Themes {
+			if !snp.in.ThemeClosed(th) {
+				all = false
+			}
+		}
+		if !all {
+			continue
+		}
+		for _, q := range a.plan.Markers(b.ID) {
+			_ = a.st.SetMarker(b.ID, store.CheckKey(b.ID, q.Text), true)
+		}
+	}
 	return nil
 }
