@@ -20,7 +20,7 @@ export function h(tag, attrs, ...kids) {
 export function append(el, kids) {
   for (const k of kids.flat(Infinity)) {
     if (k == null || k === false) continue;
-    el.append(k.nodeType ? k : document.createTextNode(String(k)));
+    el.appendChild(k.nodeType ? k : document.createTextNode(String(k)));
   }
   return el;
 }
@@ -46,4 +46,10 @@ export function pluralRu(n, one, few, many) {
   if (m10 === 1 && m100 !== 11) return one;
   if (m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)) return few;
   return many;
+}
+
+// Контейнер экрана: append молча пропускает null/false (тернарные выражения в разметке).
+export function safeRoot(el) {
+  el.append = (...kids) => append(el, kids);
+  return el;
 }

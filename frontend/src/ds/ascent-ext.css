@@ -76,6 +76,9 @@ html,body{margin:0;height:100%;overflow:hidden;background:var(--surface-window)}
 .as-window.is-narrow.is-side-open .as-scrim--side{display:block}
 .as-window.is-side-closed:not(.is-narrow) .as-sidebar{display:none}
 
+/* выбранный вариант в диалогах — не primary: главная кнопка одна */
+.as-btn.is-selected{background:var(--accent-soft);color:var(--accent-ink);border-color:var(--accent)}
+
 /* ---------- Чекбокс на as-state ---------- */
 .as-check{display:grid;place-items:center;width:var(--hit-min);height:var(--hit-min);padding:0;border:0;border-radius:var(--radius-sm);background:transparent;cursor:default;flex:none}
 .as-check:hover{background:var(--hover-wash)}
@@ -225,7 +228,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:var(--surface-window)}
 
 /* ---------- Прочее ---------- */
 .as-field--full{min-width:0;width:100%}
-.as-input--num{width:96px;min-width:0}
+.as-input--num{width:96px;min-width:96px;flex:none}
 .as-setting{display:flex;align-items:center;justify-content:space-between;gap:var(--space-4);padding:var(--space-2) 0}
 .as-setting+.as-setting{border-top:1px solid var(--line)}
 .as-setting__text{display:flex;flex-direction:column;min-width:0}

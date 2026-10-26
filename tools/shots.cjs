@@ -23,7 +23,7 @@ const port = 8700 + Math.floor(Math.random() * 200);
   await new Promise((r) => setTimeout(r, 1200));
   const rpc = (m, a = []) => fetch(`http://127.0.0.1:${port}/rpc/${m}`, { method: 'POST', body: JSON.stringify(a) }).then((r) => r.json());
   if (!fresh) { const r = await rpc('FillDemo'); if (r.error) console.log('demo:', r.error); }
-  else await rpc('SetSetting', ['onboarded', '1']);
+  else if (!args.includes('--onboard')) await rpc('SetSetting', ['onboarded', '1']);
   const browser = await chromium.launch();
   const problems = [];
   for (const theme of themes) {
@@ -39,6 +39,7 @@ const port = 8700 + Math.floor(Math.random() * 200);
       for (const act of r.split('|').slice(1)) {
         if (act.startsWith('click:')) { await page.getByText(act.slice(6), { exact: true }).first().click(); await page.waitForTimeout(500); }
         if (act.startsWith('key:')) { await page.keyboard.press(act.slice(4)); await page.waitForTimeout(500); }
+        if (act.startsWith('rpc:')) { const i = act.indexOf(':', 4); await rpc(act.slice(4, i), JSON.parse(act.slice(i + 1))); await page.reload(); await page.waitForSelector('.as-screen'); await page.waitForTimeout(400); }
         if (act.startsWith('wait:')) await page.waitForTimeout(+act.slice(5));
       }
       const name = r.replace(/[#/|:]+/g, '_').replace(/^_/, '').replace(/[^\wа-яА-Я._-]/g, '') || 'today';

@@ -62,7 +62,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer a.Close()
+	defer app.Shutdown(a)
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/rpc/", func(w http.ResponseWriter, r *http.Request) {

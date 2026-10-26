@@ -156,7 +156,7 @@ function streakCard(s) {
     return h('div', { class: 'as-day' }, el, d.label);
   };
   const head = s.n > 0
-    ? h('div', null, h('div', { class: 'as-streak__num', style: { fontSize: '44px', lineHeight: '44px' } }, String(s.n)), h('div', { class: 'as-streak__unit' }, 'дней подряд'))
+    ? h('div', null, h('div', { class: 'as-streak__num', style: { fontSize: '44px', lineHeight: '44px' } }, String(s.n)), h('div', { class: 'as-streak__unit' }, s.unit))
     : h('div', { class: 'as-p-callout', style: { maxWidth: '200px' } }, 'Начните сегодня — и здесь появится серия');
   const flame = h('div', { class: 'as-flame', html: FLAME });
   return h('section', { class: 'as-card as-streak' },

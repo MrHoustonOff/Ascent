@@ -402,3 +402,6 @@ func (a *App) ExportMarkdown() (string, error) {
 	}
 	return out, nil
 }
+
+// DefaultTemplate — шаблон копирования урока по умолчанию.
+func (a *App) DefaultTemplate() string { return store.DefaultHermesTemplate }

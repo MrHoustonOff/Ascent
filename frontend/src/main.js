@@ -1,6 +1,7 @@
+import './ds/bundle.js';
 import { api } from './api.js';
 import { S, subscribe, emit, runUndo } from './state.js';
-import { h, clear, $ } from './ui/dom.js';
+import { h, clear, $, safeRoot } from './ui/dom.js';
 import { mountTitlebar } from './ui/titlebar.js';
 import { renderSidebar, revealInTree, pathHash } from './ui/sidebar.js';
 import { mountToasts, toast } from './ui/toast.js';
@@ -78,7 +79,7 @@ async function renderRoute() {
   const scr = SCREENS[S.route.name];
   const keep = main.scrollTop;
   const sameScreen = main.dataset.screen === S.route.name + ':' + S.route.arg;
-  const root = h('div', { class: 'as-screen' });
+  const root = safeRoot(h('div', { class: 'as-screen' }));
   let title = '';
   try {
     title = (await scr.render(root, S.route.arg)) || '';

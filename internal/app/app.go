@@ -61,9 +61,10 @@ func New(dataDir string, host Host, now func() time.Time, loc *time.Location) (*
 	return a, nil
 }
 
-func (a *App) SetLogger(f func(string, ...any)) { a.log = f }
+// SetLogger и Shutdown — функции пакета, а не методы: методы App целиком уходят во фронтенд.
+func SetLogger(a *App, f func(string, ...any)) { a.log = f }
 
-func (a *App) Close() error { return a.st.Close() }
+func Shutdown(a *App) error { return a.st.Close() }
 
 func (a *App) loadPlan() error {
 	set, err := a.st.Settings()

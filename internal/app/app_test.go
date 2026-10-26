@@ -22,7 +22,7 @@ func newApp(t *testing.T) (*App, *fakeHost, *time.Time) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Cleanup(func() { a.Close() })
+	t.Cleanup(func() { Shutdown(a) })
 	return a, h, &now
 }
 

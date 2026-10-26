@@ -17,6 +17,7 @@ type DotDTO struct {
 
 type StreakDTO struct {
 	N        int      `json:"n"`
+	Unit     string   `json:"unit"`
 	Best     int      `json:"best"`
 	Week     []DotDTO `json:"week"`
 	CanRest  bool     `json:"canRest"`
@@ -86,6 +87,7 @@ func (s *snap) streak() StreakDTO {
 		}
 		d.Week = append(d.Week, dot)
 	}
+	d.Unit = plural(d.N, "день подряд", "дня подряд", "дней подряд")
 	d.CanRest = stats.CanRest(days, s.in.Rest, s.today, s.in.S.RestPerWeek)
 	d.RestUsed = !d.CanRest && !days[s.today.Format("2006-01-02")] && !s.in.Rest[s.today.Format("2006-01-02")]
 	return d
@@ -413,4 +415,24 @@ func paceUnit(v float64) string {
 		return "темы"
 	}
 	return plural(int(v), "тема", "темы", "тем")
+}
+
+// MilestoneIf — когда будет веха, если закрывать goal тем в день (для мастера первого запуска).
+func (a *App) MilestoneIf(goal int) (string, error) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	s, err := a.snap()
+	if err != nil {
+		return "", err
+	}
+	if goal < 1 {
+		goal = 1
+	}
+	for _, t := range s.in.Targets() {
+		if t.Key == "milestone" {
+			d := stats.DaysFor(t.Ahead, float64(goal), t.HasProject, s.in.S.ProjectDays)
+			return "около " + dateGen(s.today.AddDate(0, 0, d)), nil
+		}
+	}
+	return "", nil
 }
