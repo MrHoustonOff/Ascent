@@ -6,6 +6,8 @@ import { toast, toastError } from './toast.js';
 import { achBadge } from './achicons.js';
 
 const W = 1080, H = 1920;
+const LOGO = new Image();
+LOGO.src = new URL('../ds/logo.svg', import.meta.url).href;
 // Цвета — тёмная тема дизайн-системы (tokens.css)
 const C = { bg1: '#0E3A47', bg2: '#121214', ink: '#F5F5F7', muted: '#A8A8AE', subtle: '#9E9EA5', accent: '#4CC9EA', streak: '#FFA640', success: '#4FD08F', card: 'rgba(255,255,255,0.06)', line: 'rgba(255,255,255,0.12)' };
 const FONT = '-apple-system, "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif';
@@ -80,9 +82,7 @@ function canvas() {
 }
 
 function header(g, d, page, total) {
-  g.fillStyle = C.accent; roundRect(g, 80, 96, 56, 56, 16); g.fill();
-  g.fillStyle = '#00232C'; g.font = `800 32px ${FONT}`; g.textAlign = 'center'; g.textBaseline = 'middle';
-  g.fillText('A', 108, 126);
+  if (LOGO.complete && LOGO.naturalWidth) g.drawImage(LOGO, 80, 96, 56, 56);
   g.textAlign = 'left'; g.fillStyle = C.ink; g.font = `700 34px ${FONT}`;
   g.fillText('Ascent', 156, 116);
   g.fillStyle = C.muted; g.font = `400 26px ${FONT}`;
@@ -155,6 +155,7 @@ async function badgeImage(a) {
 }
 
 async function render(d) {
+  if (!LOGO.complete) await LOGO.decode().catch(() => {});
   const out = [];
   const pagesThemes = [];
   for (let i = 0; i < d.themes.length; i += 8) pagesThemes.push(d.themes.slice(i, i + 8));

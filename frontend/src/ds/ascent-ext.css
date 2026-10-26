@@ -451,3 +451,4 @@ html,body{margin:0;height:100%;overflow:hidden;background:var(--surface-window)}
 .as-weeks .wbar{transform-box:fill-box;transform-origin:bottom;animation:as-bar-up .6s cubic-bezier(.3,.7,.3,1) both;animation-delay:calc(var(--i) * 14ms)}
 .as-weeks-wrap{overflow-x:auto;overflow-y:hidden;padding-bottom:6px;scrollbar-width:thin;scroll-behavior:smooth}
 .as-weeks-wrap .as-weeks{width:auto;max-width:none}
+.as-logo{width:20px;height:20px;border-radius:5px;display:block;flex:none}

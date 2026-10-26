@@ -1,3 +1,4 @@
+const logoUrl = new URL('../ds/logo.svg', import.meta.url).href;
 import { h, $ } from './dom.js';
 import { icon } from './icons.js';
 import { win } from '../api.js';
@@ -7,7 +8,7 @@ const G = (window.Ascent && window.Ascent.glyph) || {};
 export function mountTitlebar(winEl, { onToggleSidebar, onSearch }) {
   const maxBtn = h('button', { class: 'as-ctrl', 'aria-label': 'Развернуть', 'data-as-ctrl': 'max', html: G.max, title: 'Развернуть' });
   const bar = h('div', { class: 'as-titlebar' },
-    h('div', { class: 'as-titlebar__brand' }, h('span', { class: 'as-titlebar__mark' }, 'A'), 'Ascent'),
+    h('div', { class: 'as-titlebar__brand' }, h('img', { class: 'as-logo', src: logoUrl, alt: '' }), 'Ascent'),
     h('div', { class: 'as-titlebar__title', id: 'as-title' }, ''),
     h('div', { class: 'as-titlebar__tools' },
       h('button', { class: 'as-iconbtn', title: 'Поиск (Ctrl+K)', 'aria-label': 'Поиск', onclick: onSearch }, icon('search')),
