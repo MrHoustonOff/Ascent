@@ -14,7 +14,7 @@ const TOGGLE_NEXT = { auto: 'on', on: 'off', off: 'auto' };
 const TOGGLE_TEXT = { auto: 'случайно', on: 'всегда', off: 'нет' };
 
 function loadPrefs() {
-  const def = { format: 'story', mode: 'carousel', style: 'random', toggles: {}, custom: [] };
+  const def = { format: 'story', mode: 'carousel', style: 'random', toggles: {}, custom: [], dayX: true };
   try { return { ...def, ...JSON.parse(S.settings.recap_prefs || '{}') }; } catch { return def; }
 }
 function savePrefs(p) {
@@ -58,6 +58,11 @@ export function openRecap() {
         onclick: () => { p.toggles[k] = TOGGLE_NEXT[st]; savePrefs(p); drawToggles(); build(); },
       }, l, h('span', { class: 'as-recap__chipst' }, TOGGLE_TEXT[st])));
     }
+    // «учу Go · день X» на первой карточке: считается от первой закрытой темы
+    toggles.append(h('button', {
+      class: 'as-recap__chip is-' + (p.dayX ? 'on' : 'off'), title: 'Надпись «учу Go · день X» на первой карточке',
+      onclick: () => { p.dayX = !p.dayX; savePrefs(p); drawToggles(); build(); },
+    }, 'День X', h('span', { class: 'as-recap__chipst' }, p.dayX ? 'есть' : 'нет')));
   };
   drawToggles();
 
@@ -110,7 +115,7 @@ export function openRecap() {
       for (let i = 0; i < list.length; i++) {
         const st = over[cardId(list[i])]?.style || style; // свой фон у страницы
         const a = st === style ? acc : pick(rngFrom(seed + 5), STYLES[st].accents);
-        out.push(await drawCard(list[i], data, { format: p.format, style: st, acc: a, seed, index: i, total: list.length, full: p.mode === 'one' }));
+        out.push(await drawCard(list[i], data, { format: p.format, style: st, acc: a, seed, index: i, total: list.length, full: p.mode === 'one', dayX: p.dayX }));
         if (my !== buildNo) return;
       }
       canvases = out;

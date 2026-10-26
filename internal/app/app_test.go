@@ -280,6 +280,13 @@ func TestRecapPeriodsAndExport(t *testing.T) {
 	if !empty.Empty || empty.Prev != 0 || empty.PrevLabel != "вчера" {
 		t.Fatalf("пустой день: %+v", empty)
 	}
+	// день X: с первой закрытой темы; до неё — 0
+	if all.DayN != 1 || all.Start == "" || len(all.Milestones) == 0 || all.Milestones[0].Label != "Первая тема" || empty.DayN != 0 {
+		t.Fatalf("день X: all %d %q %+v · до темы %d", all.DayN, all.Start, all.Milestones, empty.DayN)
+	}
+	if later, _ := a.Recap("day", a.Now().In(a.Loc).AddDate(0, 0, 9).Format("2006-01-02")); later.DayN != 1 {
+		t.Fatalf("день X не уходит в будущее: %d", later.DayN)
+	}
 	// экспорт: подпапка на каждый экспорт внутри запомненной папки
 	root := t.TempDir()
 	a.SetSetting("export_dir", root)

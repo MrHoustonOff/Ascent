@@ -21,6 +21,10 @@ type RecapItem struct {
 type RecapDay struct {
 	Label  string `json:"label"`
 	Themes int    `json:"themes"`
+	Day    int    `json:"day"`    // число месяца
+	Active bool   `json:"active"` // был учебный день
+	Rest   bool   `json:"rest"`   // день отдыха
+	Future bool   `json:"future"` // ещё не наступил
 }
 
 type RecapDTO struct {
@@ -56,6 +60,18 @@ type RecapDTO struct {
 	Nick       string          `json:"nick"`
 	AchOpen    int             `json:"achOpen"`  // открыто достижений всего
 	AchTotal   int             `json:"achTotal"` // всего достижений
+
+	// «учу Go · день X»: X — учебный день от первой закрытой темы до конца периода (0 — тем ещё нет)
+	DayN       int              `json:"dayN"`
+	Start      string           `json:"start"`      // «5 сентября» — день первой темы
+	BestStreak int              `json:"bestStreak"` // рекордная серия дней
+	Milestones []RecapMilestone `json:"milestones"` // вехи пути (для «всего пути»)
+}
+
+type RecapMilestone struct {
+	Date  string `json:"date"`  // «5 сен»
+	Label string `json:"label"` // «Первая тема»
+	Sub   string `json:"sub"`   // название темы, блока или этапа
 }
 
 type RecapTrack struct {
@@ -113,7 +129,7 @@ func (a *App) Recap(kind, date string) (RecapDTO, error) {
 	}
 	from, to := day, day
 	r := RecapDTO{Date: day.Format("2006-01-02"), Kind: kind, Themes: []RecapItem{}, Blocks: []RecapItem{}, Achievements: []AchRef{}, Days: []RecapDay{},
-		Tracks: []RecapTrack{}, Stages: []RecapStage{}, Forecast: []RecapForecast{}, Prev: -1, Nick: s.set["nick"]}
+		Tracks: []RecapTrack{}, Stages: []RecapStage{}, Forecast: []RecapForecast{}, Milestones: []RecapMilestone{}, Prev: -1, Nick: s.set["nick"]}
 	switch kind {
 	case "week":
 		from = stats.WeekStart(day)
@@ -194,12 +210,15 @@ func (a *App) Recap(kind, date string) (RecapDTO, error) {
 			}
 		}
 		if kind != "all" {
-			r.Days = append(r.Days, RecapDay{weekdaysShort[d.Weekday()], n})
+			k := d.Format("2006-01-02")
+			r.Days = append(r.Days, RecapDay{Label: weekdaysShort[d.Weekday()], Themes: n, Day: d.Day(),
+				Active: agg[k] != nil && agg[k].Active, Rest: in.Rest[k], Future: d.After(s.today)})
 		}
 	}
 	r.Empty = len(r.Themes) == 0 && r.Lessons == 0 && r.Checks == 0
 	a.recapExtras(s, &r, from, to)
 	r.Streak = stats.CurrentStreak(in.ActiveDays(), in.Rest, s.today)
+	r.BestStreak = stats.BestStreak(in.ActiveDays(), in.Rest)
 	r.Done, r.Total = s.totalCounts()
 	r.Pct = pct(r.Done, r.Total)
 	r.Pace = num(in.Pace(14).V)
@@ -211,9 +230,10 @@ func (a *App) Recap(kind, date string) (RecapDTO, error) {
 	return r, nil
 }
 
-// recapExtras — данные для карточек: хитмапа, треки, сравнение, этапы, прогноз, рекорды.
+// recapExtras — данные для карточек: хитмапа, треки, сравнение, этапы, прогноз, рекорды, день X.
 func (a *App) recapExtras(s *snap, r *RecapDTO, from, to time.Time) {
 	in := s.in
+	a.recapJourney(s, r, to)
 	// хитмапа: целые недели, от 5 до 26 штук, заканчивая неделей конца периода
 	end := stats.WeekStart(to).AddDate(0, 0, 6)
 	weeks := 5
@@ -323,6 +343,64 @@ func (a *App) recapExtras(s *snap, r *RecapDTO, from, to time.Time) {
 				r.BestWeek = &RecapBest{Label: fmt.Sprintf("%s — %s", dateShort(ws), dateShort(ws.AddDate(0, 0, 6))), Themes: v}
 			}
 		}
+	}
+}
+
+// recapJourney — день X от первой закрытой темы и вехи пути до конца периода.
+func (a *App) recapJourney(s *snap, r *RecapDTO, to time.Time) {
+	in := s.in
+	end := to
+	if end.After(s.today) {
+		end = s.today
+	}
+	type closed struct {
+		at    time.Time
+		title string
+	}
+	var ths []closed
+	for _, th := range a.plan.Themes {
+		if t, ok := in.ThemeClosedAt(th); ok && !stats.ParseDay(in.DayLabel(t)).After(end) {
+			ths = append(ths, closed{t, th.Title})
+		}
+	}
+	if len(ths) == 0 {
+		return
+	}
+	sort.Slice(ths, func(i, j int) bool { return ths[i].at.Before(ths[j].at) })
+	first := stats.ParseDay(in.DayLabel(ths[0].at))
+	r.DayN = stats.DaysBetween(first, end) + 1
+	r.Start = dateGen(first)
+	if r.Kind != "all" {
+		return
+	}
+	type ms struct {
+		at time.Time
+		m  RecapMilestone
+	}
+	day := func(t time.Time) string { return dateShort(stats.ParseDay(in.DayLabel(t))) }
+	list := []ms{{ths[0].at, RecapMilestone{day(ths[0].at), "Первая тема", ths[0].title}}}
+	for _, n := range []int{10, 25, 50, 100, 150, 200, 300, 400, 500} {
+		if len(ths) >= n {
+			list = append(list, ms{ths[n-1].at, RecapMilestone{day(ths[n-1].at), fmt.Sprintf("%d %s", n, plural(n, "тема", "темы", "тем")), ths[n-1].title}})
+		}
+	}
+	var fb *ms
+	for _, b := range a.plan.Blocks {
+		if t, ok := in.BlockClosedAt(b); ok && !t.IsZero() && !stats.ParseDay(in.DayLabel(t)).After(end) && (fb == nil || t.Before(fb.at)) {
+			fb = &ms{t, RecapMilestone{day(t), "Первый блок", b.Title}}
+		}
+	}
+	if fb != nil {
+		list = append(list, *fb)
+	}
+	for _, st := range a.plan.Stages {
+		if t, ok := in.StageClosedAt(st); ok && !t.IsZero() && !stats.ParseDay(in.DayLabel(t)).After(end) {
+			list = append(list, ms{t, RecapMilestone{day(t), fmt.Sprintf("Этап %d", st.Num), st.Title}})
+		}
+	}
+	sort.SliceStable(list, func(i, j int) bool { return list[i].at.Before(list[j].at) })
+	for _, x := range list {
+		r.Milestones = append(r.Milestones, x.m)
 	}
 }
 

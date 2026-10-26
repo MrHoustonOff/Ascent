@@ -24,6 +24,7 @@ export const STYLES = {
       const glow = g.createRadialGradient(W * 0.85, H * 0.08, 10, W * 0.85, H * 0.08, W * 0.6);
       glow.addColorStop(0, hexA(acc, 0.28)); glow.addColorStop(1, hexA(acc, 0));
       g.fillStyle = glow; g.fillRect(0, 0, W, H);
+      speckle(g, W, H, 'rgba(255,255,255,0.045)', 1600, 2);
     },
   },
   sand: {
@@ -35,6 +36,7 @@ export const STYLES = {
       g.fillStyle = grd; g.fillRect(0, 0, W, H);
       g.fillStyle = 'rgba(255,255,255,0.22)';
       blob(g, W * 0.9, H * 0.1, W * 0.35); blob(g, W * 0.05, H * 0.62, W * 0.28);
+      speckle(g, W, H, 'rgba(90,60,30,0.05)', 1800, 2);
     },
   },
   terminal: {
@@ -68,6 +70,15 @@ export function rngFrom(seed) { // mulberry32
 }
 export const pick = (rng, arr) => arr[Math.floor(rng() * arr.length)];
 function hexA(hex, a) { const c = hex.replace('#', ''); const n = parseInt(c.length === 3 ? c.split('').map((x) => x + x).join('') : c, 16); return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${a})`; }
+function onAcc(hex) { // чёрный или белый текст поверх акцента
+  const c = hex.replace('#', ''); const n = parseInt(c.length === 3 ? c.split('').map((x) => x + x).join('') : c, 16);
+  const l = (0.299 * (n >> 16) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) / 255;
+  return l > 0.6 ? '#141414' : '#FFFFFF';
+}
+function speckle(g, W, H, color, n, size) { // мелкое «зерно» без случайности: одинаково при каждом рисовании
+  g.fillStyle = color;
+  for (let i = 0; i < n; i++) g.fillRect((i * 7919) % W, (i * 104729 + i * i * 13) % H, size, size);
+}
 function blob(g, x, y, r) { g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); g.fill(); }
 function rr(g, x, y, w, h, r) { r = Math.min(r, w / 2, h / 2); g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); }
 export function wrap(g, text, maxW) {
@@ -175,11 +186,37 @@ function progress(g, S, acc, u, x, y, w, pct) {
 // ---------- карточки ----------
 // каждая: async (g, W, H, ctx) где ctx = { S, acc, rng, d, page, total, layout, full }
 const W_LOWER = { w: 0 }; // ширина нижнего блока, когда справа стоит гофер
+// «учу Go · день X»: наклейка в цвет акцента; у «Журнала» — штамп, у «Терминала» — рамка
+function dayBadge(g, S, acc, u, d, x, y, align, size) {
+  const term = S === STYLES.terminal, stamp = S === STYLES.journal;
+  const t1 = term ? '> учу Go' : stamp ? 'УЧУ GO' : 'учу Go', t2 = stamp ? `ДЕНЬ ${d.dayN}` : `день ${d.dayN}`;
+  const f2 = `800 ${size * u}px ${S.head}`, f1 = `600 ${size * 0.6 * u}px ${S.font}`;
+  g.font = f2; const w2 = g.measureText(t2).width;
+  g.font = f1; const w1 = g.measureText(t1).width;
+  const pad = size * 0.45 * u, gap = size * 0.32 * u, w = pad * 2 + w1 + gap + w2, hh = size * 1.48 * u;
+  const x0 = align === 'center' ? x - w / 2 : align === 'right' ? x - w : x;
+  g.save(); g.translate(x0 + w / 2, y + hh / 2); g.rotate(stamp ? -0.05 : term ? 0 : -0.03);
+  const ink = term || stamp ? acc : onAcc(acc);
+  if (term) { g.strokeStyle = acc; g.lineWidth = 3 * u; g.fillStyle = hexA(acc, 0.08); rr(g, -w / 2, -hh / 2, w, hh, 6 * u); g.fill(); g.stroke(); }
+  else if (stamp) { g.strokeStyle = acc; g.lineWidth = 5 * u; rr(g, -w / 2, -hh / 2, w, hh, 14 * u); g.stroke(); g.lineWidth = 2 * u; rr(g, -w / 2 + 9 * u, -hh / 2 + 9 * u, w - 18 * u, hh - 18 * u, 8 * u); g.stroke(); }
+  else {
+    g.fillStyle = 'rgba(0,0,0,0.20)'; rr(g, -w / 2 + 6 * u, -hh / 2 + 10 * u, w, hh, hh * 0.32); g.fill();
+    g.fillStyle = acc; rr(g, -w / 2, -hh / 2, w, hh, hh * 0.32); g.fill();
+  }
+  g.textBaseline = 'middle'; g.textAlign = 'left';
+  g.fillStyle = hexA(ink, 0.78); g.font = f1; g.fillText(t1, -w / 2 + pad, size * 0.04 * u);
+  g.fillStyle = ink; g.font = f2; g.fillText(t2, -w / 2 + pad + w1 + gap, size * 0.06 * u);
+  g.restore(); g.textBaseline = 'alphabetic';
+  return hh;
+}
+const showDay = (c) => c.dayX && c.d.dayN > 0;
+
 async function cardSummary(g, W, H, c) {
   const { S, acc, d, rng } = c; const u = W / 1080, sq = H === W;
   const n = d.themes.length;
   const pose = poseFor('summary', d, rng);
   const lay = sq ? (c.layout % 2) : c.layout % 3;
+  const dx = showDay(c); // со «днём X» всё опускается ниже
   const big = (x, y, size, align = 'left') => {
     g.textAlign = align; g.fillStyle = S.ink; g.font = `800 ${size * u}px ${S.head}`; g.fillText(String(n), x, y);
     g.font = `700 ${56 * u}px ${S.font}`; g.fillText(W_(n, 'тема закрыта', 'темы закрыто', 'тем закрыто'), x, y + 86 * u); g.textAlign = 'left';
@@ -210,36 +247,43 @@ async function cardSummary(g, W, H, c) {
     g.fillStyle = S.ink; g.font = `700 ${34 * u}px ${S.font}`; g.fillText(`${d.done} из ${d.total} уроков`, 80 * u, y + 150 * u);
   };
   if (sq) {
-    const gx = lay ? 270 * u : W - 270 * u, tx = lay ? W - 80 * u : 80 * u, al = lay ? 'right' : 'left';
-    kicker(tx, 250 * u, al); big(tx, 520 * u, 250, al);
+    const gx = lay ? 270 * u : W - 270 * u, tx = lay ? W - 80 * u : 80 * u, al = lay ? 'right' : 'left', o = dx ? 56 * u : 0;
+    if (dx) dayBadge(g, S, acc, u, d, tx, 166 * u, al, 50);
+    kicker(tx, 250 * u + o, al); big(tx, 520 * u + o * 0.6, 250, al);
     await drawGopher(g, pose, gx, 700 * u, 430 * u, 0, lay === 0);
     tiles(760 * u, 170 * u);
     return;
   }
+  const o = dx ? 80 * u : 0;
   if (lay === 0) {
-    kicker(80 * u, 280 * u); big(64 * u, 590 * u, 300);
-    tiles(800 * u);
-    const lw = W; W_LOWER.w = W - 420 * u; lower(1060 * u, 360 * u); W_LOWER.w = 0; void lw;
+    if (dx) dayBadge(g, S, acc, u, d, 80 * u, 186 * u, 'left', 66);
+    kicker(80 * u, 280 * u + o); big(64 * u, 590 * u + o, 300);
+    tiles(800 * u + o);
+    W_LOWER.w = W - 480 * u; lower(1060 * u + o, 360 * u - o / 2); W_LOWER.w = 0;
     await drawGopher(g, pose, W - 210 * u, H - 120 * u, 450 * u, -0.06);
   } else if (lay === 1) {
-    await drawGopher(g, pose, W / 2, 760 * u, 500 * u);
-    kicker(W / 2, 860 * u, 'center'); big(W / 2, 1090 * u, 230, 'center');
-    tiles(1280 * u, 170 * u); lower(1500 * u, 260 * u);
+    if (dx) dayBadge(g, S, acc, u, d, W / 2, 186 * u, 'center', 66);
+    await drawGopher(g, pose, W / 2, 760 * u + o, 500 * u - o / 2);
+    kicker(W / 2, 860 * u + o, 'center'); big(W / 2, 1090 * u + o, 230, 'center');
+    tiles(1280 * u + o, 170 * u); lower(1500 * u + o, 260 * u - o);
   } else {
-    kicker(80 * u, 280 * u); big(64 * u, 600 * u, 320);
-    await drawGopher(g, pose, W - 250 * u, 760 * u, 520 * u, 0.05, true);
-    tiles(860 * u); lower(1130 * u, 380 * u);
+    if (dx) dayBadge(g, S, acc, u, d, 80 * u, 186 * u, 'left', 66);
+    kicker(80 * u, 280 * u + o); big(64 * u, 600 * u + o, 320);
+    await drawGopher(g, pose, W - 250 * u, 760 * u + o, 520 * u, 0.05, true);
+    tiles(860 * u + o); lower(1130 * u + o, 380 * u - o / 2);
   }
 }
 
 async function cardQuiet(g, W, H, c) { // пустой день: без хвастовства
   const { S, d, rng } = c; const u = W / 1080, sq = H === W;
   if (S !== STYLES.terminal) { g.fillStyle = hexA(S.ink, 0.5); for (let i = 0; i < 26; i++) blob(g, (i * 397) % W, ((i * 211) % (H * 0.45)) + 180 * u, (1 + (i % 3)) * 1.6 * u); }
+  const o = showDay(c) ? (sq ? 50 : 40) * u : 0;
+  if (o) dayBadge(g, S, c.acc, u, d, 80 * u, (sq ? 172 : 200) * u, 'left', sq ? 50 : 66);
   g.fillStyle = S.ink; g.font = `800 ${(sq ? 64 : 76) * u}px ${S.head}`;
   const lines = d.kind === 'day' ? ['День отдыха —', 'тоже часть пути'] : ['Тихий период —', 'тоже часть пути'];
-  lines.forEach((l, i) => g.fillText(l, 80 * u, (sq ? 300 : 420) * u + i * 92 * u));
+  lines.forEach((l, i) => g.fillText(l, 80 * u, (sq ? 300 : 420) * u + o + i * 92 * u));
   g.fillStyle = S.muted; g.font = `400 ${32 * u}px ${S.font}`;
-  g.fillText(d.streak ? `Серия ${d.streak} ${W_(d.streak, 'день', 'дня', 'дней')} цела · завтра продолжим` : 'Завтра продолжим', 80 * u, (sq ? 470 : 640) * u);
+  g.fillText(d.streak ? `Серия ${d.streak} ${W_(d.streak, 'день', 'дня', 'дней')} цела · завтра продолжим` : 'Завтра продолжим', 80 * u, (sq ? 470 : 640) * u + o);
   await drawGopher(g, poseFor('empty', d, rng), W / 2, H - (sq ? 150 : 220) * u, (sq ? 460 : 640) * u);
 }
 
@@ -432,6 +476,151 @@ async function cardForecast(g, W, H, c) {
   if (!sq) await drawGopher(g, poseFor('forecast', d, rng), W - 200 * u, H - 130 * u, 300 * u, 0, false);
 }
 
+// ---------- карточки периода: неделя, месяц, весь путь ----------
+function moon(g, x, y, r, col) { // значок дня отдыха
+  g.fillStyle = col; g.beginPath(); g.arc(x, y, r, Math.PI * 0.35, Math.PI * 1.65, false); g.arc(x + r * 0.45, y - r * 0.1, r * 0.8, Math.PI * 1.5, Math.PI * 0.5, true); g.closePath(); g.fill();
+}
+function check(g, x, y, r, col, w) {
+  g.strokeStyle = col; g.lineWidth = w; g.lineCap = 'round'; g.lineJoin = 'round';
+  g.beginPath(); g.moveTo(x - r * 0.5, y); g.lineTo(x - r * 0.12, y + r * 0.38); g.lineTo(x + r * 0.55, y - r * 0.4); g.stroke();
+}
+function star(g, x, y, r, col) {
+  g.fillStyle = col; g.beginPath();
+  for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, k = i % 2 ? r * 0.45 : r; g.lineTo(x + Math.cos(a) * k, y + Math.sin(a) * k); }
+  g.closePath(); g.fill();
+}
+// рекорд: подпись, крупное значение, пояснение
+function record(g, S, acc, u, x, y, label, value, sub, hl) {
+  g.fillStyle = S.muted; g.font = `600 ${24 * u}px ${S.font}`; g.fillText(label.toUpperCase(), x, y);
+  g.fillStyle = hl ? acc : S.ink; g.font = `800 ${52 * u}px ${S.head}`; g.fillText(value, x, y + 58 * u);
+  if (sub) { g.fillStyle = S.muted; g.font = `400 ${26 * u}px ${S.font}`; g.fillText(sub, x, y + 96 * u); }
+}
+
+async function cardWeek(g, W, H, c) {
+  const { S, acc, d, rng } = c; const u = W / 1080, sq = H === W;
+  const days = d.days, act = days.filter((x) => x.active).length, max = Math.max(1, ...days.map((x) => x.themes));
+  let best = -1; days.forEach((x, i) => { if (x.themes && (best < 0 || x.themes > days[best].themes)) best = i; });
+  title(g, S, u, 'Ритм недели', 80 * u, 290 * u);
+  g.fillStyle = S.muted; g.font = `400 ${30 * u}px ${S.font}`;
+  g.fillText(`${act} из 7 ${W_(act, 'дня', 'дней', 'дней')} с учёбой` + (d.bestStreak > 1 ? ` · рекорд серии ${d.bestStreak}` : ''), 80 * u, 345 * u);
+  const pose = pick(rng, act >= 5 ? ['cheer', 'dance', 'proud'] : act >= 3 ? ['wave', 'walk', 'point'] : ['tired', 'think', 'shrug']);
+  if (sq) { // семь кружков в ряд
+    const gap = 16 * u, cw = (W - 160 * u - gap * 6) / 7, r = cw / 2, cy = 560 * u;
+    days.forEach((x, i) => {
+      const cx = 80 * u + i * (cw + gap) + r;
+      if (x.themes) { g.fillStyle = hexA(acc, 0.35 + 0.65 * x.themes / max); blob(g, cx, cy, r); }
+      else if (x.future) { g.strokeStyle = S.line; g.lineWidth = 3 * u; g.setLineDash([8 * u, 8 * u]); g.beginPath(); g.arc(cx, cy, r - 2 * u, 0, Math.PI * 2); g.stroke(); g.setLineDash([]); }
+      else { g.fillStyle = S.track; blob(g, cx, cy, r); }
+      if (x.themes) { g.fillStyle = onAcc(acc); g.textAlign = 'center'; g.font = `800 ${46 * u}px ${S.head}`; g.fillText(String(x.themes), cx, cy + 16 * u); g.textAlign = 'left'; }
+      else if (x.active) check(g, cx, cy, r * 0.7, acc, 6 * u);
+      else if (x.rest) moon(g, cx, cy, r * 0.32, S.muted);
+      if (i === best) star(g, cx, cy - r - 26 * u, 18 * u, acc);
+      g.fillStyle = i >= 5 ? acc : S.muted; g.textAlign = 'center'; g.font = `600 ${28 * u}px ${S.font}`; g.fillText(x.label, cx, cy + r + 50 * u); g.textAlign = 'left';
+    });
+    record(g, S, acc, u, 80 * u, 760 * u, 'за неделю', `${d.themes.length} ${W_(d.themes.length, 'тема', 'темы', 'тем')}`, `${d.lessons} ${W_(d.lessons, 'урок', 'урока', 'уроков')} · ${d.checks} ${W_(d.checks, 'ответ', 'ответа', 'ответов')}`, true);
+    await drawGopher(g, pose, W - 200 * u, 950 * u, 230 * u, -0.04, true);
+    return;
+  }
+  // сторис: семь строк-полос
+  const x0 = 210 * u, bw = W - 80 * u - x0 - 90 * u, rowH = 124 * u, bh = 72 * u;
+  let y = 420 * u;
+  days.forEach((x, i) => {
+    const cy = y + rowH / 2;
+    g.fillStyle = i >= 5 ? acc : S.ink; g.font = `700 ${36 * u}px ${S.font}`; g.fillText(x.label, 80 * u, cy + 13 * u);
+    if (x.future) { g.strokeStyle = S.line; g.lineWidth = 3 * u; g.setLineDash([10 * u, 10 * u]); rr(g, x0, cy - bh / 2, bw, bh, bh / 2); g.stroke(); g.setLineDash([]); }
+    else { g.fillStyle = S.track; rr(g, x0, cy - bh / 2, bw, bh, bh / 2); g.fill(); }
+    if (x.themes) {
+      const w = Math.max(bh, bw * x.themes / max);
+      g.fillStyle = i === best ? acc : hexA(acc, 0.55); rr(g, x0, cy - bh / 2, w, bh, bh / 2); g.fill();
+      if (i === best) { g.fillStyle = onAcc(acc); g.font = `700 ${26 * u}px ${S.font}`; if (w > 300 * u) g.fillText('лучший день', x0 + 32 * u, cy + 9 * u); }
+    } else if (x.active) { g.fillStyle = S.muted; g.font = `500 ${26 * u}px ${S.font}`; g.fillText('уроки и вопросы', x0 + 70 * u, cy + 9 * u); check(g, x0 + 36 * u, cy, 22 * u, acc, 5 * u); }
+    else if (x.rest) { moon(g, x0 + 36 * u, cy, 12 * u, S.muted); g.fillStyle = S.muted; g.font = `500 ${26 * u}px ${S.font}`; g.fillText('отдых', x0 + 70 * u, cy + 9 * u); }
+    g.textAlign = 'right'; g.fillStyle = x.themes ? S.ink : S.muted; g.font = `800 ${44 * u}px ${S.head}`;
+    g.fillText(x.future ? '' : String(x.themes), W - 80 * u, cy + 15 * u); g.textAlign = 'left';
+    y += rowH;
+  });
+  record(g, S, acc, u, 80 * u, y + 110 * u, 'за неделю', `${d.themes.length} ${W_(d.themes.length, 'тема', 'темы', 'тем')}`, `${d.lessons} ${W_(d.lessons, 'урок', 'урока', 'уроков')} · ${d.checks} ${W_(d.checks, 'ответ', 'ответа', 'ответов')}`, true);
+  if (best >= 0) record(g, S, acc, u, 80 * u, y + 260 * u, 'сильнейший день', `${days[best].label} · ${days[best].themes}`, W_(days[best].themes, 'тема', 'темы', 'тем'));
+  await drawGopher(g, pose, W - 230 * u, H - 120 * u, 380 * u, -0.05);
+}
+
+async function cardMonth(g, W, H, c) {
+  const { S, acc, d, rng } = c; const u = W / 1080, sq = H === W;
+  const days = d.days, act = days.filter((x) => x.active).length, max = Math.max(1, ...days.map((x) => x.themes));
+  const off = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'].indexOf(days[0]?.label);
+  const sel = +String(d.date).slice(8, 10);
+  title(g, S, u, d.period, 80 * u, 290 * u);
+  g.fillStyle = S.muted; g.font = `400 ${30 * u}px ${S.font}`;
+  g.fillText(`${act} ${W_(act, 'день', 'дня', 'дней')} с учёбой · ${d.themes.length} ${W_(d.themes.length, 'тема', 'темы', 'тем')}`, 80 * u, 345 * u);
+  const gw = sq ? 600 * u : W - 160 * u, gap = (sq ? 10 : 14) * u, cell = (gw - gap * 6) / 7, top = (sq ? 440 : 470) * u;
+  ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'].forEach((l, i) => {
+    g.fillStyle = i >= 5 ? acc : S.muted; g.textAlign = 'center'; g.font = `600 ${(sq ? 22 : 26) * u}px ${S.font}`;
+    g.fillText(l, 80 * u + i * (cell + gap) + cell / 2, top - 22 * u); g.textAlign = 'left';
+  });
+  days.forEach((x, i) => {
+    const k = i + Math.max(0, off), col = k % 7, row = Math.floor(k / 7);
+    const px = 80 * u + col * (cell + gap), py = top + row * (cell + gap), rad = cell * 0.24;
+    const strong = x.themes / max > 0.5;
+    if (x.future) { g.strokeStyle = S.line; g.lineWidth = 2 * u; rr(g, px + u, py + u, cell - 2 * u, cell - 2 * u, rad); g.stroke(); }
+    else { g.fillStyle = x.themes ? hexA(acc, 0.3 + 0.7 * Math.min(1, x.themes / max)) : x.active ? hexA(acc, 0.14) : S.track; rr(g, px, py, cell, cell, rad); g.fill(); }
+    if (x.day === sel && !x.future) { g.strokeStyle = S.ink; g.lineWidth = 4 * u; rr(g, px - 4 * u, py - 4 * u, cell + 8 * u, cell + 8 * u, rad + 4 * u); g.stroke(); }
+    g.fillStyle = strong ? onAcc(acc) : S.muted; g.font = `600 ${(sq ? 18 : 24) * u}px ${S.font}`; g.fillText(String(x.day), px + cell * 0.14, py + cell * 0.3);
+    if (x.themes) { g.fillStyle = strong ? onAcc(acc) : S.ink; g.textAlign = 'center'; g.font = `800 ${(sq ? 30 : 44) * u}px ${S.head}`; g.fillText(String(x.themes), px + cell / 2, py + cell * 0.8); g.textAlign = 'left'; }
+    else if (x.rest) moon(g, px + cell / 2, py + cell * 0.62, cell * 0.12, S.muted);
+    else if (x.active) check(g, px + cell / 2, py + cell * 0.62, cell * 0.22, acc, 4 * u);
+  });
+  const rows = Math.ceil((days.length + Math.max(0, off)) / 7), end = top + rows * (cell + gap);
+  const bd = d.bestDay, bw = d.bestWeek;
+  const pose = pick(rng, act >= 15 ? ['cheer', 'proud', 'dance'] : act >= 6 ? ['point', 'wave', 'proud'] : ['think', 'sit', 'tired']);
+  if (sq) {
+    const rx = 740 * u; let y = top + 10 * u;
+    if (bd) { record(g, S, acc, u, rx, y, 'лучший день', `${bd.themes} ${W_(bd.themes, 'тема', 'темы', 'тем')}`, bd.label, true); y += 170 * u; }
+    if (bw) { record(g, S, acc, u, rx, y, 'лучшая неделя', `${bw.themes} ${W_(bw.themes, 'тема', 'темы', 'тем')}`, bw.label); y += 170 * u; }
+    await drawGopher(g, pose, 870 * u, 935 * u, 170 * u, -0.05, true);
+    return;
+  }
+  let y = end + 60 * u;
+  if (bd) { record(g, S, acc, u, 80 * u, y, 'лучший день', `${bd.themes} ${W_(bd.themes, 'тема', 'темы', 'тем')}`, bd.label, true); }
+  if (bw) { record(g, S, acc, u, 80 * u + (bd ? 360 * u : 0), y, 'лучшая неделя', `${bw.themes} ${W_(bw.themes, 'тема', 'темы', 'тем')}`, bw.label); }
+  y += bd || bw ? 170 * u : 0;
+  record(g, S, acc, u, 80 * u, y, 'серия', `${d.streak} ${W_(d.streak, 'день', 'дня', 'дней')}`, d.bestStreak > d.streak ? `рекорд — ${d.bestStreak}` : 'это рекорд', false);
+  await drawGopher(g, pose, W - 200 * u, H - 120 * u, Math.min(380 * u, H - 150 * u - end), -0.05);
+}
+
+async function cardJourney(g, W, H, c) {
+  const { S, acc, d, rng } = c; const u = W / 1080, sq = H === W;
+  const act = d.activeDays;
+  g.fillStyle = acc; g.font = `700 ${30 * u}px ${S.font}`; g.fillText('УЧУ GO', 80 * u, (sq ? 250 : 280) * u);
+  const txt = `День ${d.dayN}`; let fs = sq ? 150 : 190;
+  g.font = `800 ${fs * u}px ${S.head}`; while (g.measureText(txt).width > W - 160 * u - (sq ? 330 : 360) * u && fs > 90) { fs -= 6; g.font = `800 ${fs * u}px ${S.head}`; }
+  g.fillStyle = S.ink; g.fillText(txt, 70 * u, (sq ? 410 : 470) * u);
+  g.fillStyle = S.muted; g.font = `400 ${32 * u}px ${S.font}`; g.fillText(`с ${d.start} · ${act} ${W_(act, 'день', 'дня', 'дней')} с учёбой`, 80 * u, (sq ? 470 : 540) * u);
+  await drawGopher(g, pick(rng, ['proud', 'walk', 'cheer', 'wave']), W - (sq ? 200 : 220) * u, (sq ? 500 : 580) * u, (sq ? 280 : 330) * u, 0.04, true);
+  // шесть плиток с итогом
+  const tw = (W - 160 * u - 40 * u) / 3, th = (sq ? 160 : 190) * u, ty = (sq ? 540 : 620) * u;
+  const nB = d.blocks.length;
+  [[d.themes.length, W_(d.themes.length, 'тема', 'темы', 'тем'), true], [d.lessons, W_(d.lessons, 'урок', 'урока', 'уроков')], [d.checks, W_(d.checks, 'ответ', 'ответа', 'ответов')],
+    [nB, W_(nB, 'блок закрыт', 'блока закрыто', 'блоков закрыто')], [d.stagesDone, `${W_(d.stagesDone, 'этап', 'этапа', 'этапов')} из ${d.stages.length}`], [d.bestStreak, 'рекорд серии', true]]
+    .forEach(([n, l, hl], i) => tile(g, S, acc, u, 80 * u + (i % 3) * (tw + 20 * u), ty + Math.floor(i / 3) * (th + 20 * u), tw, th, n, l, hl));
+  if (sq) return;
+  // вехи: первая и последние
+  const ms = d.milestones.length > 5 ? [d.milestones[0], ...d.milestones.slice(-4)] : d.milestones;
+  if (!ms.length) return;
+  let y = ty + th * 2 + 110 * u;
+  g.fillStyle = S.muted; g.font = `600 ${28 * u}px ${S.font}`; g.fillText('ВЕХИ', 80 * u, y); y += 70 * u;
+  const lx = 262 * u, step = 112 * u;
+  g.strokeStyle = S.line; g.lineWidth = 4 * u; g.beginPath(); g.moveTo(lx, y - 10 * u); g.lineTo(lx, y + step * (ms.length - 1) - 10 * u); g.stroke();
+  ms.forEach((m, i) => {
+    const yy = y + i * step, last = i === ms.length - 1;
+    g.fillStyle = acc; g.font = `600 ${26 * u}px ${MONO}`; g.textAlign = 'right'; g.fillText(m.date, lx - 34 * u, yy); g.textAlign = 'left';
+    if (last) { g.fillStyle = acc; blob(g, lx, yy - 10 * u, 16 * u); g.fillStyle = hexA(acc, 0.25); blob(g, lx, yy - 10 * u, 28 * u); }
+    else { g.fillStyle = acc; blob(g, lx, yy - 10 * u, 12 * u); }
+    g.fillStyle = S.ink; g.font = `700 ${34 * u}px ${S.font}`; g.fillText(m.label, lx + 44 * u, yy);
+    g.fillStyle = S.muted; g.font = `400 ${26 * u}px ${S.font}`;
+    const l = wrap(g, plain(m.sub), W - 80 * u - lx - 44 * u); g.fillText(l[0] + (l.length > 1 ? '…' : ''), lx + 44 * u, yy + 38 * u);
+  });
+}
+
 // ---------- своя карточка (редактор) ----------
 // Шрифты текста: системные, без загрузки из сети (есть и в Windows, и в macOS; иначе — общий запасной).
 export const TEXT_FONTS = {
@@ -510,7 +699,7 @@ const extraOk = {
   mountain: (d) => d.stages.length > 0,
   forecast: (d) => d.forecast.length > 0,
 };
-const draws = { heat: cardHeat, tracks: cardTracks, compare: cardCompare, mountain: cardMountain, forecast: cardForecast };
+const draws = { week: cardWeek, month: cardMonth, journey: cardJourney, heat: cardHeat, tracks: cardTracks, compare: cardCompare, mountain: cardMountain, forecast: cardForecast };
 
 // plan: какие карточки рисовать. opts = { mode, toggles, seed }
 export function planCards(d, opts) {
@@ -519,6 +708,10 @@ export function planCards(d, opts) {
   if (d.empty) out.push({ key: 'quiet', name: 'Отдых' });
   else out.push({ key: 'summary', name: 'Сводка' });
   if (opts.mode === 'one') return out;
+  // карточка периода: ритм недели, календарь месяца, весь путь
+  if (d.kind === 'week' && d.days.length === 7 && !d.empty) out.push({ key: 'week', name: 'Ритм недели' });
+  if (d.kind === 'month' && d.days.length) out.push({ key: 'month', name: 'Календарь' });
+  if (d.kind === 'all' && d.dayN > 0) out.push({ key: 'journey', name: 'Путь' });
   // темы: до трёх картинок; на первой место занимают закрытые блоки
   const per = opts.format === 'square' ? 3 : 6, sq = opts.format === 'square';
   let i = 0;
@@ -542,7 +735,7 @@ export function planCards(d, opts) {
 }
 
 // рисует одну карточку; style — ключ, layout — номер раскладки
-export async function drawCard(card, d, { format, style, acc, seed, index, total, full }) {
+export async function drawCard(card, d, { format, style, acc, seed, index, total, full, dayX = true }) {
   if (!LOGO.complete) await LOGO.decode().catch(() => {});
   const [W, H] = FORMATS[format];
   const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
@@ -550,7 +743,7 @@ export async function drawCard(card, d, { format, style, acc, seed, index, total
   if (card.key === 'custom') { await drawCustom(g, W, H, card.card, acc); return cv; }
   const S = STYLES[style];
   const rng = rngFrom(seed * 31 + index * 7 + 1);
-  const c = { S, acc, d, rng, layout: Math.floor(rng() * 3), full };
+  const c = { S, acc, d, rng, layout: Math.floor(rng() * 3), full, dayX };
   frame(g, W, H, S, acc, d, index + 1, total);
   const sq = H === W;
   if (card.key === 'summary') await cardSummary(g, W, H, c);
