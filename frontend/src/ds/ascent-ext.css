@@ -626,10 +626,10 @@ html,body{margin:0;height:100%;overflow:hidden;background:var(--surface-window)}
 .as-zoomhud__gopher.is-same svg{animation:as-g-same .45s ease}
 .as-zoomhud__gopher.is-same .g-lids{animation:as-g-blink .45s ease}
 @keyframes as-g-up{0%{transform:none}22%{transform:scale(1.1,.86)}50%{transform:translateY(-14px) scale(.94,1.08)}78%{transform:scale(1.05,.95)}100%{transform:none}}
-@keyframes as-g-arml{0%,100%{transform:none}30%,70%{transform:rotate(-120deg)}}
-@keyframes as-g-armr{0%,100%{transform:none}30%,70%{transform:rotate(120deg)}}
+@keyframes as-g-arml{0%,100%{transform:none}30%,70%{transform:translate(-17px,-45px) rotate(155deg)}}
+@keyframes as-g-armr{0%,100%{transform:none}30%,70%{transform:translate(17px,-45px) rotate(-155deg)}}
 @keyframes as-g-down{0%{transform:none}30%{transform:scale(1.16,.8)}65%{transform:scale(.97,1.04)}100%{transform:none}}
-@keyframes as-g-squint{0%{transform:scaleY(0)}25%,75%{transform:scaleY(.85)}100%{transform:scaleY(.45)}}
+@keyframes as-g-squint{0%{transform:scaleY(0)}25%,75%{transform:scaleY(.8)}100%{transform:scaleY(.42)}}
 @keyframes as-g-blink{0%,100%{transform:scaleY(0)}50%{transform:scaleY(1.9)}}
 @keyframes as-g-same{0%,100%{transform:none}25%{transform:rotate(-6deg)}75%{transform:rotate(6deg)}}
 .as-zoomhud__text{display:flex;flex-direction:column;gap:5px}
