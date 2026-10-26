@@ -1,6 +1,8 @@
 package app
 
 import (
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -254,5 +256,47 @@ func TestZoomSettings(t *testing.T) {
 	}
 	if s, _ := a.Settings(); s["ui_zoom"] != "125" || s["zoom_gopher"] != "1" {
 		t.Fatalf("%v", s)
+	}
+}
+
+func TestRecapPeriodsAndExport(t *testing.T) {
+	a, _, _ := newApp(t)
+	for _, id := range []string{"ФУНД-1.1.1", "ФУНД-1.1.2"} {
+		a.CompleteLesson(id)
+	}
+	a.SetChecksAll("ФУНД-1.1", true)
+	m, err := a.Recap("month", "")
+	if err != nil || m.Title != "Итоги месяца" || len(m.Themes) != 1 || m.BestDay == nil || m.BestWeek == nil || m.Prev != 0 {
+		t.Fatalf("месяц: %+v %v", m, err)
+	}
+	if len(m.Heat)%7 != 0 || len(m.Heat) < 35 || len(m.Tracks) != 6 || len(m.Stages) != 7 || len(m.Forecast) == 0 {
+		t.Fatalf("данные карточек: heat %d tracks %d stages %d forecast %d", len(m.Heat), len(m.Tracks), len(m.Stages), len(m.Forecast))
+	}
+	all, _ := a.Recap("all", "")
+	if all.Title != "Весь путь" || all.Prev != -1 || len(all.Days) != 0 || len(all.Themes) != 1 {
+		t.Fatalf("весь путь: %+v", all)
+	}
+	empty, _ := a.Recap("day", "2026-10-20")
+	if !empty.Empty || empty.Prev != 0 || empty.PrevLabel != "вчера" {
+		t.Fatalf("пустой день: %+v", empty)
+	}
+	// экспорт: подпапка на каждый экспорт внутри запомненной папки
+	root := t.TempDir()
+	a.SetSetting("export_dir", root)
+	img := "data:image/png;base64,iVBORw0KGgo="
+	d1, err := a.SaveImages("day", "2026-10-25", []string{"Сводка", "Темы/блоки"}, []string{img, img})
+	if err != nil || filepath.Base(d1) != "Итоги дня 25.10.26" {
+		t.Fatalf("%q %v", d1, err)
+	}
+	if _, err := os.Stat(filepath.Join(d1, "02 Темы-блоки.png")); err != nil {
+		t.Fatal(err)
+	}
+	d2, _ := a.SaveImages("day", "2026-10-25", nil, []string{img})
+	if filepath.Base(d2) != "Итоги дня 25.10.26 (2)" {
+		t.Fatalf("повтор: %q", d2)
+	}
+	w, _ := a.SaveImages("week", "2026-10-21", nil, []string{img})
+	if filepath.Base(w) != "Итоги недели 19.10–25.10.26" {
+		t.Fatalf("неделя: %q", w)
 	}
 }

@@ -418,7 +418,7 @@ func (a *App) ExportMarkdown() (string, error) {
 // DefaultTemplate — шаблон копирования урока по умолчанию.
 func (a *App) DefaultTemplate() string { return store.DefaultHermesTemplate }
 
-func writeImages(dir, name string, images []string) error {
+func writeImages(dir string, names, images []string) error {
 	for i, im := range images {
 		if j := strings.Index(im, ","); strings.HasPrefix(im, "data:") && j > 0 {
 			im = im[j+1:]
@@ -427,10 +427,24 @@ func writeImages(dir, name string, images []string) error {
 		if err != nil {
 			return err
 		}
-		p := filepath.Join(dir, fmt.Sprintf("%s-%d.png", name, i+1))
+		name := fmt.Sprintf("%02d", i+1)
+		if i < len(names) && names[i] != "" {
+			name = fmt.Sprintf("%02d %s", i+1, safeName(names[i]))
+		}
+		p := filepath.Join(dir, name+".png")
 		if err := os.WriteFile(p, b, 0o644); err != nil {
 			return err
 		}
 	}
 	return nil
+}
+
+// safeName убирает из имени файла символы, запрещённые в Windows.
+func safeName(s string) string {
+	return strings.Map(func(r rune) rune {
+		if strings.ContainsRune(`<>:"/\|?*`, r) || r < 32 {
+			return '-'
+		}
+		return r
+	}, strings.TrimSpace(s))
 }

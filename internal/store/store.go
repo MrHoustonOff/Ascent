@@ -139,6 +139,9 @@ var Defaults = map[string]string{
 	"onboarded":         "0",
 	"ui_zoom":           "100", // масштаб интерфейса, %
 	"zoom_gopher":       "1",   // гофер при смене масштаба
+	"nick":              "",    // подпись на картинках итогов
+	"export_dir":        "",    // папка экспорта итогов (внутри — подпапка на каждый экспорт)
+	"recap_prefs":       "",    // выбор в окне итогов (JSON)
 }
 
 const DefaultHermesTemplate = "Тема {theme_id} {theme_title}\n{brief}\nУрок {lesson_id} — {lesson_title}{stars}\n{arrows}"
