@@ -8,8 +8,8 @@ import (
 	"ascent/internal/stats"
 )
 
-// Скорость: никаких норм и целей. Средняя скорость считается сама, по ней — прогноз.
-// Если указана желаемая дата, мягко подсказываем, какая скорость к ней приведёт.
+// Темп: никаких норм и целей. Средний темп считается сам, по нему — прогноз.
+// Если указана желаемая дата, мягко подсказываем, какой темп к ней приведёт.
 
 type SpeedPoint struct {
 	Day   string  `json:"day"`
@@ -67,18 +67,18 @@ func (a *App) Speed() (SpeedDTO, error) {
 	d.PerWeek = num(v * 7)
 	d.V7, d.V28, d.All = num(in.Pace(7).V), num(in.Pace(28).V), num(in.AllTimePace())
 	if young && !d.Empty {
-		d.Young = fmt.Sprintf("Истории пока мало — скорость уточнится через %s.", days(7-in.HistoryDays()))
+		d.Young = fmt.Sprintf("Истории пока мало — темп уточнится через %s.", days(7-in.HistoryDays()))
 	}
 	v7, v28 := in.Pace(7).V, in.Pace(28).V
 	switch {
 	case in.HistoryDays() < 14:
-		d.Trend, d.TrendText = "flat", "Скорость складывается"
+		d.Trend, d.TrendText = "flat", "Темп складывается"
 	case v7 > v28*1.12:
 		d.Trend, d.TrendText = "up", "Последняя неделя быстрее обычного"
 	case v7 < v28*0.88:
 		d.Trend, d.TrendText = "down", "Последняя неделя спокойнее — это нормально"
 	default:
-		d.Trend, d.TrendText = "flat", "Скорость ровная"
+		d.Trend, d.TrendText = "flat", "Темп ровный"
 	}
 	// скользящая средняя за 7 дней на 12 недель
 	agg := in.Aggregates()
@@ -116,7 +116,7 @@ func (a *App) Speed() (SpeedDTO, error) {
 		if f.Key == "milestone" {
 			milestoneDate = r.Date
 			if f.From != "" && vmin != vmax {
-				d.Fork = fmt.Sprintf("Если скорость будет от %s до %s — между %s и %s.", num(vmin), num(vmax),
+				d.Fork = fmt.Sprintf("Если темп будет от %s до %s — между %s и %s.", num(vmin), num(vmax),
 					dateGen(stats.ParseDay(f.From)), dateGen(stats.ParseDay(f.To)))
 			}
 		}
@@ -180,14 +180,14 @@ func (s *snap) target(v float64) TargetDTO {
 	switch {
 	case v >= t.Need*1.05:
 		t.Status = "ok"
-		t.Verdict = fmt.Sprintf("Нынешней скорости хватает с запасом: при ней %s будет около %s. Ускоряться не нужно.", t.Label, t.Projected)
+		t.Verdict = fmt.Sprintf("Нынешнего темпа хватает с запасом: при нём %s будет около %s. Ускоряться не нужно.", t.Label, t.Projected)
 	case v >= t.Need*0.9:
 		t.Status = "close"
 		t.Verdict = fmt.Sprintf("Вы идёте почти точно в срок. Около %s %s в день — и дата сходится.", t.NeedText, paceUnit(t.Need))
 	default:
 		t.Status = "faster"
 		if v > 0 {
-			t.Verdict = fmt.Sprintf("Чтобы успеть, понадобится около %s %s в день — сейчас %s. Можно чуть прибавить или спокойно сдвинуть дату: при нынешней скорости — около %s.",
+			t.Verdict = fmt.Sprintf("Чтобы успеть, понадобится около %s %s в день — сейчас %s. Можно чуть прибавить или спокойно сдвинуть дату: при нынешнем темпе — около %s.",
 				t.NeedText, paceUnit(t.Need), num(v), t.Projected)
 		} else {
 			t.Verdict = fmt.Sprintf("Чтобы успеть, понадобится около %s %s в день.", t.NeedText, paceUnit(t.Need))

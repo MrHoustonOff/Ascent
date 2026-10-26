@@ -5,24 +5,24 @@ import { icon } from '../ui/icons.js';
 import { toast } from '../ui/toast.js';
 import { lineChart } from './stats.js';
 
-// Скорость: без норм и целей. Средняя считается сама; к желаемой дате — мягкая подсказка.
+// Темп: без норм и целей. Средняя считается сама; к желаемой дате — мягкая подсказка.
 export async function render(root) {
   const d = await api.Speed();
   root.append(
     h('header', { class: 'as-head' },
-      h('div', { class: 'as-eyebrow' }, 'Скорость'),
-      h('h1', { class: 'large-title', style: { margin: '4px 0 0' } }, 'Ваша скорость'),
-      h('p', { class: 'as-lead' }, 'Никаких норм и обязательств: скорость считается сама по закрытым темам, а по ней — спокойный прогноз.')));
+      h('div', { class: 'as-eyebrow' }, 'Темп'),
+      h('h1', { class: 'large-title', style: { margin: '4px 0 0' } }, 'Ваш темп'),
+      h('p', { class: 'as-lead' }, 'Никаких норм и обязательств: темп считается сам по закрытым темам, а по нему — спокойный прогноз.')));
 
   if (d.empty) {
-    root.append(h('div', { class: 'as-card' }, h('div', { class: 'as-empty' }, 'Закройте первую тему — и здесь появится ваша скорость и прогноз.')), targetCard(d));
-    return 'Скорость';
+    root.append(h('div', { class: 'as-card' }, h('div', { class: 'as-empty' }, 'Закройте первую тему — и здесь появится ваш темп и прогноз.')), targetCard(d));
+    return 'Темп';
   }
 
   const trendIcon = { up: 'arrowUp', down: 'arrowDown', flat: 'arrowR' }[d.trend];
   root.append(h('section', { class: 'as-card as-card--lg as-speedhero' },
     h('div', { class: 'as-speedhero__now' },
-      h('div', { class: 'as-eyebrow' }, 'Средняя скорость · 14 дней'),
+      h('div', { class: 'as-eyebrow' }, 'Средний темп · 14 дней'),
       h('div', { class: 'as-speedhero__v' }, h('span', { class: 'as-speedhero__num' }, d.vText), h('span', { class: 'as-speedhero__unit' }, d.unit)),
       h('span', { class: 'as-trend as-trend--' + d.trend }, icon(trendIcon), d.trendText)),
     h('div', { class: 'as-speedhero__eta' },
@@ -30,10 +30,10 @@ export async function render(root) {
       h('div', { class: 'as-speedhero__headline' }, d.headline),
       d.young ? h('div', { class: 'caption as-subtle' }, d.young) : d.fork ? h('div', { class: 'caption as-subtle' }, d.fork) : null)));
 
-  // график скорости
+  // график темпа
   const host = h('div');
   root.append(h('section', { class: 'as-section' },
-    h('h2', { class: 'as-h2' }, 'Как менялась скорость'),
+    h('h2', { class: 'as-h2' }, 'Как менялся темп'),
     h('div', { class: 'as-card', style: { gap: '10px' } },
       h('div', { class: 'as-section__head' }, h('span', { class: 'callout as-muted' }, 'Тем в день, среднее за скользящие 7 дней'), h('span', { class: 'caption as-subtle' }, `${d.series.length} ${pluralRu(d.series.length, 'день', 'дня', 'дней')}`)),
       host)));
@@ -58,7 +58,7 @@ export async function render(root) {
       h('tbody', null, d.rows.map((r) => h('tr', null, h('td', null, r.label), h('td', { class: 'num' }, r.ahead), h('td', null, r.date || '—'), h('td', { class: 'num as-muted' }, r.fork || '—')))))))));
 
   root.append(targetCard(d));
-  return 'Скорость';
+  return 'Темп';
 }
 
 function targetCard(d) {

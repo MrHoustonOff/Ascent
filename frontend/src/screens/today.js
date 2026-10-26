@@ -192,7 +192,7 @@ function forecastCard(f) {
   return h('section', { class: 'as-card' },
     h('div', { class: 'as-rowx as-rowx--between' },
       h('h3', { class: 'as-h-headline' }, 'Прогноз'),
-      h('a', { class: 'as-a callout', onclick: () => go('#/speed') }, 'Скорость')),
+      h('a', { class: 'as-a callout', onclick: () => go('#/speed') }, 'Темп')),
     ...body);
 }
 

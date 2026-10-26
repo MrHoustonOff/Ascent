@@ -233,7 +233,7 @@ func (a *App) Heat(from, to string) ([]HeatDTO, error) {
 	return out, nil
 }
 
-// ---------- скорость ----------
+// ---------- темп ----------
 
 type PaceDTO struct {
 	N      int    `json:"n"`

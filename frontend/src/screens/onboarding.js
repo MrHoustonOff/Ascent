@@ -35,7 +35,7 @@ export function runOnboarding() {
       const inp = h('input', { class: 'as-input', type: 'date', value: st.date || '', 'aria-label': 'Желаемая дата', style: { width: '190px' } });
       inp.addEventListener('change', () => { st.date = inp.value; });
       body.append(
-        h('p', { class: 'as-p-callout', style: { fontSize: '15px', lineHeight: '22px' } }, 'Норм и дневных целей здесь нет: скорость посчитается сама по тому, как вы закрываете темы.'),
+        h('p', { class: 'as-p-callout', style: { fontSize: '15px', lineHeight: '22px' } }, 'Норм и дневных целей здесь нет: темп посчитается сам по тому, как вы закрываете темы.'),
         h('p', { class: 'as-p-callout', style: { fontSize: '15px', lineHeight: '22px' } }, 'Если хочется дойти до собесов к определённому дню — укажите его. Приложение мягко подскажет, сколько тем в день к нему приведёт. Можно пропустить и вернуться к этому позже.'),
         h('div', { class: 'as-field', style: { minWidth: 0 } }, h('label', { class: 'as-label' }, 'Дойти до собесов к'), inp));
     } else {

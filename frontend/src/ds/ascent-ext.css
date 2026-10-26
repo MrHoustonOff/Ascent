@@ -381,7 +381,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:var(--surface-window)}
 .as-q.is-marker{background:color-mix(in srgb,var(--c-amber) 7%,transparent)}
 .as-q.is-marker.is-done{background:color-mix(in srgb,var(--success) 6%,transparent)}
 
-/* ---------- Скорость ---------- */
+/* ---------- Темп ---------- */
 .as-speedhero{flex-direction:row;flex-wrap:wrap;gap:var(--space-8);align-items:flex-end;background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 12%,var(--surface-raised)),var(--surface-raised) 60%)}
 .as-speedhero__now{display:flex;flex-direction:column;gap:6px;min-width:220px}
 .as-speedhero__v{display:flex;align-items:baseline;gap:10px}

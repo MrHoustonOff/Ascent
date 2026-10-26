@@ -26,7 +26,7 @@ export async function render(root) {
     h('header', { class: 'as-head' },
       h('div', { class: 'as-eyebrow' }, 'Статистика'),
       h('div', { class: 'as-rowx as-rowx--between' },
-        h('h1', { class: 'large-title', style: { margin: '4px 0 0' } }, 'Ваш темп'),
+        h('h1', { class: 'large-title', style: { margin: '4px 0 0' } }, 'Как идёт учёба'),
         vel.empty ? null : h('button', { class: 'as-btn as-btn--secondary', onclick: openRecap, title: 'Картинки с итогами дня или недели' }, icon('share'), 'Итоги дня и недели')),
       h('p', { class: 'as-lead' }, 'Единица — закрытая тема: пройдены уроки и отвечены вопросы. Уроки по времени не считаются.')));
 
@@ -53,7 +53,7 @@ export async function render(root) {
   };
   await drawHeat();
 
-  // 2. скорость
+  // 2. темп
   const chartBox = h('div', { class: 'as-card', style: { gap: '12px' } });
   root.append(h('section', { class: 'as-section' }, h('h2', { class: 'as-h2' }, 'Динамика'), chartBox));
   const drawChart = () => {
@@ -88,7 +88,7 @@ export async function render(root) {
       card(`${vel.activeDays28} из 28`, 'активных дней'),
       card(String(vel.bestStreak), pluralRu(vel.bestStreak, 'день', 'дня', 'дней') + ' — лучшая серия'),
       card(vel.bestDay ? `${vel.bestDayThemes} ${themesWord(vel.bestDayThemes)}` : '—', vel.bestDay ? 'лучший день · ' + vel.bestDay : 'лучший день')),
-    h('p', { class: 'caption as-subtle', style: { margin: 0 } }, 'Скорость и прогноз — на экране «Скорость».')));
+    h('p', { class: 'caption as-subtle', style: { margin: 0 } }, 'Темп и прогноз — в разделе «Темп».')));
 
   // ритм: дни недели, время суток, рекорды
   root.append(rhythm(ins, w0()));
