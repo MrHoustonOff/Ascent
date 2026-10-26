@@ -62,8 +62,7 @@ export async function render(root, arg) {
       list.append(h('li', { class: 'as-q' + (q.done ? ' is-done' : '') + (q.marker ? ' is-marker' : ''), 'data-key': q.key },
         box,
         h('div', null,
-          q.marker ? markerLabel(q.done) : null,
-          h('div', { class: 'as-q__text' }, rich(q.text)),
+                    h('div', { class: 'as-q__text' }, rich(q.text)),
           markerMeta(q))));
     }
   }

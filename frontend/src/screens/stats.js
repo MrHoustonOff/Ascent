@@ -69,14 +69,13 @@ export async function render(root) {
     chartBox.append(host);
     requestAnimationFrame(() => {
       const w = host.clientWidth || 640;
-      if (chartTab === 'days') host.append(barChart(daily.map((d) => ({ v: d.themes, label: d.label, today: d.today, avg: d.avg7 })), { w }));
+      if (chartTab === 'days') { const [f, t] = heatRange(tdy.toISOString().slice(0, 10), 6); api.Heat(f, t).then((hd) => host.append(weekCards(hd, { w }))); }
       else if (chartTab === 'total') { let acc = 0; host.append(barChart(weekly.map((d) => { acc += d.themes; return { v: acc, label: d.label, today: d.current, tip: `всего ${acc} · за неделю +${d.themes}` }; }), { w })); }
       else host.append(barChart(weekly.map((d) => ({ v: d.themes, label: d.label, today: d.current })), { w, ticks: 3 }));
     });
     chartBox.append(h('div', { class: 'as-chart-legend' },
       chartTab === 'total' ? null : h('span', null, h('i'), 'Закрытые темы'),
       chartTab === 'total' ? h('span', null, h('i'), 'Темы нарастающим итогом') : null,
-      chartTab === 'days' ? h('span', null, h('i', { class: 'l' }), 'Среднее за 7 дней') : null,
       chartTab === 'days' ? h('span', null, h('i', { class: 'd' }), 'Цель дня') : null));
   };
   drawChart();
@@ -326,3 +325,48 @@ function rhythm(ins, width) {
         h('p', { class: 'caption as-subtle', style: { margin: 0 } }, ins.trend))),
     h('p', { class: 'caption as-subtle', style: { margin: 0 } }, `Всего: ${ins.themesTotal} ${themesWord(ins.themesTotal)}, ${ins.lessonsTotal} ${pluralRu(ins.lessonsTotal, 'урок', 'урока', 'уроков')}, ${ins.checksTotal} ${pluralRu(ins.checksTotal, 'ответ', 'ответа', 'ответов')} на вопросы, ${ins.blocksTotal} ${pluralRu(ins.blocksTotal, 'блок', 'блока', 'блоков')}.`));
 }
+
+// Карточки недель: каждая неделя — 7 столбиков; под каждым число месяца и день недели, сверху итог.
+const MG = ['янв', 'фев', 'мар', 'апр', 'мая', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
+export function weekCards(days, { w }) {
+  const WD = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+  const weeks = [];
+  for (let i = 0; i + 7 <= days.length; i += 7) weeks.push(days.slice(i, i + 7));
+  const per = w < 640 ? 3 : 4;
+  const shown = weeks.slice(-per);
+  const gap = 12, cw = (w - (shown.length - 1) * gap) / shown.length, H = 250;
+  const max = Math.max(3, ...days.map((d) => d.themes));
+  const svg = sv('svg', { class: 'as-weeks', viewBox: `0 0 ${w} ${H}`, width: w, height: H, role: 'img', 'aria-label': 'Закрытые темы по дням, по неделям' });
+  shown.forEach((wk, k) => {
+    const x0 = k * (cw + gap), sum = wk.reduce((a, d) => a + d.themes, 0);
+    svg.append(sv('rect', { x: x0, y: 0, width: cw, height: H, rx: 16, fill: 'var(--surface-sunken)', opacity: 0.6 }));
+    const a = new Date(wk[0].day + 'T00:00:00Z'), b = new Date(wk[6].day + 'T00:00:00Z');
+    const ttl = `${a.getUTCDate()}${a.getUTCMonth() !== b.getUTCMonth() ? ' ' + MG[a.getUTCMonth()] : ''} — ${b.getUTCDate()} ${MG[b.getUTCMonth()]}`;
+    svg.append(sv('text', { x: x0 + 14, y: 24, style: 'font-weight:600;font-size:12px;fill:var(--ink-muted)' }, ttl));
+    svg.append(sv('text', { x: x0 + cw - 14, y: 30, 'text-anchor': 'end', style: 'font-weight:800;font-size:24px;fill:var(--ink)' }, String(sum)));
+    const bw = (cw - 20) / 7, base = 180, hMax = 112;
+    wk.forEach((d, i) => {
+      const v = d.themes, hh = v ? Math.max(6, (v / max) * hMax) : 4, bx = x0 + 10 + i * bw, cx = bx + bw / 2;
+      if (d.today) svg.append(sv('rect', { x: bx + 2, y: 44, width: bw - 4, height: H - 50, rx: 8, fill: 'var(--accent-soft)' }));
+      const fill = d.rest ? 'var(--streak)' : d.future ? 'transparent' : v ? 'var(--accent)' : 'var(--line)';
+      svg.append(sv('rect', { class: 'wbar', x: bx + bw * 0.17, y: base - hh, width: bw * 0.66, height: hh, rx: 4, fill, opacity: d.rest ? 0.5 : 1, style: `--i:${k * 7 + i}` }));
+      if (v) svg.append(sv('text', { x: cx, y: base - hh - 6, 'text-anchor': 'middle', style: 'font-weight:700;font-size:12px;fill:var(--ink)' }, String(v)));
+      if (d.rest && !v) svg.append(sv('text', { x: cx, y: base - 12, 'text-anchor': 'middle', style: 'font-size:9px;fill:var(--streak-ink)' }, 'отдых'));
+      const dt = new Date(d.day + 'T00:00:00Z');
+      const col = d.today ? 'var(--accent-ink)' : d.future ? 'var(--ink-subtle)' : 'var(--ink)';
+      svg.append(sv('text', { x: cx, y: base + 22, 'text-anchor': 'middle', style: `font-weight:700;font-size:13px;fill:${col}` }, String(dt.getUTCDate())));
+      svg.append(sv('text', { x: cx, y: base + 38, 'text-anchor': 'middle', style: `font-size:10px;fill:${d.today ? 'var(--accent-ink)' : 'var(--ink-subtle)'}` }, WD[i]));
+      const hit = sv('rect', { x: bx, y: 40, width: bw, height: H - 40, fill: 'transparent' });
+      hit.addEventListener('mousemove', (e) => showTip(e, [h('b', null, d.text.split(' · ')[0]), h('span', null, d.text.split(' · ').slice(1).join(' · ') || '—')]));
+      hit.addEventListener('mouseleave', hideTip);
+      svg.append(hit);
+    });
+  });
+  return svg;
+}
+export const heatRange = (todayISO, weeks) => {
+  const t = new Date(todayISO + 'T00:00:00Z');
+  const mon = new Date(t.getTime() - ((t.getUTCDay() + 6) % 7) * 864e5);
+  const from = new Date(mon.getTime() - (weeks - 1) * 7 * 864e5), to = new Date(mon.getTime() + 6 * 864e5);
+  return [from.toISOString().slice(0, 10), to.toISOString().slice(0, 10)];
+};

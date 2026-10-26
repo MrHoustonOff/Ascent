@@ -130,7 +130,7 @@ function heroCard(n, t) {
 
 export function qRow(text, done, onToggle, meta, marker) {
   const b = checkbox(done, onToggle, marker ? 'Маркер отвечен' : 'Вопрос отмечен', marker);
-  return h('li', { class: 'as-q' + (done ? ' is-done' : '') + (marker ? ' is-marker' : '') }, b, h('div', null, marker ? markerLabel(done) : null, h('div', { class: 'as-q__text' }, rich(text)), meta || null));
+  return h('li', { class: 'as-q' + (done ? ' is-done' : '') + (marker ? ' is-marker' : '') }, b, h('div', null, h('div', { class: 'as-q__text' }, rich(text)), meta || null));
 }
 
 export function checkbox(done, onToggle, label, diamond) {

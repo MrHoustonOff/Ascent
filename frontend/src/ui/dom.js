@@ -92,12 +92,10 @@ export function gem(done, size = 16) {
 // Звёзды частоты на собесе: шкала из трёх (★★☆), цвет и короткая подпись — чтобы читалось сразу.
 const STAR = '<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M6 1l1.5 3.1 3.4.5-2.45 2.4.58 3.4L6 8.8 2.97 10.4l.58-3.4L1.1 4.6l3.4-.5z"/></svg>';
 const STAR_TEXT = ['', 'редко', 'бывает', 'часто'];
-export function starChip(n, withText = true) {
+export function starChip(n) {
   if (!n) return null;
-  const el = h('span', { class: 'as-stars lv' + n, title: `Как часто встречается на собесах: ${STAR_TEXT[n]} (${n} из 3)`, 'aria-label': `На собесах: ${STAR_TEXT[n]}, ${n} из 3` });
-  for (let i = 1; i <= 3; i++) el.append(h('i', { class: i <= n ? 'on' : 'off', html: STAR }));
-  if (withText) el.append(h('b', null, STAR_TEXT[n]));
-  return el;
+  return h('span', { class: 'as-freq lv' + n, title: `Как часто встречается на собесах: ${STAR_TEXT[n]} (${n} из 3)`, 'aria-label': `На собесах: ${STAR_TEXT[n]}` },
+    h('span', { class: 'as-freq__dots' }, [1, 2, 3].map((i) => h('i', { class: i <= n ? 'on' : '' }))), STAR_TEXT[n]);
 }
 
 // Подпись маркера над вопросом.

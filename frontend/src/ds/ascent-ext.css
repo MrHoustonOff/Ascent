@@ -436,3 +436,16 @@ html,body{margin:0;height:100%;overflow:hidden;background:var(--surface-window)}
 .as-stars.lv2{background:color-mix(in srgb,var(--c-amber) 14%,transparent);color:var(--c-amber)}
 .as-stars.lv1{background:var(--surface-sunken);color:var(--ink-muted)}
 .as-card--lg > .as-stars{align-self:flex-start;margin-left:0;margin-top:-6px}
+
+/* ---------- Частота на собесе: точки в капсуле ---------- */
+.as-freq{display:inline-flex;align-items:center;gap:6px;margin-left:8px;padding:1px 9px;border-radius:var(--radius-pill);font:600 11px/16px var(--font-sans);vertical-align:2px;white-space:nowrap}
+.as-freq__dots{display:inline-flex;gap:3px}
+.as-freq i{width:6px;height:6px;border-radius:50%;background:currentColor;opacity:.25}
+.as-freq i.on{opacity:1}
+.as-freq.lv3{background:color-mix(in srgb,var(--c-pink) 14%,transparent);color:var(--c-pink)}
+.as-freq.lv2{background:color-mix(in srgb,var(--c-violet) 13%,transparent);color:var(--c-violet)}
+.as-freq.lv1{background:var(--surface-sunken);color:var(--ink-muted)}
+.as-card--lg > .as-freq{align-self:flex-start;margin-left:0;margin-top:-6px}
+.as-weeks{width:100%;display:block}
+.as-weeks text{font-family:var(--font-sans)}
+.as-weeks .wbar{transform-box:fill-box;transform-origin:bottom;animation:as-bar-up .6s cubic-bezier(.3,.7,.3,1) both;animation-delay:calc(var(--i) * 14ms)}
