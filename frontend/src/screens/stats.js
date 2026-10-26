@@ -282,7 +282,7 @@ export function lineChart(data, { w, tip, fine }) {
 
 
 
-const STAGEC = ['var(--c-amber)', 'var(--accent)', 'var(--c-violet)', 'var(--c-blue)', 'var(--success)', 'var(--c-pink)', 'var(--streak)'];
+const STAGEC = ['var(--accent)'];
 function stagesCard() {
   const t = S.tree;
   const rows = t.stages.map((st) => h('div', { class: 'as-stagebar', style: { '--trk': STAGEC[(st.num - 1) % STAGEC.length] }, onclick: () => (location.hash = '#/path/' + st.id), title: st.title },

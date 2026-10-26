@@ -45,7 +45,7 @@ export function renderSidebar(el, onNavigate) {
   for (const st of tree.stages) {
     const isOpen = open.has(st.id);
     const sActive = activeId === st.id;
-    const grp = h('div', { class: 'as-stage' + (isOpen ? ' is-open' : ''), style: { '--sc': STAGEC[(st.num - 1) % STAGEC.length] } });
+    const grp = h('div', { class: 'as-stage' + (isOpen ? ' is-open' : ''), style: { '--sc': st.num === tree.curStage ? 'var(--accent)' : 'var(--ink-subtle)' } });
     grp.append(h('button', {
       class: 'as-nav-item as-nav-item--stage' + (sActive ? ' is-active' : ''), title: 'Этап ' + st.num + '. ' + st.title,
       'aria-expanded': isOpen,

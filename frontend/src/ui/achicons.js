@@ -71,8 +71,9 @@ const SHAPES = {
 };
 const TIER = {
   accent: ['--accent-soft', '--accent', '--accent-ink'],
-  streak: ['--streak-soft', '--streak', '--streak-ink'],
-  success: ['--success-soft', '--success', '--success-ink'],
+  // в духе Apple — один акцент на все уровни; различаются формой, а не цветом
+  streak: ['--accent-soft', '--accent', '--accent-ink'],
+  success: ['--accent-soft', '--accent', '--accent-ink'],
 };
 let uid = 0;
 
@@ -131,9 +132,9 @@ export function achBadge(x, size = 64) {
 // Тематический значок блока: насыщенная «карточка» с кодом трека, надписью и узором.
 function topicArt(svg, x) {
   // у каждого блока свой оттенок: треков мало, а блоков 54 — пусть плитки различаются
-  const PAL = ['var(--accent)', 'var(--c-blue)', 'var(--c-violet)', 'var(--c-pink)', 'var(--c-amber)', 'var(--success)', 'var(--streak)'];
+  const PAL = ['var(--accent)'];
   const n = parseInt((x.sub || '').split('-')[1], 10);
-  const col = (x.sub || '').startsWith('GO-') && n ? PAL[n % PAL.length] : trk(x.sub || 'GO');
+  const col = PAL[0] || trk(x.sub);
   const id = 'tp' + (++uid);
   const shape = 'M14 4h36a10 10 0 0 1 10 10v36a10 10 0 0 1-10 10H14A10 10 0 0 1 4 50V14A10 10 0 0 1 14 4z';
   const defs = el('defs');

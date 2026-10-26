@@ -76,7 +76,7 @@ export function countUp(el, to, suffix = '') {
 
 // Цвет трека по ID (ФУНД-1.2 → ФУНД): чуть больше цвета, чтобы треки различались с первого взгляда.
 const TRK = { GO: 'var(--accent)', 'ФУНД': 'var(--c-amber)', SQL: 'var(--success)', PG: 'var(--success)', 'СЕТЬ': 'var(--c-blue)', 'ОС': 'var(--c-blue)', 'АРХ': 'var(--c-violet)', 'СИСД': 'var(--c-violet)', 'ТЕСТ': 'var(--c-pink)', 'ИНФРА': 'var(--streak)', 'БРОК': 'var(--c-pink)', 'СБОР': 'var(--c-violet)', 'ПРОГОН': 'var(--c-pink)' };
-export function trk(id) { return TRK[String(id).split('-')[0]] || 'var(--accent)'; }
+export function trk(id) { return 'var(--ink-subtle)'; } // приглушено: один нейтральный тон для всех треков
 export function idTag(id, cls = 'as-nav-id') { return h('span', { class: cls + ' as-trk', style: { '--trk': trk(id) } }, id); }
 
 // Маркер ◆ — самоцветный ромб; отвеченный — зелёный с галочкой.
