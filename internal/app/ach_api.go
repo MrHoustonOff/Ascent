@@ -14,6 +14,7 @@ type AchDTO struct {
 	Tier     string `json:"tier"`
 	Group    string `json:"group"`
 	Mark     string `json:"mark"`
+	Sub      string `json:"sub"`
 	Unlocked bool   `json:"unlocked"`
 	Name     string `json:"name"`
 	Desc     string `json:"desc"`
@@ -35,6 +36,7 @@ type AchRef struct {
 	Tier  string `json:"tier"`
 	Group string `json:"group"`
 	Mark  string `json:"mark"`
+	Sub   string `json:"sub"`
 	Name  string `json:"name"`
 	Desc  string `json:"desc"`
 }
@@ -54,7 +56,7 @@ func (a *App) syncAch(s *snap) []AchRef {
 			continue
 		}
 		if err := a.st.UnlockAchievement(r.ID, r.At, false); err == nil {
-			fresh = append(fresh, AchRef{ID: r.ID, Icon: r.Icon, Tier: r.Tier, Group: r.Group, Mark: r.Mark, Name: r.Name, Desc: r.Desc})
+			fresh = append(fresh, AchRef{ID: r.ID, Icon: r.Icon, Tier: r.Tier, Group: r.Group, Mark: r.Mark, Sub: r.Sub, Name: r.Name, Desc: r.Desc})
 		}
 	}
 	return fresh
@@ -83,7 +85,7 @@ func (a *App) Achievements() (AchListDTO, error) {
 		x := AchDTO{ID: d.ID}
 		if row, ok := have[d.ID]; ok {
 			x.Unlocked, x.Name, x.Desc, x.New = true, d.Name, d.Desc, !row.Seen
-			x.Icon, x.Tier, x.Group, x.Mark = d.Icon, d.Tier, d.Group, d.Mark
+			x.Icon, x.Tier, x.Group, x.Mark, x.Sub = d.Icon, d.Tier, d.Group, d.Mark, d.Sub
 			x.order = row.At
 			if row.At.IsZero() {
 				x.When = "ранее"

@@ -11,7 +11,7 @@ import (
 )
 
 func TestCatalog(t *testing.T) {
-	if n := len(Defs); n != 100 {
+	if n := len(Defs); n != 144 {
 		t.Fatalf("достижений %d", n)
 	}
 	ids := map[string]bool{}

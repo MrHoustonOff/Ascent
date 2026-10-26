@@ -154,3 +154,23 @@ func TestAchievementsSecret(t *testing.T) {
 		t.Fatal("отметка «новое» не снялась")
 	}
 }
+
+func TestRecapAndInsights(t *testing.T) {
+	a, _, _ := newApp(t)
+	for _, id := range []string{"ФУНД-1.1.1", "ФУНД-1.1.2"} {
+		a.CompleteLesson(id)
+	}
+	a.SetChecksAll("ФУНД-1.1", true)
+	r, err := a.Recap("day", "")
+	if err != nil || len(r.Themes) != 1 || r.Lessons != 2 || r.Checks != 2 || len(r.Achievements) == 0 {
+		t.Fatalf("%+v %v", r, err)
+	}
+	w, _ := a.Recap("week", "2026-10-21")
+	if len(w.Days) != 7 || len(w.Themes) != 1 {
+		t.Fatalf("%+v", w)
+	}
+	in, _ := a.Insights()
+	if in.Empty || in.ThemesTotal != 1 || in.BestWeekday != "воскресенье" {
+		t.Fatalf("%+v", in)
+	}
+}

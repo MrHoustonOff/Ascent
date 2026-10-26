@@ -90,6 +90,7 @@ export function achBadge(x, size = 64) {
     svg.append(g);
     return svg;
   }
+  if (x.group === 'topic') return topicArt(svg, x);
   const [soft, main, ink] = TIER[x.tier] || TIER.accent;
   const id = 'g' + (++uid);
   const shape = SHAPES[x.group] || SHAPES.themes;
@@ -123,5 +124,42 @@ export function achBadge(x, size = 64) {
     const g = achSvg(x.icon, 30); g.setAttribute('x', 17); g.setAttribute('y', 17); g.setAttribute('style', `color:var(${ink})`);
     svg.append(g);
   }
+  return svg;
+}
+
+// Тематический значок блока: насыщенная «карточка» с кодом трека, надписью и узором.
+const TRACK = { GO: 'accent', 'ФУНД': 'streak', SQL: 'success', PG: 'success', 'СЕТЬ': 'accent', 'ОС': 'streak', 'АРХ': 'success', 'ИНФРА': 'streak', 'ТЕСТ': 'success', 'БРОК': 'streak', 'СИСД': 'accent', 'СБОР': 'success' };
+const ON = { accent: '--on-accent', streak: '--on-streak', success: '--surface-raised' };
+function topicArt(svg, x) {
+  const tier = TRACK[(x.sub || '').split('-')[0]] || 'accent';
+  const [, main, ink] = TIER[tier];
+  const on = ON[tier];
+  const id = 'tp' + (++uid);
+  const shape = 'M14 4h36a10 10 0 0 1 10 10v36a10 10 0 0 1-10 10H14A10 10 0 0 1 4 50V14A10 10 0 0 1 14 4z';
+  const defs = el('defs');
+  defs.innerHTML = `<linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:color-mix(in srgb,var(${main}) 82%,#fff)"/><stop offset="1" style="stop-color:color-mix(in srgb,var(${ink}) 88%,#000)"/></linearGradient>` +
+    `<pattern id="${id}p" width="6" height="6" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r=".7" fill="#fff" fill-opacity=".18"/></pattern>` +
+    `<clipPath id="${id}c"><path d="${shape}"/></clipPath>`;
+  svg.append(defs);
+  svg.append(el('path', { d: shape, fill: `url(#${id})` }));
+  svg.append(el('path', { d: shape, fill: `url(#${id}p)` }));
+  // большой декоративный круг-орбита
+  svg.append(el('g', { 'clip-path': `url(#${id}c)` }, [
+    el('circle', { cx: 54, cy: 54, r: 22, fill: 'none', stroke: '#fff', 'stroke-opacity': '.16', 'stroke-width': 6 }),
+    el('circle', { cx: 10, cy: 8, r: 14, fill: '#fff', 'fill-opacity': '.10' }),
+    el('rect', { x: -40, y: -10, width: 18, height: 90, class: 'b-shine', transform: 'rotate(25)' }),
+  ]));
+  const style = `fill:var(${on})`;
+  const sub = el('text', { x: 10, y: 15, class: 'b-sub', style });
+  sub.textContent = x.sub || '';
+  svg.append(sub);
+  const mark = x.mark || '';
+  const fs = mark.length > 6 ? 9.5 : mark.length > 4 ? 11.5 : mark.length > 3 ? 14 : 17;
+  const t = el('text', { x: 32, y: 36 + fs * 0.33, 'text-anchor': 'middle', class: 'b-code', style: style + `;font-size:${fs}px` });
+  t.textContent = mark;
+  svg.append(t);
+  const g = achSvg(x.icon, 13); g.setAttribute('x', 44); g.setAttribute('y', 45); g.setAttribute('style', `color:var(${on});opacity:.85`);
+  svg.append(g);
+  svg.append(el('path', { d: shape, fill: 'none', stroke: '#000', 'stroke-opacity': '.12', 'stroke-width': 1 }));
   return svg;
 }

@@ -4,6 +4,7 @@ import { h, clear, pluralRu } from '../ui/dom.js';
 import { icon } from '../ui/icons.js';
 import { toastError } from '../ui/toast.js';
 import { refresh } from '../actions.js';
+import { openRecap } from '../ui/recap.js';
 
 const MONTHS = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
 const MSHORT = ['янв', 'фев', 'мар', 'апр', 'мая', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
@@ -16,14 +17,16 @@ const KINDS = { days: 'По дням', weeks: 'По неделям', total: 'Н�
 let tab = 'week', monthOff = 0, chartTab = 'days';
 
 export async function render(root) {
-  const [today, vel, fc, daily, weekly] = await Promise.all([api.Today(), api.Velocity(), api.Forecast(), api.Daily(28), api.Weekly(12)]);
+  const [today, vel, fc, daily, weekly, ins] = await Promise.all([api.Today(), api.Velocity(), api.Forecast(), api.Daily(28), api.Weekly(12), api.Insights()]);
   const todayStr = today.streak.week.find((d) => d.state === 'today' || d.state === 'done' && false)?.day || null;
   const tdy = todayDate(today);
 
   root.append(
     h('header', { class: 'as-head' },
       h('div', { class: 'as-eyebrow' }, 'Статистика'),
-      h('h1', { class: 'large-title', style: { margin: '4px 0 0' } }, 'Ваш темп'),
+      h('div', { class: 'as-rowx as-rowx--between' },
+        h('h1', { class: 'large-title', style: { margin: '4px 0 0' } }, 'Ваш темп'),
+        h('button', { class: 'as-btn as-btn--secondary', onclick: openRecap, title: 'Картинки с итогами дня или недели' }, icon('share'), 'Итоги дня и недели')),
       h('p', { class: 'as-lead' }, 'Единица — закрытая тема: пройдены уроки и отвечены вопросы. Уроки по времени не считаются.')));
 
   if (vel.empty) {
@@ -89,6 +92,9 @@ export async function render(root) {
       card(String(vel.bestStreak), pluralRu(vel.bestStreak, 'день', 'дня', 'дней') + ' — лучшая серия'),
       card(vel.bestDay ? `${vel.bestDayThemes} ${themesWord(vel.bestDayThemes)}` : '—', vel.bestDay ? 'лучший день · ' + vel.bestDay : 'лучший день')),
     h('p', { class: 'caption as-subtle', style: { margin: 0 } }, `За всё время: ${vel.allTime} тем в день. В неделю при нынешнем темпе — около ${vel.perWeek}.`)));
+
+  // ритм: дни недели, время суток, рекорды
+  root.append(rhythm(ins, w0()));
 
   // 4. прогноз
   root.append(forecastSection(fc));
@@ -209,7 +215,7 @@ function barChart(data, { w, goal }) {
     const hit = sv('rect', { x: padL + i * bw, y: padT, width: bw, height: ih + padB, fill: 'transparent' });
     hit.addEventListener('mousemove', (e) => {
       hl.setAttribute('x', padL + i * bw); hl.setAttribute('opacity', 1);
-      showTip(e, [h('b', null, d.label), h('span', null, `${d.v} ${themesWord(d.v)}` + (d.avg != null ? ` · среднее ${d.avg.toFixed(1).replace('.', ',')}` : ''))]);
+      showTip(e, [h('b', null, d.label), h('span', null, d.tip || `${d.v} ${themesWord(d.v)}` + (d.avg != null ? ` · среднее ${d.avg.toFixed(1).replace('.', ',')}` : ''))]);
     });
     hit.addEventListener('mouseleave', () => { hl.setAttribute('opacity', 0); hideTip(); });
     svg.append(hit);
@@ -318,3 +324,36 @@ function stagesCard() {
   return h('section', { class: 'as-section' }, h('h2', { class: 'as-h2' }, 'Путь по этапам'), h('div', { class: 'as-card' }, h('div', { class: 'as-stagebars' }, rows)));
 }
 
+
+function w0() { const m = document.querySelector('.as-window__main'); return Math.min(1040, (m ? m.clientWidth : 900) - 64 - 34); }
+
+function rhythm(ins, width) {
+  if (ins.empty) return null;
+  const card = (n, l) => h('div', { class: 'as-card as-stat' }, h('div', { class: 'as-stat__n' }, n), h('div', { class: 'as-stat__l' }, l));
+  const wdHost = h('div');
+  requestAnimationFrame(() => {
+    const w = wdHost.clientWidth || width;
+    wdHost.append(barChart(ins.weekdays.map((d) => ({ v: d.avg, label: d.label, today: d.best, tip: `в среднем ${d.avgText} · всего ${d.total}` })), { w }));
+  });
+  return h('section', { class: 'as-section' },
+    h('h2', { class: 'as-h2' }, 'Ритм'),
+    h('div', { class: 'as-grid3' },
+      card(ins.avgActive, 'тем в среднем за учебный день'),
+      card(ins.bestWeekday || '—', 'самый сильный день недели'),
+      card(String(ins.bestWeek), 'рекорд недели · ' + ins.bestWeekAt),
+      card(String(ins.bestMonth), 'рекорд месяца · ' + ins.bestMonthAt),
+      card(String(ins.activeTotal), 'дней с учёбой всего'),
+      card(ins.avgDay, 'тем в день за всё время')),
+    h('div', { class: 'as-grid2' },
+      h('div', { class: 'as-card' },
+        h('div', { class: 'as-section__head' }, h('h3', { class: 'as-h-headline' }, 'По дням недели'), h('span', { class: 'caption as-subtle' }, 'тем в среднем')),
+        wdHost),
+      h('div', { class: 'as-card' },
+        h('div', { class: 'as-section__head' }, h('h3', { class: 'as-h-headline' }, 'Время суток'), h('span', { class: 'caption as-subtle' }, 'когда закрываются темы')),
+        h('div', { class: 'as-hbars' }, ins.parts.map((p) => h('div', { class: 'as-hbar' + (p.best ? ' is-best' : '') },
+          h('div', null, h('b', null, p.label), h('div', { class: 'caption as-subtle' }, p.hint)),
+          h('div', { class: 'as-bar' }, h('i', { style: { width: p.pct + '%' } })),
+          h('span', null, p.pct + ' %')))),
+        h('p', { class: 'caption as-subtle', style: { margin: 0 } }, ins.trend))),
+    h('p', { class: 'caption as-subtle', style: { margin: 0 } }, `Всего: ${ins.themesTotal} ${themesWord(ins.themesTotal)}, ${ins.lessonsTotal} ${pluralRu(ins.lessonsTotal, 'урок', 'урока', 'уроков')}, ${ins.checksTotal} ${pluralRu(ins.checksTotal, 'ответ', 'ответа', 'ответов')} на вопросы, ${ins.blocksTotal} ${pluralRu(ins.blocksTotal, 'блок', 'блока', 'блоков')}.`));
+}

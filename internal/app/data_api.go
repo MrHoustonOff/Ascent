@@ -1,6 +1,7 @@
 package app
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -405,3 +406,20 @@ func (a *App) ExportMarkdown() (string, error) {
 
 // DefaultTemplate — шаблон копирования урока по умолчанию.
 func (a *App) DefaultTemplate() string { return store.DefaultHermesTemplate }
+
+func writeImages(dir, name string, images []string) error {
+	for i, im := range images {
+		if j := strings.Index(im, ","); strings.HasPrefix(im, "data:") && j > 0 {
+			im = im[j+1:]
+		}
+		b, err := base64.StdEncoding.DecodeString(im)
+		if err != nil {
+			return err
+		}
+		p := filepath.Join(dir, fmt.Sprintf("%s-%d.png", name, i+1))
+		if err := os.WriteFile(p, b, 0o644); err != nil {
+			return err
+		}
+	}
+	return nil
+}

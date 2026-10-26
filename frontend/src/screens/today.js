@@ -2,6 +2,7 @@ import { api } from '../api.js';
 import { S } from '../state.js';
 import { h, rich, countUp } from '../ui/dom.js';
 import { icon, stateDot, FLAME, CHECK_GLYPH, DASH_GLYPH } from '../ui/icons.js';
+import { openRecap } from '../ui/recap.js';
 import { go, openId, copy, startLesson, completeLesson, setCheck, setChecksAll, setMarker, rest, refresh } from '../actions.js';
 
 let keyHandler = null;
@@ -11,7 +12,8 @@ export async function render(root) {
   const hero = heroCard(n, t);
   root.append(
     h('header', { class: 'as-head' },
-      h('div', { class: 'as-eyebrow' }, t.eyebrow),
+      h('div', { class: 'as-rowx as-rowx--between' }, h('div', { class: 'as-eyebrow' }, t.eyebrow),
+        t.fresh ? null : h('button', { class: 'as-btn as-btn--ghost as-btn--sm', onclick: openRecap, title: 'Картинки с итогами дня или недели' }, 'Итоги дня')),
       h('h1', { class: 'large-title', style: { margin: '4px 0 0' } }, t.greeting),
       h('p', { class: 'as-lead' }, t.status)),
     hero.el,
