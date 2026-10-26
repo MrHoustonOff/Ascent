@@ -7,7 +7,7 @@ import { toast } from '../ui/toast.js';
 
 // Мастер первого запуска: три шага, на каждом одна главная кнопка.
 export function runOnboarding() {
-  const st = { goal: 2, custom: false, theme: S.settings.theme || 'system', upTo: null };
+  const st = { date: '', theme: S.settings.theme || 'system', upTo: null };
   let step = 1, dlg;
   const body = h('div', { style: { display: 'flex', flexDirection: 'column', gap: '16px', minHeight: '168px' } });
 
@@ -31,16 +31,13 @@ export function runOnboarding() {
               [...e.target.parentNode.children].forEach((c) => c.classList.toggle('is-active', c === e.target));
             } }, l)))));
     } else if (step === 2) {
-      title.textContent = 'Какой темп для вас реален?';
-      const hint = h('p', { class: 'as-p-callout', style: { fontSize: '14px' } }, '');
-      const upd = async () => { hint.textContent = 'При таком темпе веха «можно на собесы» — ' + (await api.MilestoneIf(st.goal)) + '.'; };
-      const num = h('input', { class: 'as-input as-input--num', type: 'number', min: 1, max: 10, value: st.goal, 'aria-label': 'Тем в день', style: { display: st.custom ? 'block' : 'none' } });
-      const row = h('div', { class: 'as-rowx' });
-      const drawRow = () => { clear(row); [1, 2, 3].forEach((n) => row.append(choice(n + (n === 1 ? ' тема' : ' темы'), !st.custom && st.goal === n, () => { st.goal = n; st.custom = false; drawRow(); upd(); num.style.display = 'none'; })));
-        row.append(choice('Своя', st.custom, () => { st.custom = true; num.style.display = 'block'; drawRow(); num.focus(); })); row.append(num); };
-      num.addEventListener('input', () => { st.goal = Math.min(10, Math.max(1, Math.round(+num.value) || 1)); upd(); });
-      drawRow(); upd();
-      body.append(h('p', { class: 'as-p-callout', style: { fontSize: '15px', lineHeight: '22px' } }, 'Тема — это несколько уроков и вопросы для самопроверки. Цель можно поменять в любой момент.'), row, hint);
+      title.textContent = 'Есть желаемая дата?';
+      const inp = h('input', { class: 'as-input', type: 'date', value: st.date || '', 'aria-label': 'Желаемая дата', style: { width: '190px' } });
+      inp.addEventListener('change', () => { st.date = inp.value; });
+      body.append(
+        h('p', { class: 'as-p-callout', style: { fontSize: '15px', lineHeight: '22px' } }, 'Норм и дневных целей здесь нет: скорость посчитается сама по тому, как вы закрываете темы.'),
+        h('p', { class: 'as-p-callout', style: { fontSize: '15px', lineHeight: '22px' } }, 'Если хочется дойти до собесов к определённому дню — укажите его. Приложение мягко подскажет, сколько тем в день к нему приведёт. Можно пропустить и вернуться к этому позже.'),
+        h('div', { class: 'as-field', style: { minWidth: 0 } }, h('label', { class: 'as-label' }, 'Дойти до собесов к'), inp));
     } else {
       title.textContent = 'Вы уже прошли часть плана?';
       const res = h('div', { class: 'as-palette__list', style: { maxHeight: '160px' } });
@@ -74,8 +71,7 @@ export function runOnboarding() {
   async function next() {
     if (step < 3) { step++; paint(); return; }
     try {
-      await api.SetSetting('daily_goal', String(st.goal));
-      S.settings.daily_goal = String(st.goal);
+      if (st.date) { await api.SetSetting('target_scope', 'milestone'); await api.SetSetting('milestone_target', st.date); S.settings.milestone_target = st.date; }
       if (st.mode === 'mark' && st.upTo) { const n = await api.MarkDoneUpTo(st.upTo.id); toast({ title: 'Пройденное отмечено', body: `Уроков: ${n}.` }); }
       await api.SetSetting('onboarded', '1');
       S.settings.onboarded = '1';

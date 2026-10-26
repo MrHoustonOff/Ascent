@@ -1,6 +1,6 @@
 import { api } from '../api.js';
 import { S } from '../state.js';
-import { h, rich, $$ } from '../ui/dom.js';
+import { h, rich, $$, gem, idTag, trk } from '../ui/dom.js';
 import { icon, stateDot } from '../ui/icons.js';
 import { go, openId, copy, startLesson, completeLesson, undoLesson, setCheck, setChecksAll, setMarker } from '../actions.js';
 import { checkbox, qRow } from './today.js';
@@ -34,7 +34,7 @@ function lessonRow(l, cur, onNote) {
   const row = h('div', { class: 'as-lesson' + (cur === l.id ? ' is-current' : ''), 'data-id': l.id, tabindex: '-1' },
     box,
     h('div', { class: 'as-lesson__main' },
-      h('span', { class: 'as-lesson__id' }, l.id),
+      idTag(l.id, 'as-lesson__id'),
       h('span', { class: 'as-lesson__title' }, rich(l.title)),
       l.stars ? h('span', { class: 'as-stars', title: 'Как часто встречается на собеседованиях', 'aria-label': l.stars + ' из 3' }, '★'.repeat(l.stars)) : null,
       l.note ? h('span', { class: 'as-note-dot', title: 'Есть заметка' }) : null,
@@ -137,14 +137,14 @@ async function blockScreen(root, id) {
         h('div', { class: 'as-lesson', style: { cursor: 'default', gridTemplateColumns: 'auto 1fr auto', alignItems: 'center' }, onclick: () => go('#/path/' + t.id) },
           h('span', { style: { display: 'grid', placeItems: 'center', width: '32px' } }, stateDot(t.state)),
           h('div', { class: 'as-lesson__main' },
-            h('div', { class: 'as-lesson__title' }, h('span', { class: 'as-lesson__id' }, t.id), rich(t.title), t.checkPending ? h('span', { class: 'as-badge as-badge--accent', style: { marginLeft: '8px' } }, 'Проверка темы') : null),
+            h('div', { class: 'as-lesson__title' }, idTag(t.id, 'as-lesson__id'), rich(t.title), t.checkPending ? h('span', { class: 'as-badge as-badge--accent', style: { marginLeft: '8px' } }, 'Проверка темы') : null),
             h('div', { style: { marginTop: '6px', maxWidth: '280px' } }, progressBar(t.pct, 'Прогресс темы'))),
           h('span', { class: 'callout as-muted as-tnum', style: { textAlign: 'right' } }, t.done + '/' + t.total, t.closedAt ? h('div', { class: 'caption as-subtle' }, t.closedAt === 'ранее' ? 'закрыта ранее' : 'закрыта ' + t.closedAt) : null))))) : null,
     b.markers.length ? h('section', { class: 'as-card' },
-      h('div', { class: 'as-section__head' }, h('h2', { class: 'as-h2' }, 'Маркеры ◆ блока'),
+      h('div', { class: 'as-section__head' }, h('h2', { class: 'as-h2' }, gem(b.markers.every((m) => m.done), 18), 'Маркеры блока'),
         h('span', { class: 'callout as-muted as-tnum' }, `${b.markers.filter((m) => m.done).length} из ${b.markers.length}`)),
       h('p', { class: 'as-p-callout' }, 'Вопросы с собесов. Ответьте на все вслух, без конспекта — и блок закрыт.'),
-      h('ul', { class: 'as-qlist' }, b.markers.map((m) => qRow(m.text, m.done, (v) => setMarker(m.block, m.n, v), markerMeta(m)))),
+      h('ul', { class: 'as-qlist' }, b.markers.map((m) => qRow(m.text, m.done, (v) => setMarker(m.block, m.n, v), markerMeta(m), true))),
       h('div', { class: 'as-actions' }, h('button', { class: 'as-btn as-btn--secondary', onclick: () => copy('block_markers', b.id) }, icon('copy'), 'Скопировать маркеры для Гермеса'))) : null);
   return `Путь · ${b.id} ${b.title.replace(/\.$/, '')}`;
 }
@@ -185,7 +185,7 @@ async function stageScreen(root, num) {
         h('div', { class: 'as-lesson', style: { alignItems: 'center' }, onclick: () => go('#/path/' + b.id) },
           h('span', { style: { display: 'grid', placeItems: 'center', width: '32px' } }, stateDot(b.state)),
           h('div', { class: 'as-lesson__main' },
-            h('div', { class: 'as-lesson__title' }, h('span', { class: 'as-lesson__id' }, b.id), b.title.replace(/\.$/, '')),
+            h('div', { class: 'as-lesson__title' }, idTag(b.id, 'as-lesson__id'), b.title.replace(/\.$/, '')),
             h('div', { style: { marginTop: '6px', maxWidth: '280px' } }, progressBar(b.pct, 'Прогресс блока'))),
           h('span', { class: 'callout as-muted as-tnum', style: { textAlign: 'right' } }, b.done + '/' + b.total, b.closedAt ? h('div', { class: 'caption as-subtle' }, b.closedAt === 'ранее' ? 'закрыт ранее' : 'закрыт ' + b.closedAt) : null))))));
   return `Путь · Этап ${s.num}`;

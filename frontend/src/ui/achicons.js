@@ -1,3 +1,4 @@
+import { trk } from './dom.js';
 // Иконки достижений: линейные, 24×24, штрих 1.7, currentColor.
 const P = {
   spark: '<path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.4 2.4M15.6 15.6L18 18M18 6l-2.4 2.4M8.4 15.6L6 18"/>',
@@ -128,16 +129,15 @@ export function achBadge(x, size = 64) {
 }
 
 // Тематический значок блока: насыщенная «карточка» с кодом трека, надписью и узором.
-const TRACK = { GO: 'accent', 'ФУНД': 'streak', SQL: 'success', PG: 'success', 'СЕТЬ': 'accent', 'ОС': 'streak', 'АРХ': 'success', 'ИНФРА': 'streak', 'ТЕСТ': 'success', 'БРОК': 'streak', 'СИСД': 'accent', 'СБОР': 'success' };
-const ON = { accent: '--on-accent', streak: '--on-streak', success: '--surface-raised' };
 function topicArt(svg, x) {
-  const tier = TRACK[(x.sub || '').split('-')[0]] || 'accent';
-  const [, main, ink] = TIER[tier];
-  const on = ON[tier];
+  // у каждого блока свой оттенок: треков мало, а блоков 54 — пусть плитки различаются
+  const PAL = ['var(--accent)', 'var(--c-blue)', 'var(--c-violet)', 'var(--c-pink)', 'var(--c-amber)', 'var(--success)', 'var(--streak)'];
+  const n = parseInt((x.sub || '').split('-')[1], 10);
+  const col = (x.sub || '').startsWith('GO-') && n ? PAL[n % PAL.length] : trk(x.sub || 'GO');
   const id = 'tp' + (++uid);
   const shape = 'M14 4h36a10 10 0 0 1 10 10v36a10 10 0 0 1-10 10H14A10 10 0 0 1 4 50V14A10 10 0 0 1 14 4z';
   const defs = el('defs');
-  defs.innerHTML = `<linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:color-mix(in srgb,var(${main}) 82%,#fff)"/><stop offset="1" style="stop-color:color-mix(in srgb,var(${ink}) 88%,#000)"/></linearGradient>` +
+  defs.innerHTML = `<linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:color-mix(in srgb,${col} 88%,#000000)"/><stop offset="1" style="stop-color:color-mix(in srgb,${col} 52%,#000000)"/></linearGradient>` +
     `<pattern id="${id}p" width="6" height="6" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r=".7" fill="#fff" fill-opacity=".18"/></pattern>` +
     `<clipPath id="${id}c"><path d="${shape}"/></clipPath>`;
   svg.append(defs);
@@ -149,7 +149,7 @@ function topicArt(svg, x) {
     el('circle', { cx: 10, cy: 8, r: 14, fill: '#fff', 'fill-opacity': '.10' }),
     el('rect', { x: -40, y: -10, width: 18, height: 90, class: 'b-shine', transform: 'rotate(25)' }),
   ]));
-  const style = `fill:var(${on})`;
+  const style = 'fill:#ffffff';
   const sub = el('text', { x: 10, y: 15, class: 'b-sub', style });
   sub.textContent = x.sub || '';
   svg.append(sub);
@@ -158,7 +158,7 @@ function topicArt(svg, x) {
   const t = el('text', { x: 32, y: 36 + fs * 0.33, 'text-anchor': 'middle', class: 'b-code', style: style + `;font-size:${fs}px` });
   t.textContent = mark;
   svg.append(t);
-  const g = achSvg(x.icon, 13); g.setAttribute('x', 44); g.setAttribute('y', 45); g.setAttribute('style', `color:var(${on});opacity:.85`);
+  const g = achSvg(x.icon, 13); g.setAttribute('x', 44); g.setAttribute('y', 45); g.setAttribute('style', 'color:#ffffff;opacity:.85');
   svg.append(g);
   svg.append(el('path', { d: shape, fill: 'none', stroke: '#000', 'stroke-opacity': '.12', 'stroke-width': 1 }));
   return svg;

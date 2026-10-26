@@ -4,7 +4,6 @@ export const S = {
   settings: {},
   route: { name: 'today', arg: '' },
   skipPending: false,
-  skipGoal: false,
   hooks: {},
 };
 

@@ -5,7 +5,7 @@ import { icon } from '../ui/icons.js';
 import { openId, copy, setMarker } from '../actions.js';
 import { checkbox } from './today.js';
 import { markerMeta } from './path.js';
-import { rich } from '../ui/dom.js';
+import { rich, gem, idTag } from '../ui/dom.js';
 
 const f = { stage: 0, block: '', markers: false, unchecked: false, q: '', random: 0 };
 let seed = 0;
@@ -32,14 +32,14 @@ export async function render(root, arg) {
     h('header', { class: 'as-head' },
       h('div', { class: 'as-eyebrow' }, 'Банк вопросов'),
       h('h1', { class: 'large-title', style: { margin: '4px 0 0' } }, 'Вопросы с собесов'),
-      h('p', { class: 'as-lead as-tnum' }, `${data.total} ${pluralRu(data.total, 'вопрос', 'вопроса', 'вопросов')}, из них ${data.markers} с маркером ◆. Маркеры закрывают блок.`)),
+      h('p', { class: 'as-lead as-tnum' }, `${data.total} ${pluralRu(data.total, 'вопрос', 'вопроса', 'вопросов')}, из них ${data.markers} — маркеры. Маркеры закрывают блок.`)),
     h('section', { class: 'as-card', style: { gap: '12px' } },
       h('div', { class: 'as-rowx' },
         sel([[0, 'Все этапы'], ...stages.map((n) => [n, 'Этап ' + n])], f.stage, (v) => { f.stage = +v; f.block = ''; f.random = 0; redo(); }, 'Этап'),
         sel([['', 'Все блоки'], ...data.blocks.filter((b) => !f.stage || b.done === f.stage).map((b) => [b.id, b.id + ' ' + b.title.replace(/\.$/, '')])], f.block, (v) => { f.block = v; f.random = 0; redo(); }, 'Блок'),
         search),
       h('div', { class: 'as-rowx', style: { gap: '20px' } },
-        toggle('Только маркеры ◆', f.markers, (v) => (f.markers = v)),
+        toggle('Только маркеры', f.markers, (v) => (f.markers = v)),
         toggle('Только неотмеченные', f.unchecked, (v) => (f.unchecked = v))),
       h('div', { class: 'as-rowx as-rowx--between' },
         h('span', { class: 'callout as-muted as-tnum' }, f.random ? `Случайные ${total} маркеров` : `Показано: ${total}`),
@@ -54,15 +54,15 @@ export async function render(root, arg) {
     for (const q of data.items) {
       if (q.block !== cur) {
         cur = q.block;
-        root.append(h('div', { class: 'as-group-title' }, h('span', { class: 'as-pill-id' }, q.block), q.blockTitle.replace(/\.$/, '')));
+        root.append(h('div', { class: 'as-group-title' }, idTag(q.block, 'as-pill-id'), q.blockTitle.replace(/\.$/, '')));
         list = h('ul', { class: 'as-qlist as-card', style: { padding: '8px 12px 8px 4px', gap: '2px' } });
         root.append(list);
       }
       const box = q.marker ? checkbox(q.done, (v) => setMarker(q.block, q.n, v), 'Маркер отвечен') : h('span', { style: { width: '32px', height: '32px', display: 'grid', placeItems: 'center', color: 'var(--ink-subtle)', fontSize: '12px' }, title: 'Обычный вопрос, не маркер' }, '·');
-      list.append(h('li', { class: 'as-q' + (q.done ? ' is-done' : ''), 'data-key': q.key },
+      list.append(h('li', { class: 'as-q' + (q.done ? ' is-done' : '') + (q.marker ? ' is-marker' : ''), 'data-key': q.key },
         box,
         h('div', null,
-          h('div', { class: 'as-q__text' }, q.marker ? h('span', { class: 'as-subtle', style: { marginRight: '6px' }, title: 'Маркер' }, '◆') : null, rich(q.text)),
+          h('div', { class: 'as-q__text' }, q.marker ? h('span', { class: 'as-marker-pill', title: 'Маркер: закрывает блок' }, gem(q.done), 'маркер') : null, rich(q.text)),
           markerMeta(q))));
     }
   }

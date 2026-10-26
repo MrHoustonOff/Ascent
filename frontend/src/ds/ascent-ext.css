@@ -2,6 +2,9 @@
 
 html,body{margin:0;height:100%;overflow:hidden;background:var(--surface-window)}
 #app{height:100%}
+/* Дополнительные цвета треков (расширение палитры по просьбе владельца, см. NOTES.md) */
+:root,[data-theme="light"]{--c-blue:#2F6FDB;--c-violet:#7A4FD0;--c-pink:#C2457A;--c-amber:#B07400}
+[data-theme="dark"]{--c-blue:#7AA8FF;--c-violet:#B79BFF;--c-pink:#FF8DBA;--c-amber:#F0C050}
 [data-theme="dark"]{color-scheme:dark}
 [data-theme="light"]{color-scheme:light}
 .as-root{user-select:none;-webkit-user-select:none;--wails-draggable:no-drag;-webkit-text-size-adjust:100%;hyphens:manual}
@@ -356,3 +359,59 @@ html,body{margin:0;height:100%;overflow:hidden;background:var(--surface-window)}
 .as-hbar.is-best .as-bar>i{background:var(--streak)}
 .as-motd{margin:2px 0 0;font:400 14px/20px var(--font-sans);color:var(--ink-subtle);text-wrap:pretty;max-width:640px}
 .as-ring.is-zero .as-ring__value{stroke-opacity:0}
+
+/* ---------- Треки: цветные ID ---------- */
+.as-trk{color:var(--trk)!important;font-weight:600}
+.as-nav-item .as-trk{opacity:.95}
+.as-nav-item.is-active .as-trk{color:var(--trk)!important}
+.as-stagebar .as-bar>i{background:var(--trk,var(--accent))}
+.as-stagebar__name::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--trk);margin-right:8px;vertical-align:1px}
+
+/* ---------- Маркер ◆ ---------- */
+.as-gem{flex:none;vertical-align:-3px;margin-right:6px;overflow:visible}
+.as-gem .g-b{fill:var(--c-amber)}
+.as-gem .g-t{fill:color-mix(in srgb,var(--c-amber) 70%,#fff)}
+.as-gem .g-h{fill:#fff;opacity:.55}
+.as-gem.is-done .g-b{fill:var(--success)}
+.as-gem.is-done .g-t{fill:color-mix(in srgb,var(--success) 70%,#fff)}
+.as-gem.is-done .g-h{display:none}
+.as-gem .g-c{fill:none;stroke:#fff;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.as-marker-pill{display:inline-flex;align-items:center;gap:3px;padding:2px 9px 2px 6px;border-radius:var(--radius-pill);background:color-mix(in srgb,var(--c-amber) 16%,transparent);color:var(--c-amber);font:600 11px/16px var(--font-sans);letter-spacing:.02em;margin-right:6px;vertical-align:1px;white-space:nowrap}
+.as-marker-pill .as-gem{margin-right:2px;width:14px;height:14px;vertical-align:-2px}
+.as-q.is-marker{background:color-mix(in srgb,var(--c-amber) 7%,transparent)}
+.as-q.is-marker.is-done{background:color-mix(in srgb,var(--success) 6%,transparent)}
+
+/* ---------- Скорость ---------- */
+.as-speedhero{flex-direction:row;flex-wrap:wrap;gap:var(--space-8);align-items:flex-end;background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 12%,var(--surface-raised)),var(--surface-raised) 60%)}
+.as-speedhero__now{display:flex;flex-direction:column;gap:6px;min-width:220px}
+.as-speedhero__v{display:flex;align-items:baseline;gap:10px}
+.as-speedhero__num{font:800 72px/72px var(--font-sans);letter-spacing:-.035em;color:var(--accent-ink);font-variant-numeric:tabular-nums}
+.as-speedhero__unit{font:500 17px/22px var(--font-sans);color:var(--ink-muted)}
+.as-speedhero__eta{flex:1;min-width:240px;display:flex;flex-direction:column;gap:6px;padding-left:var(--space-6);border-left:1px solid var(--line)}
+.as-speedhero__headline{font:700 26px/32px var(--font-sans);letter-spacing:-.018em;text-wrap:balance}
+.as-trend{display:inline-flex;align-items:center;gap:6px;align-self:flex-start;padding:3px 10px 3px 8px;border-radius:var(--radius-pill);font:600 12px/16px var(--font-sans)}
+.as-trend .as-icon{width:13px;height:13px}
+.as-trend--up{background:var(--success-soft);color:var(--success-ink)}
+.as-trend--down{background:var(--streak-soft);color:var(--streak-ink)}
+.as-trend--flat{background:var(--accent-soft);color:var(--accent-ink)}
+.as-stat.is-c1 .as-stat__n{color:var(--accent-ink)}.as-stat.is-c2 .as-stat__n{color:var(--c-violet)}
+.as-stat.is-c3 .as-stat__n{color:var(--c-blue)}.as-stat.is-c4 .as-stat__n{color:var(--success-ink)}
+.as-stat.is-c1{border-top:3px solid var(--accent)}.as-stat.is-c2{border-top:3px solid var(--c-violet)}
+.as-stat.is-c3{border-top:3px solid var(--c-blue)}.as-stat.is-c4{border-top:3px solid var(--success)}
+.as-chart .dot.is-quiet{opacity:0}
+.as-target__big{display:flex;flex-direction:column;gap:4px}
+.as-target__num{font:800 44px/48px var(--font-sans);letter-spacing:-.03em;color:var(--c-violet);font-variant-numeric:tabular-nums}
+.as-target__unit{font:500 17px/22px var(--font-sans);color:var(--ink-muted)}
+.as-cmps{display:flex;flex-direction:column;gap:8px}
+.as-cmp{display:grid;grid-template-columns:64px minmax(0,1fr) 44px;gap:12px;align-items:center;font:400 13px/18px var(--font-sans);color:var(--ink-muted)}
+.as-cmp__track{height:12px;border-radius:var(--radius-pill);background:var(--surface-sunken);overflow:hidden}
+.as-cmp__track>i{display:block;height:100%;border-radius:inherit;transition:width .8s cubic-bezier(.3,.7,.3,1)}
+.is-enter .as-cmp__track>i{animation:as-grow-x .9s cubic-bezier(.3,.7,.3,1) both .2s;transform-origin:left}
+.as-cmp.is-need i{background:var(--c-violet)}
+.as-cmp.is-now i{background:var(--accent)}
+.as-cmp.is-now.is-ok i{background:var(--success)}
+.as-cmp.is-now.is-faster i{background:var(--streak)}
+.as-cmp__v{text-align:right;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
+.as-target__verdict{margin:0;padding:var(--space-3) var(--space-4);border-radius:var(--radius-md);font:400 14px/20px var(--font-sans);text-wrap:pretty;background:var(--accent-soft);color:var(--accent-ink)}
+.as-target__verdict.is-ok{background:var(--success-soft);color:var(--success-ink)}
+.as-target__verdict.is-faster{background:var(--streak-soft);color:var(--streak-ink)}

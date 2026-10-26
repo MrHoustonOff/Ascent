@@ -105,23 +105,23 @@ func CanRest(days, rest map[string]bool, today time.Time, perWeek int) bool {
 	return RestUsedThisWeek(rest, today) < perWeek
 }
 
-// Level — уровень хитмапы по дневной цели g.
-func Level(n, g int) int {
+// Level — уровень хитмапы относительно вашей же средней: никаких целей и норм.
+// avg — среднее число тем за день, в который тема закрывалась.
+func Level(n int, avg float64) int {
 	if n <= 0 {
 		return 0
 	}
-	if g < 1 {
-		g = 1
+	if avg < 1 {
+		avg = 1
 	}
-	ceil := func(a, b int) int { return (a + b - 1) / b }
+	x := float64(n)
 	switch {
-	case n >= g:
-		return 4
-	case n <= ceil(g, 3):
+	case x < avg*0.75:
 		return 1
-	case n <= ceil(2*g, 3):
+	case x < avg*1.25:
 		return 2
-	default:
+	case x < avg*1.75:
 		return 3
 	}
+	return 4
 }

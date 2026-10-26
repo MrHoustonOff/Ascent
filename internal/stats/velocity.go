@@ -11,7 +11,6 @@ import (
 )
 
 type Settings struct {
-	DailyGoal      int
 	DayStartHour   int
 	RestPerWeek    int
 	ProjectDays    int
@@ -382,6 +381,7 @@ type HeatDay struct {
 // День с работой, но без закрытой темы, получает уровень 1.
 func (in *Input) Heat(from, to string) []HeatDay {
 	agg := in.Aggregates()
+	avg := in.AvgPerThemeDay()
 	var out []HeatDay
 	f, t := ParseDay(from), ParseDay(to)
 	for d := f; !d.After(t); d = d.AddDate(0, 0, 1) {
@@ -390,11 +390,26 @@ func (in *Input) Heat(from, to string) []HeatDay {
 		if a := agg[k]; a != nil {
 			h.Themes, h.Active = a.Themes, a.Active
 		}
-		h.Level = Level(h.Themes, in.S.DailyGoal)
+		h.Level = Level(h.Themes, avg)
 		if h.Level == 0 && h.Active {
 			h.Level = 1
 		}
 		out = append(out, h)
 	}
 	return out
+}
+
+// AvgPerThemeDay — сколько тем в среднем закрывается за день, в который тема вообще закрывалась.
+func (in *Input) AvgPerThemeDay() float64 {
+	n, d := 0, 0
+	for _, a := range in.Aggregates() {
+		if a.Themes > 0 {
+			n += a.Themes
+			d++
+		}
+	}
+	if d == 0 {
+		return 0
+	}
+	return float64(n) / float64(d)
 }

@@ -68,7 +68,7 @@ func TestEvaluate(t *testing.T) {
 	p, _ := plan.LoadEmbedded()
 	ls, ck := closeThemes(p, 11, time.Date(2026, 10, 1, 0, 0, 0, 0, msk), 23)
 	in := &stats.Input{Plan: p, Lessons: ls, Checks: ck, Markers: map[string]time.Time{}, Rest: map[string]bool{}, Loc: msk,
-		Now: time.Date(2026, 10, 25, 12, 0, 0, 0, msk), S: stats.Settings{DailyGoal: 2, DayStartHour: 4, MilestoneStage: 3}}
+		Now: time.Date(2026, 10, 25, 12, 0, 0, 0, msk), S: stats.Settings{DayStartHour: 4, MilestoneStage: 3}}
 	got := map[string]bool{}
 	for _, r := range Evaluate(in) {
 		if r.Ok {
@@ -91,7 +91,7 @@ func TestNightOwlAndDay(t *testing.T) {
 	p, _ := plan.LoadEmbedded()
 	ls, ck := closeThemes(p, 1, time.Date(2026, 10, 1, 0, 0, 0, 0, msk), 2) // 02:00 МСК
 	in := &stats.Input{Plan: p, Lessons: ls, Checks: ck, Markers: map[string]time.Time{}, Rest: map[string]bool{}, Loc: msk,
-		Now: time.Date(2026, 10, 25, 12, 0, 0, 0, msk), S: stats.Settings{DailyGoal: 2, DayStartHour: 4, MilestoneStage: 3}}
+		Now: time.Date(2026, 10, 25, 12, 0, 0, 0, msk), S: stats.Settings{DayStartHour: 4, MilestoneStage: 3}}
 	for _, r := range Evaluate(in) {
 		if r.ID == "x_night" && !r.Ok {
 			t.Error("сова не выдана")

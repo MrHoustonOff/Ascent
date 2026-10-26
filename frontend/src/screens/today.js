@@ -1,6 +1,6 @@
 import { api } from '../api.js';
 import { S } from '../state.js';
-import { h, rich, countUp } from '../ui/dom.js';
+import { h, rich, countUp, gem, idTag } from '../ui/dom.js';
 import { icon, stateDot, FLAME, CHECK_GLYPH, DASH_GLYPH } from '../ui/icons.js';
 import { openRecap } from '../ui/recap.js';
 import { go, openId, copy, startLesson, completeLesson, setCheck, setChecksAll, setMarker, rest, refresh } from '../actions.js';
@@ -8,7 +8,7 @@ import { go, openId, copy, startLesson, completeLesson, setCheck, setChecksAll, 
 let keyHandler = null;
 
 export async function render(root) {
-  const [t, n] = await Promise.all([api.Today(), api.Next(S.skipPending, S.skipGoal)]);
+  const [t, n] = await Promise.all([api.Today(), api.Next(S.skipPending)]);
   const hero = heroCard(n, t);
   root.append(
     h('header', { class: 'as-head' },
@@ -38,7 +38,7 @@ const btn = (label, kind, onClick, extra = {}) => h('button', { class: 'as-btn a
 
 function themeLine(n) {
   if (!n.theme) return null;
-  return h('div', { class: 'caption as-muted as-clamp1' }, h('span', { class: 'as-mono' }, n.lesson.id), ' · ' + n.theme.title);
+  return h('div', { class: 'caption as-muted as-clamp1' }, idTag(n.lesson.id, 'as-mono'), ' · ' + n.theme.title);
 }
 
 function arrowsList(l) {
@@ -120,12 +120,6 @@ function heroCard(n, t) {
           mk('Открыть ТЗ А', () => go('#/docs/98'))));
       break;
     }
-    case 'goal_done': {
-      add(h('div', { class: 'as-eyebrow' }, 'Сегодня'), h('h2', { class: 'as-h-title1' }, 'Сегодня достаточно'),
-        h('p', { class: 'as-p-callout' }, 'Остальное — завтра. Следующий урок — ' + n.nextId + '.'),
-        h('div', { class: 'as-actions' }, btn('Ещё один урок', 'ghost', () => { S.skipGoal = true; refresh(); })));
-      break;
-    }
     default: {
       add(h('div', { class: 'as-eyebrow' }, 'Путь'), h('h2', { class: 'as-h-title1' }, 'Путь пройден'),
         h('p', { class: 'as-p-callout' }, `${n.total} ${n.total % 10 === 1 && n.total % 100 !== 11 ? 'урок' : 'уроков'}. Дальше — факультатив «К мидлу».`));
@@ -134,9 +128,9 @@ function heroCard(n, t) {
   return { el: card, primary };
 }
 
-export function qRow(text, done, onToggle, meta) {
-  const b = checkbox(done, onToggle, 'Вопрос отмечен');
-  return h('li', { class: 'as-q' + (done ? ' is-done' : '') }, b, h('div', null, h('div', { class: 'as-q__text' }, rich(text)), meta || null));
+export function qRow(text, done, onToggle, meta, marker) {
+  const b = checkbox(done, onToggle, marker ? 'Маркер отвечен' : 'Вопрос отмечен');
+  return h('li', { class: 'as-q' + (done ? ' is-done' : '') + (marker ? ' is-marker' : '') }, b, h('div', null, h('div', { class: 'as-q__text' }, marker ? gem(done) : null, rich(text)), meta || null));
 }
 
 export function checkbox(done, onToggle, label) {
@@ -147,7 +141,7 @@ export function checkbox(done, onToggle, label) {
 
 function markerList(ms) {
   return h('ul', { class: 'as-qlist' }, ms.map((m) => qRow(m.text, m.done, (v) => setMarker(m.block, m.n, v),
-    m.lessons.length ? h('div', { class: 'as-q__meta' }, 'Уроки: ', m.lessons.map((l) => h('a', { class: 'as-a as-mono', title: l.title, onclick: () => openId(l.id) }, l.id))) : null)));
+    m.lessons.length ? h('div', { class: 'as-q__meta' }, 'Уроки: ', m.lessons.map((l) => h('a', { class: 'as-a as-mono', title: l.title, onclick: () => openId(l.id) }, l.id))) : null, true)));
 }
 
 function streakCard(s) {
@@ -198,7 +192,7 @@ function forecastCard(f) {
   return h('section', { class: 'as-card' },
     h('div', { class: 'as-rowx as-rowx--between' },
       h('h3', { class: 'as-h-headline' }, 'Прогноз'),
-      h('a', { class: 'as-a callout', onclick: () => go('#/stats') }, 'Подробнее')),
+      h('a', { class: 'as-a callout', onclick: () => go('#/speed') }, 'Скорость')),
     ...body);
 }
 

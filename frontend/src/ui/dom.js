@@ -73,3 +73,18 @@ export function countUp(el, to, suffix = '') {
   requestAnimationFrame(tick);
   return el;
 }
+
+// Цвет трека по ID (ФУНД-1.2 → ФУНД): чуть больше цвета, чтобы треки различались с первого взгляда.
+const TRK = { GO: 'var(--accent)', 'ФУНД': 'var(--c-amber)', SQL: 'var(--success)', PG: 'var(--success)', 'СЕТЬ': 'var(--c-blue)', 'ОС': 'var(--c-blue)', 'АРХ': 'var(--c-violet)', 'СИСД': 'var(--c-violet)', 'ТЕСТ': 'var(--c-pink)', 'ИНФРА': 'var(--streak)', 'БРОК': 'var(--c-pink)', 'СБОР': 'var(--c-violet)', 'ПРОГОН': 'var(--c-pink)' };
+export function trk(id) { return TRK[String(id).split('-')[0]] || 'var(--accent)'; }
+export function idTag(id, cls = 'as-nav-id') { return h('span', { class: cls + ' as-trk', style: { '--trk': trk(id) } }, id); }
+
+// Маркер ◆ — самоцветный ромб; отвеченный — зелёный с галочкой.
+export function gem(done, size = 16) {
+  const s = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  s.setAttribute('viewBox', '0 0 16 16'); s.setAttribute('width', size); s.setAttribute('height', size);
+  s.setAttribute('class', 'as-gem' + (done ? ' is-done' : '')); s.setAttribute('aria-hidden', 'true');
+  s.innerHTML = '<path class="g-b" d="M8 1.2l6.3 6.8L8 14.8 1.7 8z"/><path class="g-t" d="M8 1.2l6.3 6.8H1.7z"/><path class="g-h" d="M8 3.4l3.3 3.6H4.7z"/>' +
+    (done ? '<path class="g-c" d="M5.4 8.2l1.8 1.8 3.4-3.6"/>' : '');
+  return s;
+}

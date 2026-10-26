@@ -1,5 +1,5 @@
 import { api } from '../api.js';
-import { h, clear, pluralRu } from '../ui/dom.js';
+import { h, clear, pluralRu, idTag } from '../ui/dom.js';
 import { icon, stateDot } from '../ui/icons.js';
 import { openId, copy } from '../actions.js';
 
@@ -24,7 +24,7 @@ export async function render(root, arg) {
       if (t.stage !== stage) { stage = t.stage; block = null; list.append(h('h2', { class: 'as-h2', style: { marginTop: '12px' } }, 'Этап ' + stage)); }
       if (t.block !== block) {
         block = t.block;
-        list.append(h('div', { class: 'as-group-title' }, h('span', { class: 'as-pill-id' }, t.block), (t.blockTitle || '').replace(/\.$/, '')));
+        list.append(h('div', { class: 'as-group-title' }, idTag(t.block, 'as-pill-id'), (t.blockTitle || '').replace(/\.$/, '')));
         card = h('div', { class: 'as-card', style: { padding: '6px', gap: '0' } });
         list.append(card);
       }

@@ -1,4 +1,4 @@
-import { h, clear } from './dom.js';
+import { h, clear, idTag } from './dom.js';
 import { icon, stateDot } from './icons.js';
 import { S, lsGet, lsSet } from '../state.js';
 import { go } from '../actions.js';
@@ -6,11 +6,12 @@ import { go } from '../actions.js';
 const SCREENS = [
   { id: 'today', label: 'Сегодня', icon: 'today', hash: '#/today', key: 'Ctrl+1' },
   { id: 'path', label: 'Путь', icon: 'path', hash: '#/path', key: 'Ctrl+2', meta: true },
-  { id: 'stats', label: 'Статистика', icon: 'stats', hash: '#/stats', key: 'Ctrl+3' },
-  { id: 'achievements', label: 'Достижения', icon: 'trophy', hash: '#/achievements', key: 'Ctrl+4', ach: true },
-  { id: 'bank', label: 'Банк вопросов', icon: 'bank', hash: '#/bank', key: 'Ctrl+5' },
-  { id: 'glossary', label: 'Словарь', icon: 'glossary', hash: '#/glossary', key: 'Ctrl+6' },
-  { id: 'docs', label: 'Документы', icon: 'docs', hash: '#/docs/00', key: 'Ctrl+7' },
+  { id: 'speed', label: 'Скорость', icon: 'gauge', hash: '#/speed', key: 'Ctrl+3' },
+  { id: 'stats', label: 'Статистика', icon: 'stats', hash: '#/stats', key: 'Ctrl+4' },
+  { id: 'achievements', label: 'Достижения', icon: 'trophy', hash: '#/achievements', key: 'Ctrl+5', ach: true },
+  { id: 'bank', label: 'Банк вопросов', icon: 'bank', hash: '#/bank', key: 'Ctrl+6' },
+  { id: 'glossary', label: 'Словарь', icon: 'glossary', hash: '#/glossary', key: 'Ctrl+7' },
+  { id: 'docs', label: 'Документы', icon: 'docs', hash: '#/docs/00', key: 'Ctrl+8' },
   { id: 'settings', label: 'Настройки', icon: 'settings', hash: '#/settings', key: 'Ctrl+,' },
 ];
 
@@ -56,7 +57,7 @@ export function renderSidebar(el, onNavigate) {
       el.append(h('button', {
         class: 'as-nav-item as-nav-item--block' + (bActive ? ' is-active' : ''), title: b.id + ' ' + b.title,
         onclick: () => { if (!b.isRun) { if (!bOpen) toggle(b.id, true); } go('#/path/' + b.id); onNavigate(); },
-      }, stateDot(b.state), h('span', { class: 'as-nav-text' }, h('span', { class: 'as-nav-id' }, b.id), shortBlock(b.title))));
+      }, stateDot(b.state), h('span', { class: 'as-nav-text' }, idTag(b.id), shortBlock(b.title))));
       if (b.isRun || !bOpen) continue;
       for (const t of b.themes) {
         const tActive = activeId === t.id;

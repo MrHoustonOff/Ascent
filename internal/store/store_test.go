@@ -161,12 +161,12 @@ func TestChecksAndSettings(t *testing.T) {
 		t.Fatal("не снята")
 	}
 	st, _ := s.Settings()
-	if st["daily_goal"] != "2" {
+	if st["project_days"] != "4" {
 		t.Fatal(st)
 	}
-	s.SetSetting("daily_goal", "9")
+	s.SetSetting("project_days", "9")
 	st, _ = s.Settings()
-	if st["daily_goal"] != "9" {
+	if st["project_days"] != "9" {
 		t.Fatal(st)
 	}
 }

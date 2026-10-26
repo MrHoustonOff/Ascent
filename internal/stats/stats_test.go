@@ -67,18 +67,14 @@ func TestRestQuota(t *testing.T) {
 }
 
 func TestLevel(t *testing.T) {
-	// g = 3 темы: 0 → 0; 1 → l1; 2 → l2; 3, 4 → l4
-	cases := map[int]int{0: 0, 1: 1, 2: 2, 3: 4, 5: 4}
-	for n, w := range cases {
-		if got := Level(n, 3); got != w {
-			t.Errorf("g=3 n=%d: %d, ожидалось %d", n, got, w)
+	// относительно своей средней (2 темы): 0 → 0, 1 → l1, 2 → l2, 3 → l3, 4+ → l4
+	for n, w := range map[int]int{0: 0, 1: 1, 2: 2, 3: 3, 4: 4, 7: 4} {
+		if got := Level(n, 2); got != w {
+			t.Errorf("n=%d: %d, ожидалось %d", n, got, w)
 		}
 	}
-	// g = 6: 1,2 → l1; 3,4 → l2; 5 → l3; 6 → l4
-	for n, w := range map[int]int{1: 1, 2: 1, 3: 2, 4: 2, 5: 3, 6: 4, 9: 4} {
-		if got := Level(n, 6); got != w {
-			t.Errorf("g=6 n=%d: %d, ожидалось %d", n, got, w)
-		}
+	if Level(1, 0) != 2 {
+		t.Error("без истории одна тема — средний уровень")
 	}
 }
 
@@ -128,7 +124,7 @@ func (e *env) closeTheme(i int, at time.Time) {
 
 func (e *env) in(now time.Time) *Input {
 	return &Input{Plan: e.p, Lessons: e.lessons, Checks: e.checks, Rest: map[string]bool{}, Now: now, Loc: msk,
-		S: Settings{DailyGoal: 2, DayStartHour: 4, RestPerWeek: 1, ProjectDays: 4, MilestoneStage: 1}}
+		S: Settings{DayStartHour: 4, RestPerWeek: 1, ProjectDays: 4, MilestoneStage: 1}}
 }
 
 func TestPaceThemes(t *testing.T) {

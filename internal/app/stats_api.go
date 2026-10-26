@@ -50,18 +50,16 @@ type ForecastBrief struct {
 }
 
 type TodayDTO struct {
-	Eyebrow     string        `json:"eyebrow"`
-	Greeting    string        `json:"greeting"`
-	Status      string        `json:"status"`
-	Motd        string        `json:"motd"`
-	Goal        int           `json:"goal"`
-	DoneToday   int           `json:"doneToday"`
-	GoalReached bool          `json:"goalReached"`
-	Fresh       bool          `json:"fresh"`
-	Streak      StreakDTO     `json:"streak"`
-	Ring        RingDTO       `json:"ring"`
-	Forecast    ForecastBrief `json:"forecast"`
-	Recent      []RecentDTO   `json:"recent"`
+	Eyebrow   string        `json:"eyebrow"`
+	Greeting  string        `json:"greeting"`
+	Status    string        `json:"status"`
+	Motd      string        `json:"motd"`
+	DoneToday int           `json:"doneToday"`
+	Fresh     bool          `json:"fresh"`
+	Streak    StreakDTO     `json:"streak"`
+	Ring      RingDTO       `json:"ring"`
+	Forecast  ForecastBrief `json:"forecast"`
+	Recent    []RecentDTO   `json:"recent"`
 }
 
 type RecentDTO struct {
@@ -159,22 +157,22 @@ func (a *App) Today() (TodayDTO, error) {
 	if err != nil {
 		return TodayDTO{}, err
 	}
-	t := TodayDTO{Goal: s.goal}
+	t := TodayDTO{}
 	local := s.now.In(a.Loc)
 	// «дата» — учебный день, чтобы после полуночи не прыгало
 	t.Eyebrow = fmt.Sprintf("%s, %s", weekdaysNom[s.today.Weekday()], dateGen(s.today))
 	t.Greeting = greeting(local.Hour())
 	t.DoneToday = s.themesToday()
-	t.GoalReached = t.DoneToday >= s.goal
 	done, total := s.totalCounts()
 	t.Fresh = done == 0 && len(s.in.ActiveDays()) == 0
 	switch {
 	case t.Fresh:
 		t.Status = "Начните с первого урока. Остальное придёт само."
-	case t.GoalReached:
-		t.Status = "Сегодня достаточно. Остальное — завтра."
+	case t.DoneToday > 0:
+		t.Status = fmt.Sprintf("Сегодня %s %s.", plural(t.DoneToday, "закрыта", "закрыто", "закрыто"), themes(t.DoneToday))
 	default:
-		t.Status = fmt.Sprintf("Цель на сегодня — %s. Закрыто %d.", themes(s.goal), t.DoneToday)
+		t.Status = "Сегодня пока без закрытых тем. Один урок — уже движение."
+
 	}
 	t.Motd = s.motd()
 	t.Streak = s.streak()
@@ -348,11 +346,6 @@ func (a *App) Forecast() (ForecastFull, error) {
 	if young && v > 0 {
 		r.Young = fmt.Sprintf("Прогноз уточнится через %s.", days(7-s.in.HistoryDays()))
 	}
-	if need, ok := s.in.NeededPace(r.Target); ok {
-		r.NeedN = int(need)
-		r.Need = fmt.Sprintf("Чтобы дойти до вехи к %s, нужен темп около %s в день. Сейчас — %s.",
-			dateGen(stats.ParseDay(r.Target)), themes(int(need)), num(v))
-	}
 	return r, nil
 }
 
@@ -428,26 +421,6 @@ func paceUnit(v float64) string {
 		return "темы"
 	}
 	return plural(int(v), "тема", "темы", "тем")
-}
-
-// MilestoneIf — когда будет веха, если закрывать goal тем в день (для мастера первого запуска).
-func (a *App) MilestoneIf(goal int) (string, error) {
-	a.mu.Lock()
-	defer a.mu.Unlock()
-	s, err := a.snap()
-	if err != nil {
-		return "", err
-	}
-	if goal < 1 {
-		goal = 1
-	}
-	for _, t := range s.in.Targets() {
-		if t.Key == "milestone" {
-			d := stats.DaysFor(t.Ahead, float64(goal), t.HasProject, s.in.S.ProjectDays)
-			return "около " + dateGen(s.today.AddDate(0, 0, d)), nil
-		}
-	}
-	return "", nil
 }
 
 // recent — недавно закрытые темы, блоки и этапы (с датой закрытия).

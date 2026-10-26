@@ -111,7 +111,6 @@ type snap struct {
 	set   map[string]string
 	now   time.Time
 	today time.Time
-	goal  int
 }
 
 func atoi(s string, def int) int {
@@ -147,7 +146,6 @@ func (a *App) snap() (*snap, error) {
 	in := &stats.Input{
 		Plan: a.plan, Lessons: ls, Checks: ck, Markers: mk, Rest: rest, Now: now, Loc: a.Loc,
 		S: stats.Settings{
-			DailyGoal:      atoi(set["daily_goal"], 2),
 			DayStartHour:   atoi(set["day_start_hour"], 4),
 			RestPerWeek:    atoi(set["rest_per_week"], 1),
 			ProjectDays:    atoi(set["project_days"], 4),
@@ -155,7 +153,7 @@ func (a *App) snap() (*snap, error) {
 			MilestoneDate:  set["milestone_target"],
 		},
 	}
-	return &snap{a: a, in: in, set: set, now: now, today: in.Today(), goal: in.S.DailyGoal}, nil
+	return &snap{a: a, in: in, set: set, now: now, today: in.Today()}, nil
 }
 
 func (s *snap) status(id string) string { return s.in.Lessons[id].Status }

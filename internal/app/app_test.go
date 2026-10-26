@@ -28,7 +28,7 @@ func newApp(t *testing.T) (*App, *fakeHost, *time.Time) {
 
 func TestFirstRunFlow(t *testing.T) {
 	a, h, _ := newApp(t)
-	n, err := a.Next(false, false)
+	n, err := a.Next(false)
 	if err != nil || n.Card != "lesson_todo" || n.Lesson.ID != "ФУНД-1.1.1" {
 		t.Fatalf("%+v %v", n, err)
 	}
@@ -43,7 +43,7 @@ func TestFirstRunFlow(t *testing.T) {
 		t.Fatal(err)
 	}
 	// тема не закрыта без вопросов → карточка проверки
-	n, _ = a.Next(false, false)
+	n, _ = a.Next(false)
 	if n.Card != "theme_check" || len(n.Checks) != 2 {
 		t.Fatalf("%+v", n)
 	}
@@ -58,27 +58,6 @@ func TestFirstRunFlow(t *testing.T) {
 	td, _ := a.Today()
 	if td.DoneToday != 1 || td.Fresh {
 		t.Fatalf("%+v", td)
-	}
-}
-
-func TestGoalDone(t *testing.T) {
-	a, _, _ := newApp(t)
-	for _, id := range []string{"ФУНД-1.1", "ФУНД-1.2"} {
-		th := a.plan.Themes[id]
-		for _, l := range th.Lessons {
-			a.CompleteLesson(l.ID)
-		}
-		for i := range th.Checks {
-			a.SetCheck(id, i+1, true)
-		}
-	}
-	n, _ := a.Next(false, false)
-	if n.Card != "goal_done" || n.NextID != "ФУНД-1.3.1" {
-		t.Fatalf("%+v", n)
-	}
-	n, _ = a.Next(false, true)
-	if n.Card != "lesson_todo" {
-		t.Fatalf("%+v", n.Card)
 	}
 }
 
@@ -111,7 +90,7 @@ func TestImportedThemesClosed(t *testing.T) {
 	if err != nil || n == 0 {
 		t.Fatal(n, err)
 	}
-	nx, _ := a.Next(false, false)
+	nx, _ := a.Next(false)
 	if nx.Card != "lesson_todo" || nx.Lesson.ID != "GO-1.1.1" {
 		t.Fatalf("%+v", nx)
 	}
@@ -195,5 +174,25 @@ func TestMotd(t *testing.T) {
 				t.Errorf("восклицание: %s", x)
 			}
 		}
+	}
+}
+
+func TestSpeedTarget(t *testing.T) {
+	a, _, _ := newApp(t)
+	sp, _ := a.Speed()
+	if !sp.Empty || sp.Target.Set {
+		t.Fatalf("%+v", sp)
+	}
+	for _, id := range []string{"ФУНД-1.1.1", "ФУНД-1.1.2"} {
+		a.CompleteLesson(id)
+	}
+	a.SetChecksAll("ФУНД-1.1", true)
+	a.SetSetting("milestone_target", "2027-01-31")
+	sp, _ = a.Speed()
+	if sp.Empty || !sp.Target.Set || sp.Target.Need <= 0 || sp.Target.Verdict == "" || len(sp.Series) == 0 {
+		t.Fatalf("%+v", sp.Target)
+	}
+	if err := a.SetSetting("daily_goal", "3"); err == nil {
+		t.Fatal("дневная цель больше не настраивается")
 	}
 }

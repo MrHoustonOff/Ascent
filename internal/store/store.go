@@ -123,7 +123,7 @@ func CheckKey(theme, text string) string { return theme + ":" + Hash(text) }
 
 var Defaults = map[string]string{
 	"theme":             "system",
-	"daily_goal":        "2",
+	"target_scope":      "milestone",
 	"day_start_hour":    "4",
 	"rest_per_week":     "1",
 	"project_days":      "4",

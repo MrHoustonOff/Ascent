@@ -1,4 +1,4 @@
-import { h, clear } from './dom.js';
+import { h, clear, idTag } from './dom.js';
 import { icon } from './icons.js';
 import { openDialog } from './dialog.js';
 import { api } from '../api.js';
@@ -27,7 +27,7 @@ export function openPalette(onPick) {
         onmousemove: () => { if (sel !== i) { sel = i; paint(); } },
         onclick: () => pick(x),
       },
-      h('span', { class: 'as-nav-text' }, h('span', { class: 'as-nav-id' }, x.id.length < 24 ? x.id : ''), x.title),
+      h('span', { class: 'as-nav-text' }, x.id.length < 24 ? idTag(x.id) : '', x.title),
       h('span', { class: 'as-nav-sub' }, KIND[x.kind])));
     });
     const cur = list.children[sel];

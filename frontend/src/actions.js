@@ -44,7 +44,6 @@ export function celebrate(p) {
   if (p.blockClosed) toast({ title: 'Блок закрыт', body: achLine || (p.nextId ? 'Следующий — ' + p.nextId + '.' : ''), kind: 'streak', action: look });
   else if (p.themeClosed) toast({ title: 'Тема закрыта', body: achLine || 'Вы ответили на все вопросы темы.', kind: 'streak', action: look });
   else if (ach.length) toast({ title: 'Новое достижение', body: ach.length === 1 ? ach[0].name : achLine, kind: 'streak', action: look });
-  if (p.goalReached) toast({ title: 'Сегодня достаточно', body: 'Остальное — завтра.', kind: 'streak' });
 }
 
 async function safe(fn) {

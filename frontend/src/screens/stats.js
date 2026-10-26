@@ -18,7 +18,7 @@ const KINDS = { days: 'По дням', weeks: 'По неделям', total: 'Н�
 let tab = 'week', monthOff = 0, chartTab = 'days';
 
 export async function render(root) {
-  const [today, vel, fc, daily, weekly, ins] = await Promise.all([api.Today(), api.Velocity(), api.Forecast(), api.Daily(28), api.Weekly(12), api.Insights()]);
+  const [today, vel, daily, weekly, ins] = await Promise.all([api.Today(), api.Velocity(), api.Daily(28), api.Weekly(12), api.Insights()]);
   const todayStr = today.streak.week.find((d) => d.state === 'today' || d.state === 'done' && false)?.day || null;
   const tdy = todayDate(today);
 
@@ -69,7 +69,7 @@ export async function render(root) {
     chartBox.append(host);
     requestAnimationFrame(() => {
       const w = host.clientWidth || 640;
-      if (chartTab === 'days') host.append(barChart(daily.map((d) => ({ v: d.themes, label: d.label, today: d.today, avg: d.avg7 })), { w, goal: today.goal, ticks: 7 }));
+      if (chartTab === 'days') host.append(barChart(daily.map((d) => ({ v: d.themes, label: d.label, today: d.today, avg: d.avg7 })), { w }));
       else if (chartTab === 'total') { let acc = 0; host.append(lineChart(weekly.map((d) => ({ v: (acc += d.themes), label: d.label })), { w })); }
       else host.append(barChart(weekly.map((d) => ({ v: d.themes, label: d.label, today: d.current })), { w, ticks: 3 }));
     });
@@ -83,22 +83,16 @@ export async function render(root) {
 
   // 3. продуктивность
   const card = (n, l) => h('div', { class: 'as-card as-stat' }, h('div', { class: 'as-stat__n' }, n), h('div', { class: 'as-stat__l' }, l));
-  const p = Object.fromEntries(vel.paces.map((x) => [x.n, x.value]));
   root.append(h('section', { class: 'as-section' }, h('h2', { class: 'as-h2' }, 'Продуктивность'),
     h('div', { class: 'as-grid3' },
-      card(p[7], 'тем в день за 7 дней'),
-      card(p[14], 'тем в день за 14 дней'),
-      card(p[28], 'тем в день за 28 дней'),
       card(`${vel.activeDays28} из 28`, 'активных дней'),
       card(String(vel.bestStreak), pluralRu(vel.bestStreak, 'день', 'дня', 'дней') + ' — лучшая серия'),
       card(vel.bestDay ? `${vel.bestDayThemes} ${themesWord(vel.bestDayThemes)}` : '—', vel.bestDay ? 'лучший день · ' + vel.bestDay : 'лучший день')),
-    h('p', { class: 'caption as-subtle', style: { margin: 0 } }, `За всё время: ${vel.allTime} тем в день. В неделю при нынешнем темпе — около ${vel.perWeek}.`)));
+    h('p', { class: 'caption as-subtle', style: { margin: 0 } }, 'Скорость и прогноз — на экране «Скорость».')));
 
   // ритм: дни недели, время суток, рекорды
   root.append(rhythm(ins, w0()));
 
-  // 4. прогноз
-  root.append(forecastSection(fc));
   return 'Статистика';
 }
 
@@ -191,9 +185,9 @@ const hideTip = () => tip && tip.classList.remove('is-on');
 const NS = 'http://www.w3.org/2000/svg';
 const sv = (n, a, t) => { const e = document.createElementNS(NS, n); for (const k in a) e.setAttribute(k, a[k]); if (t != null) e.textContent = t; return e; };
 
-function barChart(data, { w, goal }) {
+export function barChart(data, { w }) {
   const H = 220, padL = 28, padB = 26, padT = 14, padR = 6;
-  const max = Math.max(goal || 0, ...data.map((d) => d.v), 1);
+  const max = Math.max(...data.map((d) => d.v), 1);
   const step = max > 6 ? 2 : 1;
   const top = Math.ceil((max + (max >= 3 ? 0.5 : 0)) / step) * step;
   const iw = w - padL - padR, ih = H - padT - padB;
@@ -221,14 +215,10 @@ function barChart(data, { w, goal }) {
     hit.addEventListener('mouseleave', () => { hl.setAttribute('opacity', 0); hideTip(); });
     svg.append(hit);
   });
-  if (goal) {
-    svg.append(sv('line', { class: 'goal', x1: padL, x2: w - padR, y1: y(goal), y2: y(goal) }));
-    svg.append(sv('text', { class: 'goal-label', x: w - padR, y: y(goal) - 5, 'text-anchor': 'end' }, 'цель ' + goal));
-  }
   if (data[0] && data[0].avg != null) {
     const pts = data.map((d, i) => [padL + i * bw + bw / 2, y(d.avg)]);
     const path = sv('path', { class: 'avg draw', d: smooth(pts), pathLength: 1 });
-    svg.insertBefore(path, svg.querySelector('.goal'));
+    svg.append(path);
   }
   const every = Math.ceil(data.length / Math.max(2, Math.floor(iw / 72)));
   data.forEach((d, i) => {
@@ -249,11 +239,11 @@ function smooth(p) {
   return d;
 }
 
-function lineChart(data, { w }) {
+export function lineChart(data, { w, tip, fine }) {
   const H = 220, padL = 34, padB = 26, padT = 16, padR = 22;
   const max = Math.max(...data.map((d) => d.v), 1);
-  const step = max > 40 ? 20 : max > 16 ? 10 : max > 8 ? 4 : 2;
-  const top = Math.ceil(max / step) * step || step;
+  const step = fine ? (max > 4 ? 1 : 0.5) : max > 40 ? 20 : max > 16 ? 10 : max > 8 ? 4 : 2;
+  const top = Math.ceil((max * (fine ? 1.15 : 1)) / step) * step || step;
   const iw = w - padL - padR, ih = H - padT - padB;
   const x = (i) => padL + (data.length === 1 ? iw / 2 : (i / (data.length - 1)) * iw);
   const y = (v) => padT + ih - (v / top) * ih;
@@ -262,7 +252,7 @@ function lineChart(data, { w }) {
   svg.querySelector('defs').innerHTML = '<linearGradient id="areag" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--accent);stop-opacity:.28"/><stop offset="1" style="stop-color:var(--accent);stop-opacity:0"/></linearGradient>';
   for (let v = 0; v <= top; v += step) {
     svg.append(sv('line', { class: 'grid', x1: padL, x2: w - padR, y1: y(v), y2: y(v) }));
-    svg.append(sv('text', { x: padL - 8, y: y(v) + 4, 'text-anchor': 'end' }, String(v)));
+    svg.append(sv('text', { x: padL - 8, y: y(v) + 4, 'text-anchor': 'end' }, String(v).replace('.', ',')));
   }
   const pts = data.map((d, i) => [x(i), y(d.v)]);
   const line = smooth(pts);
@@ -271,9 +261,10 @@ function lineChart(data, { w }) {
   const guide = sv('line', { class: 'guide', x1: 0, x2: 0, y1: padT, y2: padT + ih, opacity: 0 });
   svg.append(guide);
   data.forEach((d, i) => {
-    const c = sv('circle', { class: 'dot', cx: x(i), cy: y(d.v), r: i === data.length - 1 ? 5 : 3.5, style: `--i:${i}` });
+    const c = sv('circle', { class: 'dot' + (fine && i !== data.length - 1 ? ' is-quiet' : ''), cx: x(i), cy: y(d.v), r: i === data.length - 1 ? 5 : fine ? 2 : 3.5, style: `--i:${fine ? 0 : i}` });
     svg.append(c);
-    if (i % 2 === data.length % 2 || i === data.length - 1) svg.append(sv('text', { x: x(i), y: H - 7, 'text-anchor': i === data.length - 1 ? 'end' : 'middle' }, d.label));
+    const every = fine ? Math.ceil(data.length / Math.max(2, Math.floor(iw / 80))) : 2;
+    if ((data.length - 1 - i) % every === 0) svg.append(sv('text', { x: x(i), y: H - 7, 'text-anchor': i === data.length - 1 ? 'end' : 'middle' }, d.label));
   });
   const seg = iw / Math.max(1, data.length - 1);
   const hit = sv('rect', { x: padL - seg / 2, y: padT, width: iw + seg, height: ih, fill: 'transparent' });
@@ -283,42 +274,19 @@ function lineChart(data, { w }) {
     guide.setAttribute('x1', x(i)); guide.setAttribute('x2', x(i)); guide.setAttribute('opacity', 1);
     svg.querySelectorAll('.dot').forEach((c, j) => c.classList.toggle('is-hot', j === i));
     const prev = i ? data[i].v - data[i - 1].v : data[i].v;
-    showTip(e, [h('b', null, 'Неделя с ' + data[i].label), h('span', null, `всего ${data[i].v} · за неделю +${prev}`)]);
+    showTip(e, tip ? tip(data[i], i) : [h('b', null, 'Неделя с ' + data[i].label), h('span', null, `всего ${data[i].v} · за неделю +${prev}`)]);
   });
   hit.addEventListener('mouseleave', () => { guide.setAttribute('opacity', 0); svg.querySelectorAll('.dot').forEach((c) => c.classList.remove('is-hot')); hideTip(); });
   svg.append(hit);
   return svg;
 }
 
-// ---------- прогноз ----------
-function forecastSection(fc) {
-  const sec = h('section', { class: 'as-section' }, h('h2', { class: 'as-h2' }, 'Прогноз'));
-  const card = h('div', { class: 'as-card', style: { gap: '16px' } });
-  if (fc.empty) card.append(h('p', { class: 'as-p-callout' }, 'Отметьте первый урок — и здесь появится прогноз'));
-  else {
-    card.append(h('div', { class: 'as-table-wrap' }, h('table', { class: 'as-table' },
-      h('thead', null, h('tr', null, ['Цель', 'Впереди', `При темпе ${fc.pace}`, 'Вилка'].map((x) => h('th', null, x)))),
-      h('tbody', null, fc.rows.map((r) => h('tr', null,
-        h('td', null, r.label), h('td', { class: 'num' }, r.ahead), h('td', null, r.date || '—'), h('td', { class: 'num as-muted' }, r.fork || '—')))))));
-    if (fc.young) card.append(h('p', { class: 'caption as-subtle', style: { margin: 0 } }, fc.young));
-  }
-  // целевая дата вехи
-  const inp = h('input', { class: 'as-input', type: 'date', value: fc.target || '', 'aria-label': 'Целевая дата вехи', style: { width: '180px' } });
-  inp.addEventListener('change', async () => {
-    try { await api.SetSetting('milestone_target', inp.value); S.settings.milestone_target = inp.value; emit(); } catch (e) { toastError(e.message); }
-  });
-  card.append(h('div', { class: 'as-field', style: { minWidth: 0 } },
-    h('label', { class: 'as-label' }, 'Хочу дойти до вехи к'), inp,
-    fc.need ? h('div', { class: 'as-rowx', style: { marginTop: '4px' } }, h('span', { class: 'as-hint', style: { fontSize: '13px', lineHeight: '18px', flex: '1 1 260px' } }, fc.need),
-      h('button', { class: 'as-btn as-btn--ghost as-btn--sm', onclick: async () => { await api.SetSetting('daily_goal', String(Math.min(10, Math.max(1, fc.needN)))); toastOk(); refresh(); } }, 'Сделать дневной целью')) : null));
-  sec.append(card);
-  return sec;
-}
-function toastOk() {}
 
+
+const STAGEC = ['var(--c-amber)', 'var(--accent)', 'var(--c-violet)', 'var(--c-blue)', 'var(--success)', 'var(--c-pink)', 'var(--streak)'];
 function stagesCard() {
   const t = S.tree;
-  const rows = t.stages.map((st) => h('div', { class: 'as-stagebar', onclick: () => (location.hash = '#/path/' + st.id), title: st.title },
+  const rows = t.stages.map((st) => h('div', { class: 'as-stagebar', style: { '--trk': STAGEC[(st.num - 1) % STAGEC.length] }, onclick: () => (location.hash = '#/path/' + st.id), title: st.title },
     h('div', { class: 'as-stagebar__name' }, `Этап ${st.num} · ${st.title.split(':')[0]}`),
     h('div', { class: 'as-stagebar__meta' }, st.closedAt ? (st.closedAt === 'ранее' ? 'закрыт ранее' : 'закрыт ' + st.closedAt) : `${st.done} из ${st.total} · ${st.pct} %`),
     h('div', { class: 'as-bar', role: 'progressbar', 'aria-valuenow': st.pct }, h('i', { style: { width: st.pct + '%' } }))));

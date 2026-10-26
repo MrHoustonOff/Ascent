@@ -21,7 +21,7 @@ type ThemeRef struct {
 }
 
 type NextDTO struct {
-	// Card: lesson_todo | lesson_doing | theme_check | block_close | stage_run | project | goal_done | all_done
+	// Card: lesson_todo | lesson_doing | theme_check | block_close | stage_run | project | all_done
 	Card     string      `json:"card"`
 	Lesson   *LessonDTO  `json:"lesson"`
 	Theme    *ThemeRef   `json:"theme"`
@@ -39,7 +39,7 @@ func (s *snap) themeRef(th *plan.Theme) *ThemeRef {
 	return &ThemeRef{ID: th.ID, Title: th.Title, Done: d, Total: t, Pct: pct(d, t)}
 }
 
-func (s *snap) next(skipPending, skipGoal bool) NextDTO {
+func (s *snap) next(skipPending bool) NextDTO {
 	p := s.a.plan
 	d := NextDTO{Checks: []CheckDTO{}, Markers: []MarkerDTO{}}
 	_, d.Total = s.totalCounts()
@@ -60,11 +60,6 @@ func (s *snap) next(skipPending, skipGoal bool) NextDTO {
 	if nl != nil {
 		nextOrd = nl.Ord
 		d.NextID = nl.ID
-	}
-	// 2. цель дня выполнена
-	if !skipGoal && s.themesToday() >= s.goal && nl != nil {
-		d.Card = "goal_done"
-		return d
 	}
 	// 3. проверка темы / маркеры блока сразу после пройденного
 	if !skipPending && nextOrd > 0 {
@@ -128,14 +123,14 @@ func (s *snap) next(skipPending, skipGoal bool) NextDTO {
 	return d
 }
 
-func (a *App) Next(skipPending, skipGoal bool) (NextDTO, error) {
+func (a *App) Next(skipPending bool) (NextDTO, error) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	s, err := a.snap()
 	if err != nil {
 		return NextDTO{}, err
 	}
-	return s.next(skipPending, skipGoal), nil
+	return s.next(skipPending), nil
 }
 
 // ---------- события прогресса ----------
@@ -148,7 +143,6 @@ type ClosedRef struct {
 type ProgressDTO struct {
 	ThemeClosed  *ClosedRef `json:"themeClosed"`
 	BlockClosed  *ClosedRef `json:"blockClosed"`
-	GoalReached  bool       `json:"goalReached"`
 	NextID       string     `json:"nextId"`
 	Achievements []AchRef   `json:"achievements"`
 }
@@ -170,7 +164,6 @@ func (a *App) progressSince(before *snap) ProgressDTO {
 			r.BlockClosed = &ClosedRef{b.ID, b.Title}
 		}
 	}
-	r.GoalReached = before.themesToday() < before.goal && after.themesToday() >= after.goal
 	r.Achievements = a.syncAch(after)
 	if r.Achievements == nil {
 		r.Achievements = []AchRef{}
@@ -214,7 +207,7 @@ func (a *App) StartLesson(id string) (NextDTO, error) {
 	if err != nil {
 		return NextDTO{}, err
 	}
-	return s2.next(true, true), nil
+	return s2.next(true), nil
 }
 
 func (a *App) CompleteLesson(id string) (ProgressDTO, error) {

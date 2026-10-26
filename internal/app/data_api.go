@@ -189,7 +189,7 @@ func (a *App) Settings() (map[string]string, error) {
 }
 
 var intRanges = map[string][2]int{
-	"daily_goal": {1, 10}, "day_start_hour": {0, 8}, "rest_per_week": {0, 2}, "project_days": {1, 14}, "milestone_stage": {1, 7},
+	"day_start_hour": {0, 8}, "rest_per_week": {0, 2}, "project_days": {1, 14}, "milestone_stage": {1, 7},
 }
 
 func (a *App) SetSetting(key, value string) error {
@@ -206,6 +206,9 @@ func (a *App) SetSetting(key, value string) error {
 	}
 	if key == "theme" && value != "light" && value != "dark" && value != "system" {
 		return fmt.Errorf("неизвестная тема")
+	}
+	if key == "target_scope" && value != "milestone" && value != "path" {
+		return fmt.Errorf("неизвестная цель даты")
 	}
 	if key == "milestone_target" && value != "" {
 		if _, err := time.Parse("2006-01-02", value); err != nil {
