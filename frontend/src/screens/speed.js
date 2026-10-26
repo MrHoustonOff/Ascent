@@ -37,7 +37,7 @@ export async function render(root) {
   root.append(h('section', { class: 'as-section' },
     h('h2', { class: 'as-h2' }, 'Как менялся темп'),
     h('div', { class: 'as-card', style: { gap: '10px' } },
-      h('div', { class: 'as-section__head' }, h('span', { class: 'callout as-muted' }, 'Закрытые темы по дням'), h('span', { class: 'caption as-subtle' }, 'с первой закрытой темы · листается вбок')),
+      h('div', { class: 'as-section__head' }, h('span', { class: 'callout as-muted' }, 'Закрытые темы по дням')),
       host)));
   requestAnimationFrame(() => {
     host.append(weekCards(hd));
