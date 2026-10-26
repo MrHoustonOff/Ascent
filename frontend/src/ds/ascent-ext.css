@@ -453,6 +453,6 @@ html,body{margin:0;height:100%;overflow:hidden;background:var(--surface-window)}
 .as-weeks-wrap .as-weeks{width:auto;max-width:none}
 .as-logo{width:20px;height:20px;border-radius:5px;display:block;flex:none}
 
-/* Оглавление шире: примерно 35 % окна (решение владельца), в узком окне — выезжающая панель */
-.as-window:not(.is-narrow) .as-sidebar{width:clamp(248px,35%,620px)}
+/* Оглавление шире: примерно 30 % окна (решение владельца), в узком окне — выезжающая панель */
+.as-window:not(.is-narrow) .as-sidebar{width:clamp(248px,30%,560px)}
 .as-window.is-narrow .as-sidebar{width:min(380px,85vw)}
