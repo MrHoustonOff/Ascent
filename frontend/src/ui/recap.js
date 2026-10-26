@@ -40,7 +40,8 @@ export function openRecap() {
   // правки готовых страниц: id → { hidden, style }; сбрасываются при смене периода, формата или режима
   let over = {};
   const cardId = (c) => c.key === 'custom' ? 'custom:' + c.ci : c.key + ':' + (c.from || 0);
-  const reset = () => { over = {}; };
+  let order = []; // порядок страниц (id), если его меняли стрелками или перетаскиванием
+  const reset = () => { over = {}; order = []; };
 
   const preview = h('div', { class: 'as-recap__pages' });
   const info = h('div', { class: 'caption as-subtle' }, '');
@@ -100,6 +101,10 @@ export function openRecap() {
       p.custom.forEach((c, i) => all.push({ key: 'custom', name: 'Своя карточка', card: c, ci: i }));
       const hidden = all.filter((c) => over[cardId(c)]?.hidden).length;
       list = all.filter((c) => !over[cardId(c)]?.hidden);
+      if (order.length) { // переставленные — в своём порядке, новые — следом в исходном
+        const rank = (c, i) => { const k = order.indexOf(cardId(c)); return k >= 0 ? k : 1000 + i; };
+        list = list.map((c, i) => [rank(c, i), c]).sort((a, b) => a[0] - b[0]).map((x) => x[1]);
+      }
       const style = styleNow(), acc = accent();
       const out = [];
       for (let i = 0; i < list.length; i++) {
@@ -111,23 +116,39 @@ export function openRecap() {
       canvases = out;
       clear(preview);
       const [W, H] = FORMATS[p.format];
+      // перестановка: стрелками или перетаскиванием миниатюры
+      const moveTo = (from, to) => {
+        if (to < 0 || to >= list.length || from === to) return;
+        const ids = list.map(cardId); const [x] = ids.splice(from, 1); ids.splice(to, 0, x);
+        order = ids; build();
+      };
+      let dragFrom = -1;
       out.forEach((cv, i) => {
-        const img = h('img', { src: cv.toDataURL('image/png'), alt: list[i].name, class: 'as-recap__thumb', style: { aspectRatio: `${W} / ${H}` } });
+        const img = h('img', { src: cv.toDataURL('image/png'), alt: list[i].name, class: 'as-recap__thumb', style: { aspectRatio: `${W} / ${H}` }, draggable: 'false' });
         const c = list[i], id = cardId(c);
+        const arrows = [
+          h('button', { class: 'as-iconbtn as-recap__mv', title: 'Раньше', 'aria-label': 'Переместить раньше', disabled: i === 0, onclick: () => moveTo(i, i - 1) }, '‹'),
+          h('button', { class: 'as-iconbtn as-recap__mv', title: 'Позже', 'aria-label': 'Переместить позже', disabled: i === out.length - 1, onclick: () => moveTo(i, i + 1) }, '›')];
+        let tools;
         if (c.key === 'custom') {
-          preview.append(h('div', { class: 'as-recap__custom' }, img,
-            h('div', { class: 'as-recap__customtools' },
-              h('button', { class: 'as-btn as-btn--secondary as-btn--sm', onclick: () => edit(c.ci) }, 'Изменить'),
-              h('button', { class: 'as-btn as-btn--ghost as-btn--sm', onclick: () => { p.custom.splice(c.ci, 1); savePrefs(p); over = {}; build(); } }, 'Убрать'))));
-          return;
+          tools = h('div', { class: 'as-recap__customtools' }, arrows[0],
+            h('button', { class: 'as-btn as-btn--secondary as-btn--sm', onclick: () => edit(c.ci) }, 'Изменить'),
+            h('button', { class: 'as-btn as-btn--ghost as-btn--sm', onclick: () => { p.custom.splice(c.ci, 1); savePrefs(p); reset(); build(); } }, 'Убрать'), arrows[1]);
+        } else {
+          // фон страницы и удаление
+          const bg = h('select', { class: 'as-input as-recap__bgsel', 'aria-label': 'Фон страницы', title: 'Фон этой страницы' },
+            STYLE_KEYS.map((k) => h('option', { value: k, selected: k === (over[id]?.style || style) }, STYLES[k].label)));
+          bg.addEventListener('change', () => { over[id] = { ...over[id], style: bg.value }; build(); });
+          tools = h('div', { class: 'as-recap__customtools' }, arrows[0], bg,
+            h('button', { class: 'as-iconbtn as-recap__del', title: 'Удалить страницу', 'aria-label': 'Удалить страницу', onclick: () => { over[id] = { ...over[id], hidden: true }; build(); } }, '✕'), arrows[1]);
         }
-        // фон страницы и удаление
-        const bg = h('select', { class: 'as-input as-recap__bgsel', 'aria-label': 'Фон страницы', title: 'Фон этой страницы' },
-          STYLE_KEYS.map((k) => h('option', { value: k, selected: k === (over[id]?.style || style) }, STYLES[k].label)));
-        bg.addEventListener('change', () => { over[id] = { ...over[id], style: bg.value }; build(); });
-        preview.append(h('div', { class: 'as-recap__custom' }, img,
-          h('div', { class: 'as-recap__customtools' }, bg,
-            h('button', { class: 'as-iconbtn as-recap__del', title: 'Удалить страницу', 'aria-label': 'Удалить страницу', onclick: () => { over[id] = { ...over[id], hidden: true }; build(); } }, '✕'))));
+        const page = h('div', { class: 'as-recap__custom', draggable: 'true', title: 'Перетащите, чтобы поменять порядок' }, img, tools);
+        page.addEventListener('dragstart', (e) => { dragFrom = i; page.classList.add('is-drag'); e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', String(i)); });
+        page.addEventListener('dragend', () => page.classList.remove('is-drag'));
+        page.addEventListener('dragover', (e) => { e.preventDefault(); page.classList.add('is-over'); });
+        page.addEventListener('dragleave', () => page.classList.remove('is-over'));
+        page.addEventListener('drop', (e) => { e.preventDefault(); page.classList.remove('is-over'); moveTo(dragFrom, i); });
+        preview.append(page);
       });
       if (hidden) preview.append(h('button', { class: 'as-btn as-btn--ghost as-btn--sm as-recap__restore', onclick: () => { for (const k in over) if (over[k].hidden) delete over[k].hidden; build(); } }, `Вернуть удалённые (${hidden})`));
       const n = out.length;

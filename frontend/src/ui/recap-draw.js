@@ -433,6 +433,24 @@ async function cardForecast(g, W, H, c) {
 }
 
 // ---------- своя карточка (редактор) ----------
+// Шрифты текста: системные, без загрузки из сети (есть и в Windows, и в macOS; иначе — общий запасной).
+export const TEXT_FONTS = {
+  head: ['Как в стиле', null],
+  sans: ['Обычный', FONT],
+  serif: ['С засечками', SERIF],
+  mono: ['Моноширинный', MONO],
+  poster: ['Плакатный', 'Impact, "Arial Black", "Helvetica Neue", sans-serif'],
+  round: ['Округлый', '"Arial Rounded MT Bold", "Segoe UI Black", "Trebuchet MS", sans-serif'],
+  hand: ['Рукописный', '"Segoe Print", "Bradley Hand", "Comic Sans MS", "Marker Felt", cursive'],
+};
+// Цвета текста: цвета стиля и общая палитра; любой другой — свой HEX.
+export const TEXT_COLORS = ['ink', 'accent', 'muted', '#FFFFFF', '#141414', '#4CC9EA', '#4FD08F', '#F5C542', '#FFA640', '#F06AA6', '#A78BFA', '#E2553B'];
+export function textColor(it, S, acc) { return it.color === 'accent' ? (acc || S.accents[0]) : it.color === 'muted' ? S.muted : it.color && it.color[0] === '#' ? it.color : S.ink; }
+export function textFont(it, S) {
+  if (it.font === 'body') return S.font; // старые карточки
+  const f = TEXT_FONTS[it.font];
+  return f && f[1] ? f[1] : S.head;
+}
 // card = { bg: ключ стиля, items: [{ type: 'text', text, x, y, size, rot, color } | { type: 'gopher', pose, x, y, size, rot, flip }] }
 // x, y — доли ширины/высоты (центр элемента), size — px при ширине 1080
 export async function drawCustom(g, W, H, card, acc) {
@@ -442,8 +460,8 @@ export async function drawCustom(g, W, H, card, acc) {
   for (const it of card.items) {
     if (it.type === 'gopher') { await drawGopher(g, it.pose, it.x * W, it.y * H + it.size * u / 2, it.size * u, it.rot || 0, !!it.flip); continue; }
     g.save(); g.translate(it.x * W, it.y * H); g.rotate(it.rot || 0);
-    g.fillStyle = it.color === 'accent' ? (acc || S.accents[0]) : it.color === 'muted' ? S.muted : S.ink;
-    g.font = `${it.weight || 800} ${it.size * u}px ${it.font === 'body' ? S.font : S.head}`; g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.fillStyle = textColor(it, S, acc);
+    g.font = `${it.weight || 800} ${it.size * u}px ${textFont(it, S)}`; g.textAlign = 'center'; g.textBaseline = 'middle';
     const lines = String(it.text).split('\n');
     lines.forEach((l, i) => g.fillText(l, 0, (i - (lines.length - 1) / 2) * it.size * u * 1.12));
     g.restore();
@@ -453,7 +471,7 @@ export async function drawCustom(g, W, H, card, acc) {
 export function itemBox(g, W, H, it) {
   const u = W / 1080;
   if (it.type === 'gopher') return { w: it.size * u * 0.86, h: it.size * u * 1.02 };
-  g.font = `${it.weight || 800} ${it.size * u}px ${FONT}`;
+  g.font = `${it.weight || 800} ${it.size * u}px ${textFont(it, STYLES.night)}`;
   const lines = String(it.text).split('\n');
   return { w: Math.max(...lines.map((l) => g.measureText(l).width)) + 20 * u, h: lines.length * it.size * u * 1.12 + 10 * u };
 }

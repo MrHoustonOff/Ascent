@@ -3,7 +3,7 @@
 // Мышь: перетаскивание; угловая ручка — размер, верхняя — поворот; колесо — размер, Shift+колесо — поворот.
 import { h, clear } from './dom.js';
 import { POSES } from './gopher.js';
-import { FORMATS, STYLES, STYLE_KEYS, drawCustom, itemBox, autoCard, rngFrom } from './recap-draw.js';
+import { FORMATS, STYLES, STYLE_KEYS, drawCustom, itemBox, autoCard, rngFrom, TEXT_FONTS, TEXT_COLORS, textColor } from './recap-draw.js';
 
 const clone = (x) => JSON.parse(JSON.stringify(x));
 
@@ -133,11 +133,22 @@ export function openEditor({ card, format, acc, seed }) {
         if (it.type === 'text') {
           const t = h('textarea', { class: 'as-textarea', rows: 3 }); t.value = it.text;
           t.addEventListener('input', () => { it.text = t.value || ' '; redraw(); });
-          const col = h('select', { class: 'as-input' }, [['ink', 'Основной'], ['accent', 'Акцент'], ['muted', 'Приглушённый']].map(([k, l]) => h('option', { value: k, selected: k === it.color }, l)));
-          col.addEventListener('change', () => { it.color = col.value; redraw(); });
+          // цвет: цвета стиля (основной, акцент, приглушённый), палитра и свой
+          const S = STYLES[c.bg] || STYLES.night;
+          const sw = (k) => h('button', {
+            class: 'as-editor__sw' + ((it.color || 'ink') === k ? ' is-on' : ''), style: { background: textColor({ color: k }, S, acc) },
+            title: { ink: 'Основной цвет стиля', accent: 'Акцентный цвет', muted: 'Приглушённый' }[k] || k, 'aria-label': 'Цвет ' + k,
+            onclick: () => { it.color = k; panel(); redraw(); },
+          });
+          const own = h('input', { type: 'color', class: 'as-editor__own', title: 'Свой цвет', value: /^#[0-9a-f]{6}$/i.test(it.color || '') ? it.color : '#ffffff' });
+          own.addEventListener('input', () => { it.color = own.value; redraw(); });
+          own.addEventListener('change', () => panel());
+          const col = h('div', { class: 'as-editor__sws' }, TEXT_COLORS.map(sw), own);
+          const fnt = h('select', { class: 'as-input' }, Object.entries(TEXT_FONTS).map(([k, [l]]) => h('option', { value: k, selected: (it.font || 'head') === k }, l)));
+          fnt.addEventListener('change', () => { it.font = fnt.value; redraw(); });
           const wt = h('select', { class: 'as-input' }, [['800', 'Жирный'], ['600', 'Полужирный'], ['400', 'Обычный']].map(([k, l]) => h('option', { value: k, selected: String(it.weight || 800) === k }, l)));
           wt.addEventListener('change', () => { it.weight = +wt.value; redraw(); });
-          sec.append(t, field('Цвет', col), field('Начертание', wt));
+          sec.append(t, field('Шрифт', fnt), field('Начертание', wt), h('div', { class: 'as-editor__field as-editor__field--col' }, h('span', null, 'Цвет'), col));
         } else {
           const fl = h('input', { type: 'checkbox', checked: !!it.flip }); fl.addEventListener('change', () => { it.flip = fl.checked; redraw(); });
           sec.append(field('Поза', poseSelect(it.pose, (v) => { it.pose = v; })), field('Зеркально', fl));

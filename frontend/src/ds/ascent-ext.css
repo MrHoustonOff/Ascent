@@ -703,3 +703,13 @@ html,body{margin:0;height:100%;overflow:hidden;background:var(--surface-window)}
 @keyframes as-achwin-gopher{0%{opacity:0;transform:translateY(60px) scale(.8)}100%{opacity:1;transform:none}}
 @keyframes as-confetti{0%{opacity:1;transform:translate(0,0) rotate(0)}80%{opacity:1}100%{opacity:0;transform:translate(var(--x),calc(var(--y) * -1.6)) rotate(var(--r))}}
 @media (prefers-reduced-motion:reduce){.as-achwin,.as-achwin__badge,.as-achwin__gopher,.as-achwin__name,.as-achwin__desc,.as-achwin__when{animation:none}.as-achwin__burst{display:none}}
+.as-editor__field--col{grid-template-columns:1fr}
+.as-editor__sws{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.as-editor__sw{width:24px;height:24px;border-radius:50%;border:2px solid var(--surface-overlay);box-shadow:0 0 0 1px var(--line-strong);padding:0;cursor:default}
+.as-editor__sw.is-on{box-shadow:0 0 0 2px var(--accent)}
+.as-editor__own{width:30px;height:26px;padding:0;border:1px solid var(--line);border-radius:6px;background:none}
+.as-recap__mv{width:24px;height:28px;font:600 18px/1 var(--font-sans);color:var(--ink-muted)}
+.as-recap__mv:disabled{opacity:.25}
+.as-recap__custom[draggable=true]{cursor:grab}
+.as-recap__custom.is-drag{opacity:.45}
+.as-recap__custom.is-over .as-recap__thumb{outline:3px solid var(--accent);outline-offset:3px}
