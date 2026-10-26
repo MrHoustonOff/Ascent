@@ -487,12 +487,12 @@ html,body{margin:0;height:100%;overflow:hidden;background:var(--surface-window)}
 .as-stage__body .as-nav-item--theme{padding-left:30px}
 
 /* ---------- Спокойнее, в духе Apple: один акцент, остальное — нейтральные тона ---------- */
-.as-nav-item.as-nav-item--stage{background:color-mix(in srgb,var(--sc) 9%,transparent);color:var(--ink)}
-.as-nav-item.as-nav-item--stage:hover{background:color-mix(in srgb,var(--sc) 14%,transparent)}
-.as-nav-item.as-nav-item--stage.is-active{background:color-mix(in srgb,var(--sc) 16%,transparent);color:var(--ink)}
-.as-nav-item--stage .as-nav-meta{color:var(--ink-subtle)!important;font-weight:500}
-.as-stage__num{background:color-mix(in srgb,var(--sc) 85%,transparent)}
-.as-stage__body{border-left-color:var(--line)}
+.as-nav-item.as-nav-item--stage{background:color-mix(in srgb,var(--sc) 11%,transparent);color:color-mix(in srgb,var(--sc) 55%,var(--ink))}
+.as-nav-item.as-nav-item--stage:hover{background:color-mix(in srgb,var(--sc) 16%,transparent)}
+.as-nav-item.as-nav-item--stage.is-active{background:color-mix(in srgb,var(--sc) 19%,transparent);color:color-mix(in srgb,var(--sc) 55%,var(--ink))}
+.as-nav-item--stage .as-nav-meta{color:inherit!important;opacity:.75;font-weight:500}
+.as-stage__num{background:color-mix(in srgb,var(--sc) 70%,var(--surface-sidebar))}
+.as-stage__body{border-left-color:color-mix(in srgb,var(--sc) 28%,transparent)}
 .as-trk{font-weight:500}
 .as-stagebar__name::before{display:none}
 .as-freq.lv3{background:var(--accent-soft);color:var(--accent-ink)}
@@ -509,3 +509,5 @@ html,body{margin:0;height:100%;overflow:hidden;background:var(--surface-window)}
 .as-trend--up{background:var(--accent-soft);color:var(--accent-ink)}
 .as-target__verdict.is-faster{background:var(--surface-sunken);color:var(--ink-muted)}
 .as-target__verdict.is-ok{background:var(--accent-soft);color:var(--accent-ink)}
+.as-nav-kind{flex:none;font:600 9.5px/14px var(--font-sans);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-subtle);background:var(--surface-sunken);border-radius:5px;padding:0 5px;margin-right:-2px}
+.as-nav-item.is-active .as-nav-kind{background:color-mix(in srgb,var(--accent) 18%,transparent);color:var(--accent-ink)}

@@ -21,6 +21,7 @@ let seeded = lsGet('tree.seeded', false);
 export function renderSidebar(el, onNavigate) {
   const tree = S.tree;
   const rt = S.route;
+  const keepTop = el.scrollTop; // сайдбар перерисовывается целиком — позицию прокрутки сохраняем
   clear(el);
   if (!tree) return;
   if (!seeded && tree.curStage) {
@@ -45,7 +46,7 @@ export function renderSidebar(el, onNavigate) {
   for (const st of tree.stages) {
     const isOpen = open.has(st.id);
     const sActive = activeId === st.id;
-    const grp = h('div', { class: 'as-stage' + (isOpen ? ' is-open' : ''), style: { '--sc': st.num === tree.curStage ? 'var(--accent)' : 'var(--ink-subtle)' } });
+    const grp = h('div', { class: 'as-stage' + (isOpen ? ' is-open' : ''), style: { '--sc': stageColor(st, tree) } });
     grp.append(h('button', {
       class: 'as-nav-item as-nav-item--stage' + (sActive ? ' is-active' : ''), title: 'Этап ' + st.num + '. ' + st.title,
       'aria-expanded': isOpen,
@@ -69,12 +70,17 @@ export function renderSidebar(el, onNavigate) {
         body.append(h('button', {
           class: 'as-nav-item as-nav-item--theme' + (tActive ? ' is-active' : ''), title: t.id + ' ' + t.title + (t.checkPending ? ' — проверка темы' : '') + (t.closedAt ? ' — закрыта ' + t.closedAt : ''),
           onclick: () => { go('#/path/' + t.id); onNavigate(); },
-        }, stateDot(t.state), h('span', { class: 'as-nav-text' }, t.title), h('span', { class: 'as-nav-meta' }, t.done + '/' + t.total)));
+        }, stateDot(t.state), h('span', { class: 'as-nav-kind' }, 'тема'), h('span', { class: 'as-nav-text' }, t.title), h('span', { class: 'as-nav-meta' }, t.done + '/' + t.total)));
       }
     }
   }
+  el.scrollTop = keepTop;
+  // докручиваем, только если активный пункт вне видимой области
   const act = el.querySelector('.as-nav-item.is-active');
-  if (act && act.scrollIntoView) act.scrollIntoView({ block: 'nearest' });
+  if (act) {
+    const r = act.getBoundingClientRect(), b = el.getBoundingClientRect();
+    if (r.top < b.top || r.bottom > b.bottom) act.scrollIntoView({ block: 'nearest' });
+  }
 }
 
 function toggle(id, force) {
@@ -105,3 +111,11 @@ const STAGEC = ['var(--c-amber)', 'var(--accent)', 'var(--c-violet)', 'var(--c-b
 const shortStage = (t) => t.split(':')[0];
 // «От исходника к процессу» → без точки в конце
 const shortBlock = (t) => t.replace(/\.$/, '');
+
+// Цвет этапа по смыслу: пройден — зелёный, текущий — акцент, начат — тёплый, впереди — нейтральный.
+function stageColor(st, tree) {
+  if (st.state === 'done') return 'var(--success)';
+  if (st.num === tree.curStage) return 'var(--accent)';
+  if (st.done > 0) return 'var(--c-amber)';
+  return 'var(--ink-subtle)';
+}
