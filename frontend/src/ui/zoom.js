@@ -3,6 +3,7 @@
 import { api } from '../api.js';
 import { S } from '../state.js';
 import { h } from './dom.js';
+import { gopherSVG } from './gopher.js';
 
 export const STEPS = [70, 80, 90, 100, 110, 125, 140, 160, 175];
 const reduce = () => window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -47,18 +48,6 @@ export function zoomStep(dir) {
   setZoom(next ?? cur);
 }
 
-// Гофер без плитки: та же фигура, что в иконке приложения.
-const GOPHER = '<svg viewBox="14 12 72 84" aria-hidden="true">' +
-  '<path d="M24 46c0-17 11-28 26-28s26 11 26 28v30c0 10-11 16-26 16S24 86 24 76z" fill="#7AD3E6"/>' +
-  '<path d="M30 22c-5-5-12 0-8 5M70 22c5-5 12 0 8 5" stroke="#7AD3E6" stroke-width="6" stroke-linecap="round" fill="none"/>' +
-  '<path class="g-arm" d="M24 60c-6 0-8 6-4 8M76 60c6 0 8 6 4 8" stroke="#7AD3E6" stroke-width="6" stroke-linecap="round" fill="none"/>' +
-  '<ellipse cx="50" cy="74" rx="14" ry="12" fill="#B7EAF3" opacity=".7"/>' +
-  '<circle cx="39" cy="38" r="10" fill="#fff"/><circle cx="61" cy="38" r="10" fill="#fff"/>' +
-  '<g class="g-pupils"><circle cx="42" cy="39" r="4" fill="#111"/><circle cx="64" cy="39" r="4" fill="#111"/>' +
-  '<circle cx="43.3" cy="37.5" r="1.3" fill="#fff"/><circle cx="65.3" cy="37.5" r="1.3" fill="#fff"/></g>' +
-  '<ellipse cx="50" cy="51" rx="7" ry="5" fill="#F3D6B3"/><ellipse cx="50" cy="48.5" rx="3.3" ry="2.2" fill="#2A2020"/>' +
-  '<rect x="47" y="54" width="6" height="6" rx="1.2" fill="#fff" stroke="#9AA" stroke-width=".6"/><path d="M50 54v6" stroke="#9AA" stroke-width=".6"/></svg>';
-
 function showHud(pct, dir) {
   const gopher = S.settings.zoom_gopher !== '0';
   if (!hud) {
@@ -68,7 +57,8 @@ function showHud(pct, dir) {
   hud.className = 'as-zoomhud' + (gopher ? ' has-gopher' : '');
   hud.setAttribute('data-theme', document.getElementById('app').getAttribute('data-theme') || 'light');
   hud.replaceChildren(
-    gopher ? h('div', { class: 'as-zoomhud__gopher' + (dir > 0 ? ' is-up' : dir < 0 ? ' is-down' : ' is-same'), style: { '--g': String(0.7 + (pct - STEPS[0]) / (STEPS[STEPS.length - 1] - STEPS[0]) * 0.6) }, html: GOPHER }) : null,
+    // гофер растёт вместе с масштабом: от 40 до 74 px
+    gopher ? h('div', { class: 'as-zoomhud__gopher' + (dir > 0 ? ' is-up' : dir < 0 ? ' is-down' : ' is-same'), style: { '--gw': Math.round(40 + (pct - STEPS[0]) * 0.32) + 'px' }, html: gopherSVG({ look: dir > 0 ? 1 : 0 }) }) : null,
     h('div', { class: 'as-zoomhud__text' },
       h('div', { class: 'as-zoomhud__pct as-tnum' }, pct + ' %'),
       h('div', { class: 'as-zoomhud__steps', 'aria-hidden': 'true' }, STEPS.map((s) => h('i', { class: (s === pct ? 'is-on' : '') + (s === 100 ? ' is-base' : '') }))),
