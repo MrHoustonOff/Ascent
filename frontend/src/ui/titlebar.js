@@ -13,7 +13,8 @@ export function mountTitlebar(winEl, { onToggleSidebar, onSearch }) {
     h('div', { class: 'as-titlebar__tools' },
       h('button', { class: 'as-iconbtn', title: 'Поиск (Ctrl+K)', 'aria-label': 'Поиск', onclick: onSearch }, icon('search')),
       h('button', { class: 'as-iconbtn', title: 'Сайдбар (Ctrl+B)', 'aria-label': 'Сайдбар', id: 'as-side-toggle', onclick: onToggleSidebar }, icon('sidebar'))),
-    h('div', { class: 'as-titlebar__ctrls' },
+    // в браузере (веб-версия для macOS) окном управляет сам браузер
+    !window.runtime ? null : h('div', { class: 'as-titlebar__ctrls' },
       h('button', { class: 'as-ctrl', 'aria-label': 'Свернуть', html: G.min, title: 'Свернуть', onclick: () => win.minimise() }),
       maxBtn,
       h('button', { class: 'as-ctrl as-ctrl--close', 'aria-label': 'Закрыть', html: G.close, title: 'Закрыть', onclick: () => win.quit() })));

@@ -28,3 +28,16 @@ jobs:
           name: Ascent-windows-arm64
           path: build/bin/Ascent-arm64.exe
           if-no-files-found: ignore
+  macos-web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.26'
+      - run: GOOS=darwin GOARCH=arm64 go build -o Ascent-mac-arm64 .
+      - run: GOOS=darwin GOARCH=amd64 go build -o Ascent-mac-intel .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Ascent-macos-web
+          path: Ascent-mac-*
