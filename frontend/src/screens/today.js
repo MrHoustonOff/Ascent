@@ -1,6 +1,6 @@
 import { api } from '../api.js';
 import { S } from '../state.js';
-import { h, rich, countUp, gem, idTag } from '../ui/dom.js';
+import { h, rich, countUp, gem, idTag, markerLabel, starChip } from '../ui/dom.js';
 import { icon, stateDot, FLAME, CHECK_GLYPH, DASH_GLYPH } from '../ui/icons.js';
 import { openRecap } from '../ui/recap.js';
 import { go, openId, copy, startLesson, completeLesson, setCheck, setChecksAll, setMarker, rest, refresh } from '../actions.js';
@@ -61,7 +61,7 @@ function heroCard(n, t) {
     case 'lesson_todo': {
       const l = n.lesson;
       add(h('div', { class: 'as-eyebrow' }, 'Продолжить'), themeLine(n),
-        h('h2', { class: 'as-h-title1' }, rich(l.title)), arrowsList(l), themeBar(n),
+        h('h2', { class: 'as-h-title1' }, rich(l.title)), starChip(l.stars), arrowsList(l), themeBar(n),
         h('div', { class: 'as-rowx as-rowx--between' },
           h('span', { class: 'as-p-callout as-tnum' }, n.theme ? `${n.theme.done} из ${n.theme.total} в теме` : ''),
           h('div', { class: 'as-actions' },
@@ -129,12 +129,13 @@ function heroCard(n, t) {
 }
 
 export function qRow(text, done, onToggle, meta, marker) {
-  const b = checkbox(done, onToggle, marker ? 'Маркер отвечен' : 'Вопрос отмечен');
-  return h('li', { class: 'as-q' + (done ? ' is-done' : '') + (marker ? ' is-marker' : '') }, b, h('div', null, h('div', { class: 'as-q__text' }, marker ? gem(done) : null, rich(text)), meta || null));
+  const b = checkbox(done, onToggle, marker ? 'Маркер отвечен' : 'Вопрос отмечен', marker);
+  return h('li', { class: 'as-q' + (done ? ' is-done' : '') + (marker ? ' is-marker' : '') }, b, h('div', null, marker ? markerLabel(done) : null, h('div', { class: 'as-q__text' }, rich(text)), meta || null));
 }
 
-export function checkbox(done, onToggle, label) {
-  const b = h('button', { class: 'as-check', role: 'checkbox', 'aria-checked': String(!!done), 'aria-label': label, onclick: () => onToggle(!done) }, stateDot(done ? 'done' : 'todo'));
+export function checkbox(done, onToggle, label, diamond) {
+  const b = h('button', { class: 'as-check' + (diamond ? ' as-check--diamond' : ''), role: 'checkbox', 'aria-checked': String(!!done), 'aria-label': label, onclick: () => onToggle(!done) },
+    diamond ? h('span', { class: 'as-dbox' + (done ? ' is-done' : ''), html: done ? '<svg viewBox="0 0 10 10"><path d="M1.8 5.4l2.2 2.2 4.4-4.8"/></svg>' : '' }) : stateDot(done ? 'done' : 'todo'));
   b.addEventListener('keydown', (e) => { if (e.key === ' ') { e.preventDefault(); b.click(); } });
   return b;
 }
@@ -192,7 +193,7 @@ function forecastCard(f) {
   return h('section', { class: 'as-card' },
     h('div', { class: 'as-rowx as-rowx--between' },
       h('h3', { class: 'as-h-headline' }, 'Прогноз'),
-      h('a', { class: 'as-a callout', onclick: () => go('#/speed') }, 'Темп')),
+      h('a', { class: 'as-a callout', onclick: () => go('#/speed') }, 'Мой ритм')),
     ...body);
 }
 

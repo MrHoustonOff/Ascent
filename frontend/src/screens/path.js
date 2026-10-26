@@ -1,6 +1,6 @@
 import { api } from '../api.js';
 import { S } from '../state.js';
-import { h, rich, $$, gem, idTag, trk } from '../ui/dom.js';
+import { h, rich, $$, gem, idTag, trk, starChip } from '../ui/dom.js';
 import { icon, stateDot } from '../ui/icons.js';
 import { go, openId, copy, startLesson, completeLesson, undoLesson, setCheck, setChecksAll, setMarker } from '../actions.js';
 import { checkbox, qRow } from './today.js';
@@ -36,7 +36,7 @@ function lessonRow(l, cur, onNote) {
     h('div', { class: 'as-lesson__main' },
       idTag(l.id, 'as-lesson__id'),
       h('span', { class: 'as-lesson__title' }, rich(l.title)),
-      l.stars ? h('span', { class: 'as-stars', title: 'Как часто встречается на собеседованиях', 'aria-label': l.stars + ' из 3' }, '★'.repeat(l.stars)) : null,
+      starChip(l.stars),
       l.note ? h('span', { class: 'as-note-dot', title: 'Есть заметка' }) : null,
       l.doneAt ? h('span', { class: 'as-when' }, l.doneAt) : null),
     h('div', { class: 'as-lesson__actions' },
@@ -141,7 +141,7 @@ async function blockScreen(root, id) {
             h('div', { style: { marginTop: '6px', maxWidth: '280px' } }, progressBar(t.pct, 'Прогресс темы'))),
           h('span', { class: 'callout as-muted as-tnum', style: { textAlign: 'right' } }, t.done + '/' + t.total, t.closedAt ? h('div', { class: 'caption as-subtle' }, t.closedAt === 'ранее' ? 'закрыта ранее' : 'закрыта ' + t.closedAt) : null))))) : null,
     b.markers.length ? h('section', { class: 'as-card' },
-      h('div', { class: 'as-section__head' }, h('h2', { class: 'as-h2' }, gem(b.markers.every((m) => m.done), 18), 'Маркеры блока'),
+      h('div', { class: 'as-section__head' }, h('h2', { class: 'as-h2' }, h('span', { class: 'as-dbox as-dbox--title' + (b.markers.every((m) => m.done) ? ' is-done' : '') }), 'Маркеры блока'),
         h('span', { class: 'callout as-muted as-tnum' }, `${b.markers.filter((m) => m.done).length} из ${b.markers.length}`)),
       h('p', { class: 'as-p-callout' }, 'Вопросы с собесов. Ответьте на все вслух, без конспекта — и блок закрыт.'),
       h('ul', { class: 'as-qlist' }, b.markers.map((m) => qRow(m.text, m.done, (v) => setMarker(m.block, m.n, v), markerMeta(m), true))),

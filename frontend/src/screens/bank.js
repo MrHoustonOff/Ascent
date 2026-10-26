@@ -5,7 +5,7 @@ import { icon } from '../ui/icons.js';
 import { openId, copy, setMarker } from '../actions.js';
 import { checkbox } from './today.js';
 import { markerMeta } from './path.js';
-import { rich, gem, idTag } from '../ui/dom.js';
+import { rich, gem, idTag, markerLabel } from '../ui/dom.js';
 
 const f = { stage: 0, block: '', markers: false, unchecked: false, q: '', random: 0 };
 let seed = 0;
@@ -58,11 +58,12 @@ export async function render(root, arg) {
         list = h('ul', { class: 'as-qlist as-card', style: { padding: '8px 12px 8px 4px', gap: '2px' } });
         root.append(list);
       }
-      const box = q.marker ? checkbox(q.done, (v) => setMarker(q.block, q.n, v), 'Маркер отвечен') : h('span', { style: { width: '32px', height: '32px', display: 'grid', placeItems: 'center', color: 'var(--ink-subtle)', fontSize: '12px' }, title: 'Обычный вопрос, не маркер' }, '·');
+      const box = q.marker ? checkbox(q.done, (v) => setMarker(q.block, q.n, v), 'Маркер отвечен', true) : h('span', { style: { width: '32px', height: '32px', display: 'grid', placeItems: 'center', color: 'var(--ink-subtle)', fontSize: '12px' }, title: 'Обычный вопрос, не маркер' }, '·');
       list.append(h('li', { class: 'as-q' + (q.done ? ' is-done' : '') + (q.marker ? ' is-marker' : ''), 'data-key': q.key },
         box,
         h('div', null,
-          h('div', { class: 'as-q__text' }, q.marker ? h('span', { class: 'as-marker-pill', title: 'Маркер: закрывает блок' }, gem(q.done), 'маркер') : null, rich(q.text)),
+          q.marker ? markerLabel(q.done) : null,
+          h('div', { class: 'as-q__text' }, rich(q.text)),
           markerMeta(q))));
     }
   }

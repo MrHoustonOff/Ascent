@@ -3,20 +3,20 @@ import { S, emit } from '../state.js';
 import { h, pluralRu } from '../ui/dom.js';
 import { icon } from '../ui/icons.js';
 import { toast } from '../ui/toast.js';
-import { lineChart } from './stats.js';
+import { barChart } from './stats.js';
 
 // Темп: без норм и целей. Средняя считается сама; к желаемой дате — мягкая подсказка.
 export async function render(root) {
-  const d = await api.Speed();
+  const [d, weekly] = await Promise.all([api.Speed(), api.Weekly(12)]);
   root.append(
     h('header', { class: 'as-head' },
-      h('div', { class: 'as-eyebrow' }, 'Темп'),
-      h('h1', { class: 'large-title', style: { margin: '4px 0 0' } }, 'Ваш темп'),
+      h('div', { class: 'as-eyebrow' }, 'Мой ритм'),
+      h('h1', { class: 'large-title', style: { margin: '4px 0 0' } }, 'Мой ритм'),
       h('p', { class: 'as-lead' }, 'Никаких норм и обязательств: темп считается сам по закрытым темам, а по нему — спокойный прогноз.')));
 
   if (d.empty) {
     root.append(h('div', { class: 'as-card' }, h('div', { class: 'as-empty' }, 'Закройте первую тему — и здесь появится ваш темп и прогноз.')), targetCard(d));
-    return 'Темп';
+    return 'Мой ритм';
   }
 
   const trendIcon = { up: 'arrowUp', down: 'arrowDown', flat: 'arrowR' }[d.trend];
@@ -35,13 +35,11 @@ export async function render(root) {
   root.append(h('section', { class: 'as-section' },
     h('h2', { class: 'as-h2' }, 'Как менялся темп'),
     h('div', { class: 'as-card', style: { gap: '10px' } },
-      h('div', { class: 'as-section__head' }, h('span', { class: 'callout as-muted' }, 'Тем в день, среднее за скользящие 7 дней'), h('span', { class: 'caption as-subtle' }, `${d.series.length} ${pluralRu(d.series.length, 'день', 'дня', 'дней')}`)),
+      h('div', { class: 'as-section__head' }, h('span', { class: 'callout as-muted' }, 'Закрытые темы по неделям'), h('span', { class: 'caption as-subtle' }, '12 недель')),
       host)));
   requestAnimationFrame(() => {
-    host.append(lineChart(d.series.map((p) => ({ v: p.v, label: p.label })), {
-      w: host.clientWidth || 700, fine: true,
-      tip: (p) => [h('b', null, p.label), h('span', null, `${String(p.v).replace('.', ',')} ${pluralRu(Math.round(p.v), 'тема', 'темы', 'тем')} в день`)],
-    }));
+    host.append(barChart(weekly.map((w) => ({ v: w.themes, label: w.label, today: w.current,
+      tip: `${w.themes} ${pluralRu(w.themes, 'тема', 'темы', 'тем')} · в среднем ${String(Math.round(w.themes / 7 * 10) / 10).replace('.', ',')} в день` })), { w: host.clientWidth || 700 }));
   });
 
   const card = (n, l, cls) => h('div', { class: 'as-card as-stat ' + (cls || '') }, h('div', { class: 'as-stat__n' }, n), h('div', { class: 'as-stat__l' }, l));
@@ -58,7 +56,7 @@ export async function render(root) {
       h('tbody', null, d.rows.map((r) => h('tr', null, h('td', null, r.label), h('td', { class: 'num' }, r.ahead), h('td', null, r.date || '—'), h('td', { class: 'num as-muted' }, r.fork || '—')))))))));
 
   root.append(targetCard(d));
-  return 'Темп';
+  return 'Мой ритм';
 }
 
 function targetCard(d) {

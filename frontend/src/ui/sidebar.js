@@ -6,7 +6,7 @@ import { go } from '../actions.js';
 const SCREENS = [
   { id: 'today', label: 'Сегодня', icon: 'today', hash: '#/today', key: 'Ctrl+1' },
   { id: 'path', label: 'Путь', icon: 'path', hash: '#/path', key: 'Ctrl+2', meta: true },
-  { id: 'speed', label: 'Темп', icon: 'gauge', hash: '#/speed', key: 'Ctrl+3' },
+  { id: 'speed', label: 'Мой ритм', icon: 'gauge', hash: '#/speed', key: 'Ctrl+3' },
   { id: 'stats', label: 'Статистика', icon: 'stats', hash: '#/stats', key: 'Ctrl+4' },
   { id: 'achievements', label: 'Достижения', icon: 'trophy', hash: '#/achievements', key: 'Ctrl+5', ach: true },
   { id: 'bank', label: 'Банк вопросов', icon: 'bank', hash: '#/bank', key: 'Ctrl+6' },

@@ -70,12 +70,12 @@ export async function render(root) {
     requestAnimationFrame(() => {
       const w = host.clientWidth || 640;
       if (chartTab === 'days') host.append(barChart(daily.map((d) => ({ v: d.themes, label: d.label, today: d.today, avg: d.avg7 })), { w }));
-      else if (chartTab === 'total') { let acc = 0; host.append(lineChart(weekly.map((d) => ({ v: (acc += d.themes), label: d.label })), { w })); }
+      else if (chartTab === 'total') { let acc = 0; host.append(barChart(weekly.map((d) => { acc += d.themes; return { v: acc, label: d.label, today: d.current, tip: `всего ${acc} · за неделю +${d.themes}` }; }), { w })); }
       else host.append(barChart(weekly.map((d) => ({ v: d.themes, label: d.label, today: d.current })), { w, ticks: 3 }));
     });
     chartBox.append(h('div', { class: 'as-chart-legend' },
       chartTab === 'total' ? null : h('span', null, h('i'), 'Закрытые темы'),
-      chartTab === 'total' ? h('span', null, h('i', { class: 'l' }), 'Темы нарастающим итогом') : null,
+      chartTab === 'total' ? h('span', null, h('i'), 'Темы нарастающим итогом') : null,
       chartTab === 'days' ? h('span', null, h('i', { class: 'l' }), 'Среднее за 7 дней') : null,
       chartTab === 'days' ? h('span', null, h('i', { class: 'd' }), 'Цель дня') : null));
   };
@@ -88,7 +88,7 @@ export async function render(root) {
       card(`${vel.activeDays28} из 28`, 'активных дней'),
       card(String(vel.bestStreak), pluralRu(vel.bestStreak, 'день', 'дня', 'дней') + ' — лучшая серия'),
       card(vel.bestDay ? `${vel.bestDayThemes} ${themesWord(vel.bestDayThemes)}` : '—', vel.bestDay ? 'лучший день · ' + vel.bestDay : 'лучший день')),
-    h('p', { class: 'caption as-subtle', style: { margin: 0 } }, 'Темп и прогноз — в разделе «Темп».')));
+    h('p', { class: 'caption as-subtle', style: { margin: 0 } }, 'Темп и прогноз — в разделе «Мой ритм».')));
 
   // ритм: дни недели, время суток, рекорды
   root.append(rhythm(ins, w0()));
@@ -305,7 +305,7 @@ function rhythm(ins, width) {
     wdHost.append(barChart(ins.weekdays.map((d) => ({ v: d.avg, label: d.label, today: d.best, tip: `в среднем ${d.avgText} · всего ${d.total}` })), { w }));
   });
   return h('section', { class: 'as-section' },
-    h('h2', { class: 'as-h2' }, 'Ритм'),
+    h('h2', { class: 'as-h2' }, 'Привычки'),
     h('div', { class: 'as-grid3' },
       card(ins.avgActive, 'тем в среднем за учебный день'),
       card(ins.bestWeekday || '—', 'самый сильный день недели'),

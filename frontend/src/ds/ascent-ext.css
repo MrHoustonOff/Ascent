@@ -378,8 +378,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:var(--surface-window)}
 .as-gem .g-c{fill:none;stroke:#fff;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .as-marker-pill{display:inline-flex;align-items:center;gap:3px;padding:2px 9px 2px 6px;border-radius:var(--radius-pill);background:color-mix(in srgb,var(--c-amber) 16%,transparent);color:var(--c-amber);font:600 11px/16px var(--font-sans);letter-spacing:.02em;margin-right:6px;vertical-align:1px;white-space:nowrap}
 .as-marker-pill .as-gem{margin-right:2px;width:14px;height:14px;vertical-align:-2px}
-.as-q.is-marker{background:color-mix(in srgb,var(--c-amber) 7%,transparent)}
-.as-q.is-marker.is-done{background:color-mix(in srgb,var(--success) 6%,transparent)}
+
 
 /* ---------- Темп ---------- */
 .as-speedhero{flex-direction:row;flex-wrap:wrap;gap:var(--space-8);align-items:flex-end;background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 12%,var(--surface-raised)),var(--surface-raised) 60%)}
@@ -415,3 +414,25 @@ html,body{margin:0;height:100%;overflow:hidden;background:var(--surface-window)}
 .as-target__verdict{margin:0;padding:var(--space-3) var(--space-4);border-radius:var(--radius-md);font:400 14px/20px var(--font-sans);text-wrap:pretty;background:var(--accent-soft);color:var(--accent-ink)}
 .as-target__verdict.is-ok{background:var(--success-soft);color:var(--success-ink)}
 .as-target__verdict.is-faster{background:var(--streak-soft);color:var(--streak-ink)}
+
+/* ---------- Маркер: ромб-чекбокс и подпись (вариант Б) ---------- */
+.as-dbox{width:15px;height:15px;transform:rotate(45deg);border-radius:4px;border:2px solid var(--c-amber);display:grid;place-items:center;transition:background .15s ease,border-color .15s ease}
+.as-dbox.is-done{background:var(--success);border-color:var(--success)}
+.as-dbox svg{width:10px;height:10px;transform:rotate(-45deg);fill:none;stroke:var(--surface-raised);stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.as-check--diamond:hover .as-dbox:not(.is-done){background:color-mix(in srgb,var(--c-amber) 18%,transparent)}
+.as-dbox--title{display:inline-grid;width:12px;height:12px;margin:0 12px 0 4px;vertical-align:1px}
+.as-mlabel{display:block;font:700 10.5px/14px var(--font-sans);letter-spacing:.06em;text-transform:uppercase;color:var(--c-amber);margin:2px 0 2px}
+.as-mlabel.is-done{color:var(--success-ink)}
+.as-q.is-marker.is-done .as-q__text{color:var(--ink-muted)}
+
+/* ---------- Звёзды частоты на собесе ---------- */
+.as-stars{display:inline-flex;align-items:center;gap:1px;margin-left:8px;padding:1px 7px 1px 5px;border-radius:var(--radius-pill);vertical-align:2px;white-space:nowrap;letter-spacing:0}
+.as-stars i{display:inline-grid;width:12px;height:12px}
+.as-stars svg{width:12px;height:12px}
+.as-stars i.on svg{fill:currentColor}
+.as-stars i.off svg{fill:none;stroke:currentColor;stroke-width:1;opacity:.45}
+.as-stars b{font:600 11px/16px var(--font-sans);margin-left:4px}
+.as-stars.lv3{background:var(--streak-soft);color:var(--streak-ink)}
+.as-stars.lv2{background:color-mix(in srgb,var(--c-amber) 14%,transparent);color:var(--c-amber)}
+.as-stars.lv1{background:var(--surface-sunken);color:var(--ink-muted)}
+.as-card--lg > .as-stars{align-self:flex-start;margin-left:0;margin-top:-6px}
