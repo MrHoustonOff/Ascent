@@ -11,7 +11,7 @@ import (
 )
 
 func TestCatalog(t *testing.T) {
-	if n := len(Defs); n < 50 || n > 60 {
+	if n := len(Defs); n != 100 {
 		t.Fatalf("достижений %d", n)
 	}
 	ids := map[string]bool{}
@@ -20,10 +20,10 @@ func TestCatalog(t *testing.T) {
 			t.Errorf("повтор %s", d.ID)
 		}
 		ids[d.ID] = true
-		if d.Name == "" || d.Desc == "" || d.eval == nil || d.Icon == "" {
+		if d.Name == "" || d.Desc == "" || d.eval == nil || (d.Icon == "" && d.Mark == "") {
 			t.Errorf("неполное: %s", d.ID)
 		}
-		if strings.Contains(d.Name+d.Desc, "!") {
+		if strings.Contains(strings.ReplaceAll(d.Name+d.Desc, "!=", ""), "!") {
 			t.Errorf("восклицательный знак: %s", d.ID)
 		}
 		for _, w := range []string{"мин ", "минут", "часов"} {

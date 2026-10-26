@@ -96,6 +96,7 @@ async function renderRoute() {
   }
   if (my !== renderSeq) return;
   clear(main);
+  if (!sameScreen) root.classList.add('is-enter');
   main.append(root);
   main.dataset.screen = S.route.name + ':' + S.route.arg;
   main.scrollTop = sameScreen ? keep : 0;

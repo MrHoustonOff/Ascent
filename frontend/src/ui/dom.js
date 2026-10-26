@@ -58,3 +58,18 @@ export function safeRoot(el) {
   el.append = (...kids) => append(el, kids);
   return el;
 }
+
+// Плавный счёт числа при первом показе экрана.
+export function countUp(el, to, suffix = '') {
+  const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduce || !to) { el.textContent = to + suffix; return el; }
+  const t0 = performance.now(), dur = 800;
+  const tick = (t) => {
+    const k = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - k, 3);
+    el.textContent = Math.round(to * e) + suffix;
+    if (k < 1) requestAnimationFrame(tick);
+  };
+  el.textContent = '0' + suffix;
+  requestAnimationFrame(tick);
+  return el;
+}

@@ -27,6 +27,8 @@ const P = {
   sunrise: '<path d="M3 18h18M6.5 18a5.5 5.5 0 0 1 11 0M12 5v3M4.8 9.8l1.8 1.8M19.2 9.8l-1.8 1.8"/>',
   return: '<path d="M9 7L4.5 11.5 9 16"/><path d="M5 11.5h9.5a5 5 0 0 1 0 10H12"/>',
   trophy: '<path d="M8 4h8v5a4 4 0 0 1-8 0z"/><path d="M8 6H4.5c0 3 1.5 4.5 3.7 4.8M16 6h3.5c0 3-1.5 4.5-3.7 4.8M12 13v4M8.5 20.5h7M9.5 17h5"/>',
+  chip: '<rect x="6" y="6" width="12" height="12" rx="2.5"/><path d="M9 3v3M15 3v3M9 18v3M15 18v3M3 9h3M3 15h3M18 9h3M18 15h3"/><rect x="9.5" y="9.5" width="5" height="5" rx="1"/>',
+  gopher: '<path d="M5.5 8.5c0-3.4 2.9-5.5 6.5-5.5s6.5 2.1 6.5 5.5v8c0 2.6-2.6 4.5-6.5 4.5s-6.5-1.9-6.5-4.5z"/><path d="M6 6.2c-1.6-.9-2.9.4-2.2 1.8M18 6.2c1.6-.9 2.9.4 2.2 1.8"/><circle cx="9.3" cy="8.8" r="2"/><circle cx="14.7" cy="8.8" r="2"/><circle cx="9.7" cy="9" r=".7" fill="currentColor"/><circle cx="15.1" cy="9" r=".7" fill="currentColor"/><path d="M10.8 12.2c.4-.6 2-.6 2.4 0"/><path d="M11.2 13v1.6h1.6V13"/>',
   lock: '<rect x="5" y="10.5" width="14" height="10" rx="3"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/>',
 };
 
@@ -50,3 +52,76 @@ export function achSvg(key, size = 28) {
 }
 
 export const trophyPath = P.trophy;
+
+// ---------- кастомные значки достижений ----------
+// Форма зависит от группы, цвет — от уровня, внутри — свой глиф или надпись (число, ID, кусочек кода).
+const NS = 'http://www.w3.org/2000/svg';
+const SHAPES = {
+  themes: 'M32 4a28 28 0 1 1 0 56a28 28 0 1 1 0-56z',
+  day: 'M32 3.5l14 9.7 9 13.5v10.6l-9 13.5-14 9.7-14-9.7-9-13.5V26.7l9-13.5z',
+  streak: 'M32 3c7 7 21 14 21 31a21 21 0 0 1-42 0C11 20 25 14 32 3z',
+  week: 'M18 5h28a13 13 0 0 1 13 13v28a13 13 0 0 1-13 13H18A13 13 0 0 1 5 46V18A13 13 0 0 1 18 5z',
+  month: 'M14 9h36a9 9 0 0 1 9 9v32a9 9 0 0 1-9 9H14a9 9 0 0 1-9-9V18a9 9 0 0 1 9-9z',
+  blocks: 'M32 3l25 14.5v29L32 61 7 46.5v-29z',
+  stages: 'M32 3l25 9v17c0 15-10.5 26.5-25 32C17.5 55.5 7 44 7 29V12z',
+  tracks: 'M22 4h20l14 14v28L42 60H22L8 46V18z',
+  code: 'M13 8h38a8 8 0 0 1 8 8v32a8 8 0 0 1-8 8H13a8 8 0 0 1-8-8V16a8 8 0 0 1 8-8z',
+  special: (() => { let d = ''; for (let i = 0; i < 24; i++) { const a = (i / 24) * Math.PI * 2 - Math.PI / 2, r = i % 2 ? 26 : 30; d += (i ? 'L' : 'M') + (32 + r * Math.cos(a)).toFixed(1) + ' ' + (32 + r * Math.sin(a)).toFixed(1); } return d + 'z'; })(),
+};
+const TIER = {
+  accent: ['--accent-soft', '--accent', '--accent-ink'],
+  streak: ['--streak-soft', '--streak', '--streak-ink'],
+  success: ['--success-soft', '--success', '--success-ink'],
+};
+let uid = 0;
+
+function el(n, a, kids) {
+  const e = document.createElementNS(NS, n);
+  for (const k in a) e.setAttribute(k, a[k]);
+  (kids || []).forEach((c) => e.append(c));
+  return e;
+}
+
+export function achBadge(x, size = 64) {
+  const svg = el('svg', { viewBox: '0 0 64 64', width: size, height: size, class: 'as-badge-svg', 'aria-hidden': 'true' });
+  if (!x.unlocked) {
+    svg.append(el('path', { d: SHAPES.themes, class: 'b-lock-bg' }));
+    const g = achSvg('lock', 24); g.setAttribute('x', 20); g.setAttribute('y', 20); g.setAttribute('class', 'b-lock');
+    svg.append(g);
+    return svg;
+  }
+  const [soft, main, ink] = TIER[x.tier] || TIER.accent;
+  const id = 'g' + (++uid);
+  const shape = SHAPES[x.group] || SHAPES.themes;
+  svg.append(el('defs', {}, [
+    el('linearGradient', { id, x1: 0, y1: 0, x2: 0, y2: 1 }, [
+      el('stop', { offset: '0', style: `stop-color:color-mix(in srgb,var(${soft}) 70%,var(--surface-raised))` }),
+      el('stop', { offset: '1', style: `stop-color:color-mix(in srgb,var(${main}) 26%,var(${soft}))` }),
+    ]),
+    el('clipPath', { id: id + 'c' }, [el('path', { d: shape })]),
+  ]));
+  svg.append(el('path', { d: shape, fill: `url(#${id})`, style: `stroke:var(${main});stroke-width:2` }));
+  // внутренний контур и блик
+  svg.append(el('path', { d: shape, transform: 'translate(32 32) scale(.82) translate(-32 -32)', fill: 'none', style: `stroke:var(${main});stroke-opacity:.35;stroke-width:1.2;stroke-dasharray:2 3` }));
+  const shine = el('rect', { x: -40, y: -10, width: 18, height: 90, class: 'b-shine', transform: 'rotate(25)', 'clip-path': `url(#${id}c)` });
+  svg.append(el('g', { 'clip-path': `url(#${id}c)` }, [shine]));
+  const color = `color:var(${ink});fill:var(${ink})`;
+  const mark = x.mark || '';
+  if (x.group === 'code') {
+    const fs = mark.length > 5 ? 11 : mark.length > 3 ? 14 : 17;
+    const t = el('text', { x: 32, y: 32 + fs * 0.36, 'text-anchor': 'middle', class: 'b-code', style: color + `;font-size:${fs}px` });
+    t.textContent = mark;
+    svg.append(t);
+  } else if (mark) {
+    const g = achSvg(x.icon, 16); g.setAttribute('x', 24); g.setAttribute('y', 12); g.setAttribute('style', `color:var(${ink})`);
+    svg.append(g);
+    const fs = mark.length > 2 ? 15 : 19;
+    const t = el('text', { x: 32, y: 47, 'text-anchor': 'middle', class: 'b-num', style: color + `;font-size:${fs}px` });
+    t.textContent = mark;
+    svg.append(t);
+  } else {
+    const g = achSvg(x.icon, 30); g.setAttribute('x', 17); g.setAttribute('y', 17); g.setAttribute('style', `color:var(${ink})`);
+    svg.append(g);
+  }
+  return svg;
+}

@@ -12,6 +12,8 @@ type AchDTO struct {
 	ID       string `json:"id"`
 	Icon     string `json:"icon"`
 	Tier     string `json:"tier"`
+	Group    string `json:"group"`
+	Mark     string `json:"mark"`
 	Unlocked bool   `json:"unlocked"`
 	Name     string `json:"name"`
 	Desc     string `json:"desc"`
@@ -28,9 +30,13 @@ type AchListDTO struct {
 }
 
 type AchRef struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
-	Desc string `json:"desc"`
+	ID    string `json:"id"`
+	Icon  string `json:"icon"`
+	Tier  string `json:"tier"`
+	Group string `json:"group"`
+	Mark  string `json:"mark"`
+	Name  string `json:"name"`
+	Desc  string `json:"desc"`
 }
 
 // syncAch записывает в БД все выполненные достижения; возвращает только что открытые.
@@ -48,7 +54,7 @@ func (a *App) syncAch(s *snap) []AchRef {
 			continue
 		}
 		if err := a.st.UnlockAchievement(r.ID, r.At, false); err == nil {
-			fresh = append(fresh, AchRef{r.ID, r.Name, r.Desc})
+			fresh = append(fresh, AchRef{ID: r.ID, Icon: r.Icon, Tier: r.Tier, Group: r.Group, Mark: r.Mark, Name: r.Name, Desc: r.Desc})
 		}
 	}
 	return fresh
@@ -74,9 +80,10 @@ func (a *App) Achievements() (AchListDTO, error) {
 	}
 	out := AchListDTO{Items: []AchDTO{}, Total: len(ach.Defs)}
 	for _, d := range ach.Defs {
-		x := AchDTO{ID: d.ID, Icon: d.Icon, Tier: d.Tier}
+		x := AchDTO{ID: d.ID}
 		if row, ok := have[d.ID]; ok {
 			x.Unlocked, x.Name, x.Desc, x.New = true, d.Name, d.Desc, !row.Seen
+			x.Icon, x.Tier, x.Group, x.Mark = d.Icon, d.Tier, d.Group, d.Mark
 			x.order = row.At
 			if row.At.IsZero() {
 				x.When = "ранее"

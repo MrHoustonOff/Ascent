@@ -282,10 +282,10 @@ html,body{margin:0;height:100%;overflow:hidden;background:var(--surface-window)}
 .as-ach{display:grid;grid-template-columns:auto minmax(0,1fr);gap:var(--space-4);align-items:start;padding:var(--space-4);background:var(--surface-raised);border:1px solid var(--line);border-radius:var(--radius-lg);box-shadow:var(--shadow-card);min-height:104px;cursor:default;transition:transform .15s ease}
 .as-ach.is-new{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft),var(--shadow-card)}
 .as-ach.is-locked{background:transparent;box-shadow:none;border-style:dashed;border-color:var(--line-strong)}
-.as-ach__badge{width:56px;height:56px;border-radius:18px;display:grid;place-items:center;flex:none;background:var(--accent-soft);color:var(--accent-ink)}
+.as-ach__badge{width:64px;height:64px;display:grid;place-items:center;flex:none}
 .as-ach__badge--streak{background:var(--streak-soft);color:var(--streak-ink)}
 .as-ach__badge--success{background:var(--success-soft);color:var(--success-ink)}
-.as-ach.is-locked .as-ach__badge{background:var(--surface-sunken);color:var(--ink-subtle)}
+
 .as-ach__body{display:flex;flex-direction:column;gap:2px;min-width:0}
 .as-ach__name{font:600 15px/20px var(--font-sans);letter-spacing:-.005em;overflow-wrap:anywhere;display:flex;gap:var(--space-2);align-items:center;flex-wrap:wrap}
 .as-ach__desc{font:400 13px/18px var(--font-sans);color:var(--ink-muted);text-wrap:pretty;overflow-wrap:anywhere}
@@ -293,4 +293,51 @@ html,body{margin:0;height:100%;overflow:hidden;background:var(--surface-window)}
 .as-ach.is-locked .as-ach__name{color:var(--ink-muted)}
 .as-achhead{display:flex;flex-direction:column;gap:var(--space-3)}
 .as-ach.is-locked{min-height:0;padding:var(--space-3) var(--space-4);align-items:center;opacity:.9}
-.as-ach.is-locked .as-ach__badge{width:40px;height:40px;border-radius:13px}
+.as-ach.is-locked .as-ach__badge{width:44px;height:44px}
+
+.as-badge-svg{display:block;overflow:visible;filter:drop-shadow(0 2px 4px rgb(0 0 0 / .08))}
+.as-badge-svg .b-num{font-family:var(--font-sans);font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.as-badge-svg .b-code{font-family:var(--font-mono);font-weight:700}
+.as-badge-svg .b-lock-bg{fill:var(--surface-sunken);stroke:var(--line-strong);stroke-width:1.5;stroke-dasharray:3 3}
+.as-badge-svg .b-lock{color:var(--ink-subtle)}
+.as-badge-svg .b-shine{fill:#fff;opacity:0}
+.as-ach:hover .b-shine,.as-ach.is-new .b-shine{animation:as-shine 1.4s ease}
+.as-ach.is-new .as-badge-svg{animation:as-wobble 1.2s cubic-bezier(.3,.7,.3,1) .2s}
+.as-ach:hover .as-badge-svg{transform:translateY(-1px) scale(1.04);transition:transform .2s cubic-bezier(.3,.7,.3,1)}
+@keyframes as-shine{0%{opacity:0;transform:rotate(25deg) translateX(0)}20%{opacity:.45}100%{opacity:0;transform:rotate(25deg) translateX(110px)}}
+@keyframes as-wobble{0%{transform:scale(.6) rotate(-12deg);opacity:0}60%{transform:scale(1.08) rotate(3deg);opacity:1}100%{transform:none}}
+
+/* ---------- Анимации входа на экран (только при первом показе экрана) ---------- */
+.is-enter>*{animation:as-rise .42s cubic-bezier(.3,.7,.3,1) both}
+.is-enter>*:nth-child(2){animation-delay:.04s}.is-enter>*:nth-child(3){animation-delay:.08s}.is-enter>*:nth-child(4){animation-delay:.12s}
+.is-enter>*:nth-child(5){animation-delay:.16s}.is-enter>*:nth-child(n+6){animation-delay:.2s}
+.is-enter .as-ach{animation:as-rise .4s cubic-bezier(.3,.7,.3,1) both;animation-delay:calc(var(--i,0) * 18ms + .15s)}
+.is-enter .as-bar>i{animation:as-grow-x .9s cubic-bezier(.3,.7,.3,1) both .15s;transform-origin:left}
+.is-enter .as-cell{animation:as-pop-in .35s cubic-bezier(.3,.7,.3,1) both;animation-delay:calc(var(--i,0) * 4ms + .1s)}
+.is-enter .as-dot{animation:as-pop-in .4s cubic-bezier(.3,.7,.3,1) both;animation-delay:calc(var(--i,0) * 50ms + .15s)}
+@keyframes as-rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes as-grow-x{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes as-pop-in{from{opacity:0;transform:scale(.5)}to{opacity:1;transform:none}}
+
+/* ---------- Графики: анимации и тултип ---------- */
+.as-chart .bar{fill:url(#barg);transform-box:fill-box;transform-origin:bottom}
+.as-chart .bar.is-today{fill:var(--accent-hover)}
+.as-chart .hover-col{fill:var(--hover-wash);transition:opacity .12s ease}
+.as-chart .goal-label{font-size:11px;fill:var(--ink-subtle)}
+.as-chart .area{fill:url(#areag)}
+.as-chart .guide{stroke:var(--line-strong);stroke-width:1;stroke-dasharray:3 3;transition:opacity .12s ease}
+.as-chart .dot{transition:r .15s ease;transform-box:fill-box;transform-origin:center}
+.as-chart .dot.is-hot{r:6px}
+.as-chart--bars .bar{animation:as-bar-up .7s cubic-bezier(.3,.7,.3,1) both;animation-delay:calc(var(--i) * 18ms)}
+.as-chart .draw{stroke-dasharray:1;stroke-dashoffset:0;animation:as-draw 1.1s cubic-bezier(.3,.7,.3,1) both .25s}
+.as-chart--line .area{animation:as-fade .8s ease both .5s}
+.as-chart--line .dot{animation:as-pop-in .35s cubic-bezier(.3,.7,.3,1) both;animation-delay:calc(var(--i) * 70ms + .3s)}
+@keyframes as-bar-up{from{transform:scaleY(0)}to{transform:scaleY(1)}}
+@keyframes as-draw{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
+.as-tip{position:absolute;left:0;top:0;z-index:70;pointer-events:none;display:flex;flex-direction:column;gap:1px;padding:6px 10px;border-radius:var(--radius-md);background:var(--surface-overlay);box-shadow:var(--shadow-popover);font:400 12px/16px var(--font-sans);color:var(--ink-muted);opacity:0;transition:opacity .12s ease;white-space:nowrap}
+.as-tip b{font-weight:600;color:var(--ink);font-size:13px}
+.as-tip.is-on{opacity:1}
+/* ring на «Сегодня» заполняется при входе */
+.is-enter .as-ring__value{animation:as-ring 1.1s cubic-bezier(.3,.7,.3,1) both .2s}
+@keyframes as-ring{from{stroke-dasharray:0 999}}
+.as-countup{font-variant-numeric:tabular-nums}

@@ -1,6 +1,6 @@
 import { api } from '../api.js';
 import { S } from '../state.js';
-import { h, rich } from '../ui/dom.js';
+import { h, rich, countUp } from '../ui/dom.js';
 import { icon, stateDot, FLAME, CHECK_GLYPH, DASH_GLYPH } from '../ui/icons.js';
 import { go, openId, copy, startLesson, completeLesson, setCheck, setChecksAll, setMarker, rest, refresh } from '../actions.js';
 
@@ -154,10 +154,11 @@ function streakCard(s) {
     if (d.state === 'done') el.innerHTML = CHECK_GLYPH;
     if (d.state === 'rest') el.innerHTML = DASH_GLYPH;
     if (d.state === 'future') el.style.opacity = '.5';
+    el.style.setProperty('--i', s.week.indexOf(d));
     return h('div', { class: 'as-day' }, el, d.label);
   };
   const head = s.n > 0
-    ? h('div', null, h('div', { class: 'as-streak__num', style: { fontSize: '44px', lineHeight: '44px' } }, String(s.n)), h('div', { class: 'as-streak__unit' }, s.unit))
+    ? h('div', null, countUp(h('div', { class: 'as-streak__num', style: { fontSize: '44px', lineHeight: '44px' } }), s.n), h('div', { class: 'as-streak__unit' }, s.unit))
     : h('div', { class: 'as-p-callout', style: { maxWidth: '200px' } }, 'Начните сегодня — и здесь появится серия');
   const flame = h('div', { class: 'as-flame', html: FLAME });
   return h('section', { class: 'as-card as-streak' },
@@ -171,7 +172,7 @@ function ringCard(r) {
   const C = 2 * Math.PI * 40;
   const ring = h('div', { class: 'as-ring', role: 'img', 'aria-label': `Пройдено ${r.pct} %` },
     h('div', { html: `<svg viewBox="0 0 96 96"><circle class="as-ring__track" cx="48" cy="48" r="40"/><circle class="as-ring__value" cx="48" cy="48" r="40" stroke-dasharray="${(r.pct / 100 * C).toFixed(1)} 999"/></svg>`, style: { width: '100%', height: '100%' } }),
-    h('div', { class: 'as-ring__label' }, h('span', null, r.pct + '%', h('small', null, 'пройдено'))));
+    h('div', { class: 'as-ring__label' }, h('span', null, countUp(h('span'), r.pct, '%'), h('small', null, 'пройдено'))));
   const word = r.total % 10 === 1 && r.total % 100 !== 11 ? 'урока' : 'уроков';
   return h('section', { class: 'as-card', style: { flexDirection: 'row', alignItems: 'center', gap: '20px' } },
     ring,

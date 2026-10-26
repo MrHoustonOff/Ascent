@@ -19,6 +19,7 @@ type Def struct {
 	Icon  string // ключ иконки на фронтенде
 	Tier  string // accent | streak | success
 	Group string
+	Mark  string // короткая надпись на значке: число, ID блока или кусочек кода
 	eval  func(*ctx) (time.Time, bool)
 }
 
@@ -232,11 +233,71 @@ func milestone(c *ctx) (time.Time, bool) {
 	return best, true
 }
 
+func blockID(id string) func(*ctx) (time.Time, bool) {
+	return func(c *ctx) (time.Time, bool) {
+		b := c.in.Plan.Blocks[id]
+		if b == nil {
+			return time.Time{}, false
+		}
+		t, ok := c.in.BlockClosedAt(b)
+		return t, ok && !t.IsZero()
+	}
+}
+
+// trackDone: закрыты все темы трека.
+func trackDone(track string) func(*ctx) (time.Time, bool) {
+	return func(c *ctx) (time.Time, bool) {
+		var last time.Time
+		n := 0
+		for _, th := range c.in.Plan.Themes {
+			if !strings.HasPrefix(th.ID, track+"-") {
+				continue
+			}
+			n++
+			t, ok := c.in.ThemeClosedAt(th)
+			if !ok {
+				return time.Time{}, false
+			}
+			if t.After(last) {
+				last = t
+			}
+		}
+		return last, n > 0
+	}
+}
+
+func perMonth(n int) func(*ctx) (time.Time, bool) {
+	return func(c *ctx) (time.Time, bool) {
+		cnt := map[string]int{}
+		var best time.Time
+		for _, cl := range c.closures {
+			m := cl.day[:7]
+			cnt[m]++
+			if cnt[m] == n && (best.IsZero() || cl.at.Before(best)) {
+				best = cl.at
+			}
+		}
+		return best, !best.IsZero()
+	}
+}
+
+// allWeekdays: темы закрывались в каждый из семи дней недели (в любые недели).
+func allWeekdays(c *ctx) (time.Time, bool) {
+	seen := map[time.Weekday]bool{}
+	for _, cl := range c.closures {
+		seen[stats.ParseDay(cl.day).Weekday()] = true
+		if len(seen) == 7 {
+			return cl.at, true
+		}
+	}
+	return time.Time{}, false
+}
+
 // ---------- каталог ----------
 
 var Defs = []Def{
 	// сколько тем закрыто
-	{ID: "t1", Group: "themes", Icon: "spark", Tier: "accent", Name: "Первый шаг", Desc: "Закрыта первая тема: уроки пройдены, вопросы отвечены. Дальше проще.", eval: countThemes(1)},
+	{ID: "t1", Group: "themes", Icon: "gopher", Tier: "accent", Name: "Первый шаг", Desc: "Закрыта первая тема: уроки пройдены, вопросы отвечены. Дальше проще.", eval: countThemes(1)},
 	{ID: "t3", Group: "themes", Icon: "spark", Tier: "accent", Name: "Втянулись", Desc: "Три закрытые темы. Это уже не проба, а начало привычки.", eval: countThemes(3)},
 	{ID: "t5", Group: "themes", Icon: "star", Tier: "accent", Name: "Пятёрка", Desc: "Пять тем позади.", eval: countThemes(5)},
 	{ID: "t10", Group: "themes", Icon: "star", Tier: "accent", Name: "Десяток", Desc: "Десять закрытых тем. Самое время оглянуться и увидеть, сколько уже пройдено.", eval: countThemes(10)},
@@ -248,7 +309,7 @@ var Defs = []Def{
 	{ID: "t100", Group: "themes", Icon: "crown", Tier: "accent", Name: "Сотня", Desc: "Сто тем закрыто. Больше половины пути.", eval: countThemes(100)},
 	{ID: "t130", Group: "themes", Icon: "crown", Tier: "accent", Name: "Дальше, чем казалось", Desc: "Сто тридцать тем. Когда-то это число выглядело недостижимым.", eval: countThemes(130)},
 	{ID: "t160", Group: "themes", Icon: "flag", Tier: "accent", Name: "Почти всё", Desc: "Сто шестьдесят тем. До конца остались считаные.", eval: countThemes(160)},
-	{ID: "t180", Group: "themes", Icon: "peak", Tier: "accent", Name: "Каждая тема", Desc: "Закрыта каждая тема курса. Вы прошли весь путь.", eval: countThemes(180)},
+	{ID: "t180", Group: "themes", Icon: "gopher", Tier: "accent", Name: "Каждая тема", Desc: "Закрыта каждая тема курса. Вы прошли весь путь.", eval: countThemes(180)},
 
 	// несколько тем за день
 	{ID: "d2", Group: "day", Icon: "twin", Tier: "streak", Name: "Дубль", Desc: "Две темы закрыты за один учебный день.", eval: perDay(2)},
@@ -307,8 +368,77 @@ var Defs = []Def{
 	})},
 	{ID: "x_early", Group: "special", Icon: "sunrise", Tier: "streak", Name: "Жаворонок", Desc: "Тема закрыта утром, между пятью и девятью часами.", eval: firstWhere(func(c *ctx, cl closure) bool { h := hourOf(c, cl.at); return h >= 5 && h < 9 })},
 	{ID: "x_weekend", Group: "special", Icon: "calendar", Tier: "streak", Name: "Выходные с пользой", Desc: "Темы закрыты и в субботу, и в воскресенье одной недели.", eval: weekend},
-	{ID: "x_back", Group: "special", Icon: "return", Tier: "streak", Name: "С возвращением", Desc: "Тема закрыта после паузы в три дня и больше. Пропуск — не провал.", eval: comeback},
-	{ID: "x_mile", Group: "special", Icon: "peak", Tier: "success", Name: "Можно на собесы", Desc: "Закрыты все этапы до вехи. Можно пробовать себя на собеседованиях стажёра.", eval: milestone},
+	{ID: "x_back", Group: "special", Icon: "gopher", Tier: "streak", Name: "С возвращением", Desc: "Тема закрыта после паузы в три дня и больше. Пропуск — не провал.", eval: comeback},
+	{ID: "x_mile", Group: "special", Icon: "gopher", Tier: "success", Name: "Можно на собесы", Desc: "Закрыты все этапы до вехи. Можно пробовать себя на собеседованиях стажёра.", eval: milestone},
+}
+
+func init() {
+	Defs = append(Defs, more...)
+	for i := range Defs {
+		d := &Defs[i]
+		if d.Mark != "" {
+			continue
+		}
+		switch d.Group {
+		case "themes", "day", "streak", "week", "blocks", "month":
+			d.Mark = strings.TrimLeft(d.ID, "tdswbm")
+		}
+	}
+}
+
+var more = []Def{
+	{ID: "t2", Group: "themes", Icon: "spark", Tier: "accent", Name: "Не одна", Desc: "Вторая закрытая тема. Первая была не случайностью.", eval: countThemes(2)},
+	{ID: "t7", Group: "themes", Icon: "star", Tier: "accent", Name: "Семь тем", Desc: "Семь закрытых тем — целая неделя по одной.", eval: countThemes(7)},
+	{ID: "t20", Group: "themes", Icon: "layers", Tier: "accent", Name: "Двадцатка", Desc: "Двадцать тем позади.", eval: countThemes(20)},
+	{ID: "t30", Group: "themes", Icon: "layers", Tier: "accent", Name: "Тридцать", Desc: "Тридцать закрытых тем. Это уже серьёзный объём.", eval: countThemes(30)},
+	{ID: "t50", Group: "themes", Icon: "bolt", Tier: "accent", Name: "Полсотни", Desc: "Пятьдесят тем закрыто.", eval: countThemes(50)},
+	{ID: "t70", Group: "themes", Icon: "compass", Tier: "accent", Name: "Семьдесят", Desc: "Семьдесят тем. Вы уже далеко от старта.", eval: countThemes(70)},
+	{ID: "t90", Group: "themes", Icon: "compass", Tier: "accent", Name: "Половина", Desc: "Девяносто тем — ровно половина курса.", eval: countThemes(90)},
+	{ID: "t120", Group: "themes", Icon: "crown", Tier: "accent", Name: "Две трети", Desc: "Сто двадцать тем: две трети пути.", eval: countThemes(120)},
+	{ID: "t150", Group: "themes", Icon: "flag", Tier: "accent", Name: "Сто пятьдесят", Desc: "Сто пятьдесят тем. Финиш уже виден.", eval: countThemes(150)},
+	{ID: "t170", Group: "themes", Icon: "flag", Tier: "accent", Name: "Последний десяток", Desc: "Сто семьдесят тем. Осталась последняя десятка.", eval: countThemes(170)},
+
+	{ID: "d6", Group: "day", Icon: "rocket", Tier: "streak", Name: "Марафон", Desc: "Шесть тем за один день. Редкость, и хорошо, что редкость.", eval: perDay(6)},
+
+	{ID: "s4", Group: "streak", Icon: "flame", Tier: "streak", Name: "Четыре дня", Desc: "Четыре дня подряд с закрытой темой.", eval: streak(4)},
+	{ID: "s6", Group: "streak", Icon: "flame", Tier: "streak", Name: "Шесть дней", Desc: "Шесть дней подряд. До недели — один шаг.", eval: streak(6)},
+	{ID: "s45", Group: "streak", Icon: "sun", Tier: "streak", Name: "Полтора месяца", Desc: "Сорок пять дней подряд с закрытой темой.", eval: streak(45)},
+	{ID: "s60", Group: "streak", Icon: "sun", Tier: "streak", Name: "Два месяца", Desc: "Шестьдесят дней подряд. Учёба стала частью дня.", eval: streak(60)},
+
+	{ID: "w3", Group: "week", Icon: "wave", Tier: "accent", Name: "Неделя в ритме", Desc: "Три темы за одну календарную неделю.", eval: perWeek(3)},
+	{ID: "w7", Group: "week", Icon: "wave", Tier: "accent", Name: "Тема на каждый день", Desc: "Семь тем за календарную неделю.", eval: perWeek(7)},
+	{ID: "w20", Group: "week", Icon: "rocket", Tier: "accent", Name: "Неделя-легенда", Desc: "Двадцать тем за одну неделю.", eval: perWeek(20)},
+
+	{ID: "m20", Group: "month", Icon: "calendar", Tier: "success", Name: "Хороший месяц", Desc: "Двадцать тем за один календарный месяц.", eval: perMonth(20)},
+	{ID: "m40", Group: "month", Icon: "calendar", Tier: "success", Name: "Сильный месяц", Desc: "Сорок тем за один календарный месяц.", eval: perMonth(40)},
+
+	{ID: "b2", Group: "blocks", Icon: "block", Tier: "success", Name: "Второй блок", Desc: "Два закрытых блока.", eval: blocksClosed(2)},
+	{ID: "b3", Group: "blocks", Icon: "block", Tier: "success", Name: "Три блока", Desc: "Три блока позади.", eval: blocksClosed(3)},
+	{ID: "b15", Group: "blocks", Icon: "grid", Tier: "success", Name: "Пятнадцать блоков", Desc: "Пятнадцать закрытых блоков.", eval: blocksClosed(15)},
+	{ID: "b25", Group: "blocks", Icon: "grid", Tier: "success", Name: "Двадцать пять блоков", Desc: "Двадцать пять блоков закрыто.", eval: blocksClosed(25)},
+	{ID: "b45", Group: "blocks", Icon: "grid", Tier: "success", Name: "Сорок пять блоков", Desc: "Сорок пять блоков. Остались считаные.", eval: blocksClosed(45)},
+
+	{ID: "n_hello", Group: "code", Mark: "main()", Tier: "accent", Name: "Hello, world", Desc: "Закрыт блок GO-1 «Первая программа».", eval: blockID("GO-1")},
+	{ID: "n_ptr", Group: "code", Mark: "*p", Tier: "accent", Name: "По адресу", Desc: "Закрыт блок GO-6 «Указатели».", eval: blockID("GO-6")},
+	{ID: "n_slice", Group: "code", Mark: "[]T", Tier: "accent", Name: "Слайсы без сюрпризов", Desc: "Закрыт блок GO-7 «Массивы и слайсы». append больше не пугает.", eval: blockID("GO-7")},
+	{ID: "n_map", Group: "code", Mark: "map", Tier: "accent", Name: "Ключ и значение", Desc: "Закрыт блок GO-9 «Map».", eval: blockID("GO-9")},
+	{ID: "n_iface", Group: "code", Mark: "any", Tier: "accent", Name: "Утиная типизация", Desc: "Закрыт блок GO-12 «Интерфейсы».", eval: blockID("GO-12")},
+	{ID: "n_err", Group: "code", Mark: "err", Tier: "accent", Name: "if err != nil", Desc: "Закрыт блок GO-13 «Ошибки». Ошибка — обычное значение.", eval: blockID("GO-13")},
+	{ID: "n_gen", Group: "code", Mark: "[T]", Tier: "accent", Name: "Обобщённо", Desc: "Закрыт блок GO-14 «Дженерики».", eval: blockID("GO-14")},
+	{ID: "n_go", Group: "code", Mark: "go f()", Tier: "accent", Name: "Горутина", Desc: "Закрыт блок GO-15 «Горутины».", eval: blockID("GO-15")},
+	{ID: "n_chan", Group: "code", Mark: "<-ch", Tier: "accent", Name: "Из канала", Desc: "Закрыт блок GO-17 «Каналы и select».", eval: blockID("GO-17")},
+	{ID: "n_ctx", Group: "code", Mark: "ctx", Tier: "accent", Name: "Вовремя остановиться", Desc: "Закрыт блок GO-19 «context».", eval: blockID("GO-19")},
+
+	{ID: "f_fund", Group: "tracks", Icon: "chip", Tier: "success", Name: "Как работает машина", Desc: "Закрыты все темы трека ФУНД: процессор, память, потоки.", eval: trackDone("ФУНД")},
+	{ID: "f_sql", Group: "tracks", Icon: "db", Tier: "success", Name: "SELECT без страха", Desc: "Закрыты все темы по SQL.", eval: trackDone("SQL")},
+	{ID: "f_pg", Group: "tracks", Icon: "db", Tier: "success", Name: "Postgres изнутри", Desc: "Закрыты все темы про устройство Postgres.", eval: trackDone("PG")},
+	{ID: "f_net", Group: "tracks", Icon: "net", Tier: "success", Name: "Вся сеть", Desc: "Закрыты все сетевые темы: от пакета до REST.", eval: trackDone("СЕТЬ")},
+	{ID: "f_test", Group: "tracks", Icon: "check", Tier: "success", Name: "Покрыто тестами", Desc: "Закрыты все темы про тестирование.", eval: trackDone("ТЕСТ")},
+	{ID: "f_infra", Group: "tracks", Icon: "box", Tier: "success", Name: "Прод под контролем", Desc: "Закрыты все инфраструктурные темы: Docker, кэш, наблюдаемость, CI/CD, Kubernetes.", eval: trackDone("ИНФРА")},
+	{ID: "f_brok", Group: "tracks", Icon: "queue", Tier: "success", Name: "Доставлено", Desc: "Закрыты все темы про Kafka и RabbitMQ.", eval: trackDone("БРОК")},
+	{ID: "f_sysd", Group: "tracks", Icon: "compass", Tier: "success", Name: "Архитектор", Desc: "Закрыты все темы по системному дизайну.", eval: trackDone("СИСД")},
+
+	{ID: "x_week7", Group: "special", Icon: "calendar", Tier: "streak", Name: "Вся неделя", Desc: "Темы закрывались в каждый из семи дней недели — в разные недели тоже считается.", eval: allWeekdays},
 }
 
 // Result — состояние достижения.
