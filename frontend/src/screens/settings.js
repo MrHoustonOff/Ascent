@@ -59,6 +59,19 @@ function zoomControl() {
   return wrap;
 }
 
+// Итоги: подпись на картинках и папка, внутри которой каждый экспорт получает свою подпапку
+function recapCard(set) {
+  const nick = h('input', { class: 'as-input', type: 'text', maxlength: 40, placeholder: '@ник · учу Go', value: set.nick || '', 'aria-label': 'Подпись на картинках', style: { width: '240px' } });
+  nick.addEventListener('change', () => save('nick', nick.value.trim()));
+  const dir = h('span', { class: 'as-mono as-muted', style: { fontSize: '12px', overflowWrap: 'anywhere', textAlign: 'right', maxWidth: '280px' } }, set.export_dir || 'спросим при первом сохранении');
+  const change = h('button', { class: 'as-btn as-btn--ghost as-btn--sm', onclick: async () => {
+    try { const d = await api.ChangeExportDir(); if (d) { dir.textContent = d; S.settings.export_dir = d; } } catch (e) { toast({ title: e.message || 'Не удалось выбрать папку', kind: 'streak' }); }
+  } }, 'Изменить');
+  return card('Итоги',
+    row('Подпись на картинках', 'Видна внизу каждой картинки рядом с логотипом Ascent.', nick),
+    row('Папка для итогов', 'Каждый экспорт — в своей подпапке: «Итоги дня 26.10.26», «Итоги недели 20.10–26.10.26».', h('div', { class: 'as-rowx', style: { justifyContent: 'flex-end' } }, dir, change)));
+}
+
 export async function render(root) {
   const [set, info] = await Promise.all([api.Settings(), api.PlanInfo()]);
   const theme = set.theme;
@@ -92,6 +105,8 @@ export async function render(root) {
       row('Срок проекта, дней', 'Проект — один урок, но занимает несколько дней. Это учитывается в прогнозе.', num('project_days', 1, 14, set)),
       row('Этап вехи «можно на собесы»', 'Веха наступает, когда закрыты этапы до этого номера включительно.', num('milestone_stage', 1, 7, set)),
       row('Желаемая дата', 'Необязательно. В разделе «Мой ритм» появится мягкая подсказка, сколько тем в день к ней приведёт.', target)),
+
+    recapCard(set),
 
     card('Гермес',
       h('div', { class: 'as-setting', style: { flexDirection: 'column', alignItems: 'stretch' } },
