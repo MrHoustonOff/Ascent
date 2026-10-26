@@ -45,23 +45,28 @@ export function renderSidebar(el, onNavigate) {
   for (const st of tree.stages) {
     const isOpen = open.has(st.id);
     const sActive = activeId === st.id;
-    el.append(h('button', {
-      class: 'as-nav-item as-nav-item--stage' + (isOpen ? ' is-open' : '') + (sActive ? ' is-active' : ''), title: 'Этап ' + st.num + '. ' + st.title,
+    const grp = h('div', { class: 'as-stage' + (isOpen ? ' is-open' : ''), style: { '--sc': STAGEC[(st.num - 1) % STAGEC.length] } });
+    grp.append(h('button', {
+      class: 'as-nav-item as-nav-item--stage' + (sActive ? ' is-active' : ''), title: 'Этап ' + st.num + '. ' + st.title,
       'aria-expanded': isOpen,
       onclick: () => { if (open.has(st.id)) toggle(st.id); else { toggle(st.id, true); go('#/path/' + st.id); } },
-    }, icon('chevR', 'as-nav-chev'), h('span', { class: 'as-nav-text' }, 'Этап ' + st.num + ' · ' + shortStage(st.title)), h('span', { class: 'as-nav-meta' }, st.pct + ' %')));
+    }, h('span', { class: 'as-stage__num' }, String(st.num)), h('span', { class: 'as-nav-text' }, shortStage(st.title)),
+      h('span', { class: 'as-nav-meta' }, st.pct + ' %'), icon('chevR', 'as-nav-chev')));
+    el.append(grp);
     if (!isOpen) continue;
+    const body = h('div', { class: 'as-stage__body' });
+    grp.append(body);
     for (const b of st.blocks) {
       const bOpen = open.has(b.id);
       const bActive = activeId === b.id;
-      el.append(h('button', {
+      body.append(h('button', {
         class: 'as-nav-item as-nav-item--block' + (bActive ? ' is-active' : ''), title: b.id + ' ' + b.title,
         onclick: () => { if (!b.isRun) { if (!bOpen) toggle(b.id, true); } go('#/path/' + b.id); onNavigate(); },
       }, stateDot(b.state), h('span', { class: 'as-nav-text' }, idTag(b.id), shortBlock(b.title))));
       if (b.isRun || !bOpen) continue;
       for (const t of b.themes) {
         const tActive = activeId === t.id;
-        el.append(h('button', {
+        body.append(h('button', {
           class: 'as-nav-item as-nav-item--theme' + (tActive ? ' is-active' : ''), title: t.id + ' ' + t.title + (t.checkPending ? ' — проверка темы' : '') + (t.closedAt ? ' — закрыта ' + t.closedAt : ''),
           onclick: () => { go('#/path/' + t.id); onNavigate(); },
         }, stateDot(t.state), h('span', { class: 'as-nav-text' }, t.title), h('span', { class: 'as-nav-meta' }, t.done + '/' + t.total)));
@@ -96,6 +101,7 @@ export function pathHash() {
   return '#/path/stage-1';
 }
 
+const STAGEC = ['var(--c-amber)', 'var(--accent)', 'var(--c-violet)', 'var(--c-blue)', 'var(--success)', 'var(--c-pink)', 'var(--streak)'];
 const shortStage = (t) => t.split(':')[0];
 // «От исходника к процессу» → без точки в конце
 const shortBlock = (t) => t.replace(/\.$/, '');

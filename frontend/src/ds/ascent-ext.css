@@ -470,3 +470,18 @@ html,body{margin:0;height:100%;overflow:hidden;background:var(--surface-window)}
 .as-root ::-webkit-scrollbar-thumb:active{background-color:color-mix(in srgb,var(--accent) 60%,transparent)}
 .as-root ::-webkit-scrollbar-button{display:none;width:0;height:0}
 .as-root ::-webkit-scrollbar-corner{background:transparent}
+
+/* ---------- Этапы в сайдбаре: цветные таблетки (вариант Б) ---------- */
+.as-stage{display:flex;flex-direction:column;gap:1px;margin-top:4px}
+.as-nav-item.as-nav-item--stage{padding:6px 10px 6px 8px;min-height:36px;gap:10px;font-weight:600;font-size:13px;border-radius:10px;
+  background:color-mix(in srgb,var(--sc) 14%,transparent);color:color-mix(in srgb,var(--sc) 78%,var(--ink))}
+.as-nav-item.as-nav-item--stage:hover{background:color-mix(in srgb,var(--sc) 22%,transparent)}
+.as-nav-item.as-nav-item--stage.is-active{background:color-mix(in srgb,var(--sc) 26%,transparent);color:color-mix(in srgb,var(--sc) 78%,var(--ink))}
+.as-nav-item--stage .as-nav-meta,.as-nav-item--stage.is-active .as-nav-meta{color:inherit;font-weight:600;opacity:.9}
+.as-nav-item--stage .as-nav-chev{width:12px;height:12px;color:inherit;margin-left:2px;transition:transform .15s ease}
+.as-stage.is-open .as-nav-chev{transform:rotate(90deg)}
+.as-stage__num{width:22px;height:22px;border-radius:7px;background:var(--sc);color:#fff;display:grid;place-items:center;font:800 12px/1 var(--font-sans);flex:none}
+[data-theme="dark"] .as-stage__num{color:#111}
+.as-stage__body{display:flex;flex-direction:column;gap:1px;margin:2px 0 6px 18px;padding-left:6px;border-left:2px solid color-mix(in srgb,var(--sc) 35%,transparent)}
+.as-stage__body .as-nav-item--block{padding-left:8px}
+.as-stage__body .as-nav-item--theme{padding-left:30px}
