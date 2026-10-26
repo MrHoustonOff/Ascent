@@ -3,12 +3,12 @@ import { S, emit } from '../state.js';
 import { h, pluralRu } from '../ui/dom.js';
 import { icon } from '../ui/icons.js';
 import { toast } from '../ui/toast.js';
-import { weekCards, heatRange } from './stats.js';
+import { weekCards, weeksRange } from './stats.js';
 
 // Темп: без норм и целей. Средняя считается сама; к желаемой дате — мягкая подсказка.
 export async function render(root) {
   const d = await api.Speed();
-  const [hf, ht] = heatRange(d.series.length ? d.series[d.series.length - 1].day : new Date().toISOString().slice(0, 10), 6);
+  const [hf, ht] = weeksRange(d.firstDay, d.today);
   const hd = await api.Heat(hf, ht);
   root.append(
     h('header', { class: 'as-head' },
@@ -37,10 +37,10 @@ export async function render(root) {
   root.append(h('section', { class: 'as-section' },
     h('h2', { class: 'as-h2' }, 'Как менялся темп'),
     h('div', { class: 'as-card', style: { gap: '10px' } },
-      h('div', { class: 'as-section__head' }, h('span', { class: 'callout as-muted' }, 'Закрытые темы по дням'), h('span', { class: 'caption as-subtle' }, 'последние недели')),
+      h('div', { class: 'as-section__head' }, h('span', { class: 'callout as-muted' }, 'Закрытые темы по дням'), h('span', { class: 'caption as-subtle' }, 'с первой закрытой темы · листается вбок')),
       host)));
   requestAnimationFrame(() => {
-    host.append(weekCards(hd, { w: host.clientWidth || 700 }));
+    host.append(weekCards(hd));
   });
 
   const card = (n, l, cls) => h('div', { class: 'as-card as-stat ' + (cls || '') }, h('div', { class: 'as-stat__n' }, n), h('div', { class: 'as-stat__l' }, l));

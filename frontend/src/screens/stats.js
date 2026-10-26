@@ -69,7 +69,7 @@ export async function render(root) {
     chartBox.append(host);
     requestAnimationFrame(() => {
       const w = host.clientWidth || 640;
-      if (chartTab === 'days') { const [f, t] = heatRange(tdy.toISOString().slice(0, 10), 6); api.Heat(f, t).then((hd) => host.append(weekCards(hd, { w }))); }
+      if (chartTab === 'days') api.Speed().then((sp) => { const [f, t] = weeksRange(sp.firstDay, sp.today); return api.Heat(f, t); }).then((hd) => host.append(weekCards(hd)));
       else if (chartTab === 'total') { let acc = 0; host.append(barChart(weekly.map((d) => { acc += d.themes; return { v: acc, label: d.label, today: d.current, tip: `всего ${acc} · за неделю +${d.themes}` }; }), { w })); }
       else host.append(barChart(weekly.map((d) => ({ v: d.themes, label: d.label, today: d.current })), { w, ticks: 3 }));
     });
@@ -328,20 +328,20 @@ function rhythm(ins, width) {
 
 // Карточки недель: каждая неделя — 7 столбиков; под каждым число месяца и день недели, сверху итог.
 const MG = ['янв', 'фев', 'мар', 'апр', 'мая', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
-export function weekCards(days, { w }) {
+// Карточки недель: лента от первой закрытой темы до текущей недели, листается вбок (до года и больше).
+export function weekCards(days) {
   const WD = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
   const weeks = [];
   for (let i = 0; i + 7 <= days.length; i += 7) weeks.push(days.slice(i, i + 7));
-  const per = w < 640 ? 3 : 4;
-  const shown = weeks.slice(-per);
-  const gap = 12, cw = (w - (shown.length - 1) * gap) / shown.length, H = 250;
+  const cw = 232, gap = 12, H = 250, w = weeks.length * (cw + gap) - gap;
   const max = Math.max(3, ...days.map((d) => d.themes));
   const svg = sv('svg', { class: 'as-weeks', viewBox: `0 0 ${w} ${H}`, width: w, height: H, role: 'img', 'aria-label': 'Закрытые темы по дням, по неделям' });
-  shown.forEach((wk, k) => {
+  weeks.forEach((wk, k) => {
     const x0 = k * (cw + gap), sum = wk.reduce((a, d) => a + d.themes, 0);
     svg.append(sv('rect', { x: x0, y: 0, width: cw, height: H, rx: 16, fill: 'var(--surface-sunken)', opacity: 0.6 }));
     const a = new Date(wk[0].day + 'T00:00:00Z'), b = new Date(wk[6].day + 'T00:00:00Z');
-    const ttl = `${a.getUTCDate()}${a.getUTCMonth() !== b.getUTCMonth() ? ' ' + MG[a.getUTCMonth()] : ''} — ${b.getUTCDate()} ${MG[b.getUTCMonth()]}`;
+    const yr = b.getUTCFullYear() !== new Date().getUTCFullYear() ? ' ' + b.getUTCFullYear() : '';
+    const ttl = `${a.getUTCDate()}${a.getUTCMonth() !== b.getUTCMonth() ? ' ' + MG[a.getUTCMonth()] : ''} — ${b.getUTCDate()} ${MG[b.getUTCMonth()]}${yr}`;
     svg.append(sv('text', { x: x0 + 14, y: 24, style: 'font-weight:600;font-size:12px;fill:var(--ink-muted)' }, ttl));
     svg.append(sv('text', { x: x0 + cw - 14, y: 30, 'text-anchor': 'end', style: 'font-weight:800;font-size:24px;fill:var(--ink)' }, String(sum)));
     const bw = (cw - 20) / 7, base = 180, hMax = 112;
@@ -349,7 +349,7 @@ export function weekCards(days, { w }) {
       const v = d.themes, hh = v ? Math.max(6, (v / max) * hMax) : 4, bx = x0 + 10 + i * bw, cx = bx + bw / 2;
       if (d.today) svg.append(sv('rect', { x: bx + 2, y: 44, width: bw - 4, height: H - 50, rx: 8, fill: 'var(--accent-soft)' }));
       const fill = d.rest ? 'var(--streak)' : d.future ? 'transparent' : v ? 'var(--accent)' : 'var(--line)';
-      svg.append(sv('rect', { class: 'wbar', x: bx + bw * 0.17, y: base - hh, width: bw * 0.66, height: hh, rx: 4, fill, opacity: d.rest ? 0.5 : 1, style: `--i:${k * 7 + i}` }));
+      svg.append(sv('rect', { class: 'wbar', x: bx + bw * 0.17, y: base - hh, width: bw * 0.66, height: hh, rx: 4, fill, opacity: d.rest ? 0.5 : 1, style: `--i:${Math.max(0, i + (k - weeks.length + 4) * 7)}` }));
       if (v) svg.append(sv('text', { x: cx, y: base - hh - 6, 'text-anchor': 'middle', style: 'font-weight:700;font-size:12px;fill:var(--ink)' }, String(v)));
       if (d.rest && !v) svg.append(sv('text', { x: cx, y: base - 12, 'text-anchor': 'middle', style: 'font-size:9px;fill:var(--streak-ink)' }, 'отдых'));
       const dt = new Date(d.day + 'T00:00:00Z');
@@ -362,7 +362,19 @@ export function weekCards(days, { w }) {
       svg.append(hit);
     });
   });
-  return svg;
+  const wrap = h('div', { class: 'as-weeks-wrap' }, svg);
+  requestAnimationFrame(() => { wrap.scrollLeft = wrap.scrollWidth; });
+  return wrap;
+}
+
+// Диапазон для ленты недель: от недели первой закрытой темы до текущей недели (не меньше 4 недель).
+export function weeksRange(firstISO, todayISO) {
+  const mon = (iso) => { const t = new Date(iso + 'T00:00:00Z'); return new Date(t.getTime() - ((t.getUTCDay() + 6) % 7) * 864e5); };
+  const end = mon(todayISO);
+  let start = firstISO ? mon(firstISO) : end;
+  const min = new Date(end.getTime() - 3 * 7 * 864e5);
+  if (start > min) start = min;
+  return [start.toISOString().slice(0, 10), new Date(end.getTime() + 6 * 864e5).toISOString().slice(0, 10)];
 }
 export const heatRange = (todayISO, weeks) => {
   const t = new Date(todayISO + 'T00:00:00Z');

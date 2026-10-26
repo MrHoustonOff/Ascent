@@ -51,6 +51,8 @@ type SpeedDTO struct {
 	Series    []SpeedPoint  `json:"series"`
 	Rows      []ForecastDTO `json:"rows"`
 	Target    TargetDTO     `json:"target"`
+	FirstDay  string        `json:"firstDay"`
+	Today     string        `json:"today"`
 }
 
 func (a *App) Speed() (SpeedDTO, error) {
@@ -130,6 +132,10 @@ func (a *App) Speed() (SpeedDTO, error) {
 		d.Headline = "Прогноз появится после первой закрытой темы"
 	}
 	d.Target = s.target(v)
+	d.Today = s.today.Format("2006-01-02")
+	if hasFirst {
+		d.FirstDay = first.Format("2006-01-02")
+	}
 	return d, nil
 }
 
