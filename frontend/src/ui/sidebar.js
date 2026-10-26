@@ -48,7 +48,7 @@ export function renderSidebar(el, onNavigate) {
     el.append(h('button', {
       class: 'as-nav-item as-nav-item--stage' + (isOpen ? ' is-open' : '') + (sActive ? ' is-active' : ''), title: 'Этап ' + st.num + '. ' + st.title,
       'aria-expanded': isOpen,
-      onclick: () => { toggle(st.id); go('#/path/' + st.id); },
+      onclick: () => { if (open.has(st.id)) toggle(st.id); else { toggle(st.id, true); go('#/path/' + st.id); } },
     }, icon('chevR', 'as-nav-chev'), h('span', { class: 'as-nav-text' }, 'Этап ' + st.num + ' · ' + shortStage(st.title)), h('span', { class: 'as-nav-meta' }, st.pct + ' %')));
     if (!isOpen) continue;
     for (const b of st.blocks) {
@@ -81,7 +81,7 @@ function toggle(id, force) {
 }
 
 export function revealInTree(id) {
-  const t = S.tree; if (!t) return;
+  const t = S.tree; if (!t || /^stage-/.test(id)) return;
   for (const st of t.stages) for (const b of st.blocks) {
     if (b.id === id || b.themes.some((x) => x.id === id)) { open.add(st.id); open.add(b.id); }
     if (st.id === id) open.add(st.id);

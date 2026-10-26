@@ -103,7 +103,8 @@ async function renderRoute() {
   main.dataset.screen = S.route.name + ':' + S.route.arg;
   main.scrollTop = sameScreen ? keep : 0;
   bar.setTitle(title);
-  if (S.route.name === 'path') revealInTree(S.route.arg.replace(/^(.+-\d+\.\d+)\.\d+$/, '$1'));
+  // раскрываем дерево только при переходе на новый узел, иначе свёрнутый этап раскрывался бы после каждой отметки
+  if (S.route.name === 'path' && !sameScreen) revealInTree(S.route.arg.replace(/^(.+-\d+\.\d+)\.\d+$/, '$1'));
   renderSidebar(sideEl, closeOverlay);
   S.settings.last_route !== location.hash && api.SetSetting('last_route', location.hash).catch(() => {});
   S.settings.last_route = location.hash;
