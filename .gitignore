@@ -1,5 +1,6 @@
 node_modules/
-frontend/dist/
+frontend/dist/*
+!frontend/dist/.gitkeep
 build/bin/
 *.db
 *.db-wal
