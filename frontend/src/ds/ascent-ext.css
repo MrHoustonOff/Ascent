@@ -646,6 +646,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:var(--surface-window)}
 .as-recap__body>.as-rowx{flex-wrap:wrap;gap:8px}
 .as-recap__seg .as-seg__tab{padding:4px 11px}
 .as-recap__chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.as-recap__dates{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font:500 13px/18px var(--font-sans);color:var(--ink-muted)}
 .as-recap__label{font:600 11px/16px var(--font-sans);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-subtle);margin-right:4px}
 .as-recap__chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;background:var(--surface-raised);padding:3px 10px;font:500 12.5px/18px var(--font-sans);color:var(--ink);cursor:default}
 .as-recap__chip:hover{border-color:var(--line-strong)}

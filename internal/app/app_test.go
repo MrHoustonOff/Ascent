@@ -287,6 +287,17 @@ func TestRecapPeriodsAndExport(t *testing.T) {
 	if later, _ := a.Recap("day", a.Now().In(a.Loc).AddDate(0, 0, 9).Format("2006-01-02")); later.DayN != 1 {
 		t.Fatalf("день X не уходит в будущее: %d", later.DayN)
 	}
+	// произвольный период: даты можно перепутать, сравнение — со столькими же днями до него
+	rg, _ := a.Recap("range", "2026-10-25..2026-10-12")
+	if rg.Title != "Итоги периода" || rg.From != "2026-10-12" || rg.Date != "2026-10-25" || rg.RangeDays != 14 || len(rg.Days) != 14 || len(rg.Themes) != 1 || rg.Prev != 0 {
+		t.Fatalf("период: %+v", rg)
+	}
+	if def, _ := a.Recap("range", ""); def.RangeDays != 14 || def.Date != a.Now().In(a.Loc).Format("2006-01-02") {
+		t.Fatalf("период по умолчанию: %d %s", def.RangeDays, def.Date)
+	}
+	if long, _ := a.Recap("range", "2020-01-01..2026-10-25"); long.RangeDays != maxRangeDays+1 || len(long.Days) != 0 {
+		t.Fatalf("длинный период: %d дней, %d столбиков", long.RangeDays, len(long.Days))
+	}
 	// экспорт: подпапка на каждый экспорт внутри запомненной папки
 	root := t.TempDir()
 	a.SetSetting("export_dir", root)
@@ -301,6 +312,12 @@ func TestRecapPeriodsAndExport(t *testing.T) {
 	d2, _ := a.SaveImages("day", "2026-10-25", nil, []string{img})
 	if filepath.Base(d2) != "Итоги дня 25.10.26 (2)" {
 		t.Fatalf("повтор: %q", d2)
+	}
+	if r, _ := a.SaveImages("range", "2026-10-01..2026-10-26", nil, []string{img}); filepath.Base(r) != "Итоги 01.10–26.10.26" {
+		t.Fatalf("период: %q", r)
+	}
+	if r, _ := a.SaveImages("range", "2025-12-20..2026-01-10", nil, []string{img}); filepath.Base(r) != "Итоги 20.12.25–10.01.26" {
+		t.Fatalf("период через год: %q", r)
 	}
 	w, _ := a.SaveImages("week", "2026-10-21", nil, []string{img})
 	if filepath.Base(w) != "Итоги недели 19.10–25.10.26" {

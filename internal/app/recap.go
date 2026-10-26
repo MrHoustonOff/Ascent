@@ -25,13 +25,16 @@ type RecapDay struct {
 	Active bool   `json:"active"` // был учебный день
 	Rest   bool   `json:"rest"`   // день отдыха
 	Future bool   `json:"future"` // ещё не наступил
+	Key    string `json:"key"`    // YYYY-MM-DD
 }
 
 type RecapDTO struct {
 	Kind         string      `json:"kind"`
 	Title        string      `json:"title"`
 	Period       string      `json:"period"`
-	Date         string      `json:"date"`
+	Date         string      `json:"date"` // последний день периода (для «периода» — «до»)
+	From         string      `json:"from"` // первый день периода
+	RangeDays    int         `json:"rangeDays"`
 	Themes       []RecapItem `json:"themes"`
 	Blocks       []RecapItem `json:"blocks"`
 	Achievements []AchRef    `json:"achievements"`
@@ -115,7 +118,31 @@ var recapTracks = []struct {
 	{"infra", "Инфраструктура", []string{"ИНФРА", "БРОК"}},
 }
 
-// Recap — итоги дня или недели для инфографики. date — YYYY-MM-DD (любой день недели для kind=week).
+// maxRangeDays — самый длинный произвольный период.
+const maxRangeDays = 3 * 366
+
+// parseRange разбирает «YYYY-MM-DD..YYYY-MM-DD»; даты можно перепутать местами.
+func parseRange(s string) (from, to time.Time, ok bool) {
+	a, b, found := strings.Cut(s, "..")
+	if !found {
+		return
+	}
+	f, err1 := time.Parse("2006-01-02", strings.TrimSpace(a))
+	t, err2 := time.Parse("2006-01-02", strings.TrimSpace(b))
+	if err1 != nil || err2 != nil {
+		return
+	}
+	if t.Before(f) {
+		f, t = t, f
+	}
+	if t.Sub(f) > maxRangeDays*24*time.Hour {
+		f = t.AddDate(0, 0, -maxRangeDays)
+	}
+	return f, t, true
+}
+
+// Recap — итоги для инфографики. kind: day, week, month, all или range.
+// date — YYYY-MM-DD (любой день недели для week); для range — «YYYY-MM-DD..YYYY-MM-DD», пусто — последние 14 дней.
 func (a *App) Recap(kind, date string) (RecapDTO, error) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
@@ -143,6 +170,20 @@ func (a *App) Recap(kind, date string) (RecapDTO, error) {
 		r.Title = "Итоги месяца"
 		r.Period = fmt.Sprintf("%s %d", monthsNom[from.Month()-1], from.Year())
 		r.PrevLabel = "прошлый месяц"
+	case "range":
+		f, t, ok := parseRange(date)
+		if !ok {
+			t = s.today
+			f = t.AddDate(0, 0, -13)
+		}
+		from, to = f, t
+		r.Date = to.Format("2006-01-02")
+		r.Title = "Итоги периода"
+		r.Period = fmt.Sprintf("%s — %s", dateGen(from), dateGen(to))
+		if from.Year() != to.Year() {
+			r.Period = fmt.Sprintf("%s %d — %s %d", dateGen(from), from.Year(), dateGen(to), to.Year())
+		}
+		r.PrevLabel = "до этого"
 	case "all":
 		from = day
 		if f, ok := s.in.FirstActive(); ok {
@@ -157,6 +198,8 @@ func (a *App) Recap(kind, date string) (RecapDTO, error) {
 		r.PrevLabel = "вчера"
 		r.Period = fmt.Sprintf("%s, %s", weekdaysNom[day.Weekday()], dateGen(day))
 	}
+	r.From = from.Format("2006-01-02")
+	r.RangeDays = stats.DaysBetween(from, to) + 1
 	in := s.in
 	inRange := func(t time.Time) bool {
 		d := stats.ParseDay(in.DayLabel(t))
@@ -209,10 +252,10 @@ func (a *App) Recap(kind, date string) (RecapDTO, error) {
 				r.ActiveDays++
 			}
 		}
-		if kind != "all" {
+		if kind != "all" && (kind != "range" || r.RangeDays <= 62) {
 			k := d.Format("2006-01-02")
 			r.Days = append(r.Days, RecapDay{Label: weekdaysShort[d.Weekday()], Themes: n, Day: d.Day(),
-				Active: agg[k] != nil && agg[k].Active, Rest: in.Rest[k], Future: d.After(s.today)})
+				Active: agg[k] != nil && agg[k].Active, Rest: in.Rest[k], Future: d.After(s.today), Key: k})
 		}
 	}
 	r.Empty = len(r.Themes) == 0 && r.Lessons == 0 && r.Checks == 0
@@ -240,7 +283,7 @@ func (a *App) recapExtras(s *snap, r *RecapDTO, from, to time.Time) {
 	switch r.Kind {
 	case "month":
 		weeks = int(end.Sub(stats.WeekStart(from)).Hours()/24/7) + 1
-	case "all":
+	case "all", "range":
 		weeks = int(end.Sub(stats.WeekStart(from)).Hours()/24/7) + 1
 		if weeks > 26 {
 			weeks = 26
@@ -283,6 +326,9 @@ func (a *App) recapExtras(s *snap, r *RecapDTO, from, to time.Time) {
 		case "month":
 			pf = from.AddDate(0, -1, 0)
 			pt = from.AddDate(0, 0, -1)
+		case "range": // столько же дней перед периодом
+			pf = from.AddDate(0, 0, -r.RangeDays)
+			pt = from.AddDate(0, 0, -1)
 		}
 		n := 0
 		for _, th := range a.plan.Themes {
@@ -324,7 +370,7 @@ func (a *App) recapExtras(s *snap, r *RecapDTO, from, to time.Time) {
 	}
 
 	// рекорды периода: лучший день и лучшая неделя
-	if r.Kind == "month" || r.Kind == "all" {
+	if r.Kind == "month" || r.Kind == "all" || (r.Kind == "range" && r.RangeDays >= 7) {
 		agg := in.Aggregates()
 		weekSum := map[string]int{}
 		for d := from; !d.After(to); d = d.AddDate(0, 0, 1) {
@@ -419,6 +465,14 @@ func recapFolder(kind string, day time.Time) string {
 	return "Итоги дня " + d(day)
 }
 
+// rangeFolder — «Итоги 01.10–26.10.26»; годы разные — «Итоги 20.12.25–10.01.26».
+func rangeFolder(from, to time.Time) string {
+	if from.Year() != to.Year() {
+		return fmt.Sprintf("Итоги %s–%s", from.Format("02.01.06"), to.Format("02.01.06"))
+	}
+	return fmt.Sprintf("Итоги %s–%s", from.Format("02.01"), to.Format("02.01.06"))
+}
+
 // SaveImages сохраняет PNG (data URL или base64) в подпапку экспорта внутри запомненной папки.
 // Папка спрашивается один раз (или когда её больше нет) и хранится в настройке export_dir.
 // names — имена файлов без расширения, по одному на картинку. Возвращает путь подпапки.
@@ -437,12 +491,16 @@ func (a *App) SaveImages(kind, date string, names, images []string) (string, err
 	if t, err := time.Parse("2006-01-02", date); err == nil {
 		day = t
 	}
-	dir := filepath.Join(root, recapFolder(kind, day))
+	name := recapFolder(kind, day)
+	if f, t, ok := parseRange(date); kind == "range" && ok {
+		name = rangeFolder(f, t)
+	}
+	dir := filepath.Join(root, name)
 	for i := 2; ; i++ { // повторный экспорт за тот же период не затирает прежний
 		if _, err := os.Stat(dir); os.IsNotExist(err) {
 			break
 		}
-		dir = filepath.Join(root, fmt.Sprintf("%s (%d)", recapFolder(kind, day), i))
+		dir = filepath.Join(root, fmt.Sprintf("%s (%d)", name, i))
 	}
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return "", err

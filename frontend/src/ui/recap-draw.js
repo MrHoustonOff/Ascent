@@ -420,7 +420,8 @@ async function cardCompare(g, W, H, c) {
   title(g, S, u, 'Сравнение', 80 * u, 290 * u);
   g.fillStyle = mood === 'worse' ? S.muted : acc; g.font = `800 ${(sq ? 170 : 210) * u}px ${S.head}`; g.fillText(txt, 70 * u, (sq ? 500 : 560) * u);
   g.fillStyle = S.muted; g.font = `400 ${32 * u}px ${S.font}`;
-  const when = { 'вчера': 'вчера', 'прошлая неделя': 'за прошлую неделю', 'прошлый месяц': 'за прошлый месяц' }[d.prevLabel] || d.prevLabel;
+  const when = { 'вчера': 'вчера', 'прошлая неделя': 'за прошлую неделю', 'прошлый месяц': 'за прошлый месяц',
+    'до этого': `за ${d.rangeDays} ${W_(d.rangeDays, 'день', 'дня', 'дней')} до этого` }[d.prevLabel] || d.prevLabel;
   g.fillText(mood === 'same' ? `столько же тем, сколько ${when}` : `тем ${mood === 'better' ? 'больше' : 'меньше'}, чем ${when}`, 80 * u, (sq ? 560 : 625) * u);
   const base = (sq ? 880 : 1500) * u, hMax = (sq ? 190 : 650) * u, max = Math.max(1, now, prev);
   [[d.prevLabel, prev, S.track], ['сейчас', now, acc]].forEach(([l, v, col], i) => {
@@ -548,11 +549,15 @@ async function cardMonth(g, W, H, c) {
   const { S, acc, d, rng } = c; const u = W / 1080, sq = H === W;
   const days = d.days, act = days.filter((x) => x.active).length, max = Math.max(1, ...days.map((x) => x.themes));
   const off = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'].indexOf(days[0]?.label);
-  const sel = +String(d.date).slice(8, 10);
-  title(g, S, u, d.period, 80 * u, 290 * u);
+  const MON = ['янв', 'фев', 'мар', 'апр', 'май', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
+  let ts = 64; g.font = `800 ${ts * u}px ${S.head}`; // период бывает длинным: «20 декабря 2025 — 10 января 2026»
+  while (g.measureText(d.period).width > W - 160 * u && ts > 36) { ts -= 4; g.font = `800 ${ts * u}px ${S.head}`; }
+  title(g, S, u, d.period, 80 * u, 290 * u, ts);
   g.fillStyle = S.muted; g.font = `400 ${30 * u}px ${S.font}`;
   g.fillText(`${act} ${W_(act, 'день', 'дня', 'дней')} с учёбой · ${d.themes.length} ${W_(d.themes.length, 'тема', 'темы', 'тем')}`, 80 * u, 345 * u);
-  const gw = sq ? 600 * u : W - 160 * u, gap = (sq ? 10 : 14) * u, cell = (gw - gap * 6) / 7, top = (sq ? 440 : 470) * u;
+  const nRows = Math.ceil((days.length + Math.max(0, off)) / 7);
+  const gw = sq ? 600 * u : W - 160 * u, gap = (sq ? 10 : 14) * u, top = (sq ? 440 : 470) * u;
+  const cell = Math.min((gw - gap * 6) / 7, ((sq ? 540 : 930) * u - gap * (nRows - 1)) / nRows); // длинный период — клетки мельче
   ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'].forEach((l, i) => {
     g.fillStyle = i >= 5 ? acc : S.muted; g.textAlign = 'center'; g.font = `600 ${(sq ? 22 : 26) * u}px ${S.font}`;
     g.fillText(l, 80 * u + i * (cell + gap) + cell / 2, top - 22 * u); g.textAlign = 'left';
@@ -560,16 +565,17 @@ async function cardMonth(g, W, H, c) {
   days.forEach((x, i) => {
     const k = i + Math.max(0, off), col = k % 7, row = Math.floor(k / 7);
     const px = 80 * u + col * (cell + gap), py = top + row * (cell + gap), rad = cell * 0.24;
+    const num = x.day === 1 && i > 0 ? `1 ${MON[+x.key.slice(5, 7) - 1]}` : String(x.day); // в периоде видно смену месяца
     const strong = x.themes / max > 0.5;
     if (x.future) { g.strokeStyle = S.line; g.lineWidth = 2 * u; rr(g, px + u, py + u, cell - 2 * u, cell - 2 * u, rad); g.stroke(); }
     else { g.fillStyle = x.themes ? hexA(acc, 0.3 + 0.7 * Math.min(1, x.themes / max)) : x.active ? hexA(acc, 0.14) : S.track; rr(g, px, py, cell, cell, rad); g.fill(); }
-    if (x.day === sel && !x.future) { g.strokeStyle = S.ink; g.lineWidth = 4 * u; rr(g, px - 4 * u, py - 4 * u, cell + 8 * u, cell + 8 * u, rad + 4 * u); g.stroke(); }
-    g.fillStyle = strong ? onAcc(acc) : S.muted; g.font = `600 ${(sq ? 18 : 24) * u}px ${S.font}`; g.fillText(String(x.day), px + cell * 0.14, py + cell * 0.3);
+    if (x.key === d.date && !x.future) { g.strokeStyle = S.ink; g.lineWidth = 4 * u; rr(g, px - 4 * u, py - 4 * u, cell + 8 * u, cell + 8 * u, rad + 4 * u); g.stroke(); }
+    g.fillStyle = strong ? onAcc(acc) : S.muted; g.font = `600 ${(sq ? 18 : 24) * u}px ${S.font}`; g.fillText(num, px + cell * 0.14, py + cell * 0.3);
     if (x.themes) { g.fillStyle = strong ? onAcc(acc) : S.ink; g.textAlign = 'center'; g.font = `800 ${(sq ? 30 : 44) * u}px ${S.head}`; g.fillText(String(x.themes), px + cell / 2, py + cell * 0.8); g.textAlign = 'left'; }
     else if (x.rest) moon(g, px + cell / 2, py + cell * 0.62, cell * 0.12, S.muted);
     else if (x.active) check(g, px + cell / 2, py + cell * 0.62, cell * 0.22, acc, 4 * u);
   });
-  const rows = Math.ceil((days.length + Math.max(0, off)) / 7), end = top + rows * (cell + gap);
+  const end = top + nRows * (cell + gap);
   const bd = d.bestDay, bw = d.bestWeek;
   const pose = pick(rng, act >= 15 ? ['cheer', 'proud', 'dance'] : act >= 6 ? ['point', 'wave', 'proud'] : ['think', 'sit', 'tired']);
   if (sq) {
@@ -711,6 +717,7 @@ export function planCards(d, opts) {
   // карточка периода: ритм недели, календарь месяца, весь путь
   if (d.kind === 'week' && d.days.length === 7 && !d.empty) out.push({ key: 'week', name: 'Ритм недели' });
   if (d.kind === 'month' && d.days.length) out.push({ key: 'month', name: 'Календарь' });
+  if (d.kind === 'range' && d.days.length > 1 && d.days.length <= 42) out.push({ key: 'month', name: 'Календарь' });
   if (d.kind === 'all' && d.dayN > 0) out.push({ key: 'journey', name: 'Путь' });
   // темы: до трёх картинок; на первой место занимают закрытые блоки
   const per = opts.format === 'square' ? 3 : 6, sq = opts.format === 'square';

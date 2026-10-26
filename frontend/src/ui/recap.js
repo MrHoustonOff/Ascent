@@ -9,7 +9,7 @@ import { toast } from './toast.js';
 import { FORMATS, STYLES, STYLE_KEYS, EXTRA_CARDS, planCards, drawCard, rngFrom, pick } from './recap-draw.js';
 import { openEditor } from './recap-editor.js';
 
-const KINDS = [['day', 'День'], ['week', 'Неделя'], ['month', 'Месяц'], ['all', 'Весь путь']];
+const KINDS = [['day', 'День'], ['week', 'Неделя'], ['month', 'Месяц'], ['range', 'Период'], ['all', 'Весь путь']];
 const TOGGLE_NEXT = { auto: 'on', on: 'off', off: 'auto' };
 const TOGGLE_TEXT = { auto: 'случайно', on: 'всегда', off: 'нет' };
 
@@ -47,6 +47,19 @@ export function openRecap() {
   const info = h('div', { class: 'caption as-subtle' }, '');
   const dateInp = h('input', { class: 'as-input', type: 'date', 'aria-label': 'Дата', style: { width: '160px' } });
   dateInp.addEventListener('change', () => { date = dateInp.value; reset(); build(); });
+  // произвольный период: с … по …; пока не выбран — последние две недели
+  let rFrom = '', rTo = '';
+  const fromInp = h('input', { class: 'as-input', type: 'date', 'aria-label': 'Начало периода', style: { width: '160px' } });
+  const toInp = h('input', { class: 'as-input', type: 'date', 'aria-label': 'Конец периода', style: { width: '160px' } });
+  const onRange = () => { if (!fromInp.value || !toInp.value) return; rFrom = fromInp.value; rTo = toInp.value; reset(); build(); };
+  fromInp.addEventListener('change', onRange); toInp.addEventListener('change', onRange);
+  const dates = h('div', { class: 'as-recap__dates' });
+  const drawDates = () => {
+    clear(dates);
+    if (kind === 'range') dates.append(h('span', null, 'с'), fromInp, h('span', null, 'по'), toInp);
+    else if (kind !== 'all') dates.append(dateInp);
+  };
+  const query = () => (kind === 'range' ? (rFrom && rTo ? `${rFrom}..${rTo}` : '') : date);
   const toggles = h('div', { class: 'as-recap__chips' });
   const drawToggles = () => {
     clear(toggles);
@@ -67,7 +80,7 @@ export function openRecap() {
   drawToggles();
 
   const body = h('div', { class: 'as-recap__body' },
-    h('div', { class: 'as-rowx' }, seg(KINDS, kind, (k) => { kind = k; reset(); build(); }), dateInp),
+    h('div', { class: 'as-rowx' }, seg(KINDS, kind, (k) => { kind = k; drawDates(); reset(); build(); }), dates),
     h('div', { class: 'as-rowx' },
       seg([['story', '9:16'], ['square', '1:1']], p.format, (v) => { p.format = v; savePrefs(p); reset(); build(); }),
       seg([['carousel', 'Карусель'], ['one', 'Одна']], p.mode, (v) => { p.mode = v; savePrefs(p); reset(); build(); }),
@@ -100,8 +113,10 @@ export function openRecap() {
     clear(preview);
     preview.append(h('div', { class: 'as-recap__loading' }, 'Собираю…'));
     try {
-      data = await api.Recap(kind, date);
-      if (!dateInp.value) dateInp.value = data.date;
+      data = await api.Recap(kind, query());
+      if (my !== buildNo) return;
+      if (kind === 'range') { fromInp.value = data.from; toInp.value = data.date; rFrom = data.from; rTo = data.date; }
+      else if (!dateInp.value && kind !== 'all') dateInp.value = data.date;
       const all = planCards(data, { mode: p.mode, toggles: p.toggles, seed, format: p.format });
       p.custom.forEach((c, i) => all.push({ key: 'custom', name: 'Своя карточка', card: c, ci: i }));
       const hidden = all.filter((c) => over[cardId(c)]?.hidden).length;
@@ -166,7 +181,7 @@ export function openRecap() {
     const urls = canvases.map((cv) => cv.toDataURL('image/png'));
     const names = list.map((c) => c.name);
     try {
-      const dir = await api.SaveImages(kind, data.date, names, urls);
+      const dir = await api.SaveImages(kind, kind === 'range' ? `${data.from}..${data.date}` : data.date, names, urls);
       if (dir) toast({ title: 'Картинки сохранены', body: dir });
     } catch (e) {
       if (window.go && window.go.app) { toast({ title: 'Не удалось сохранить', body: String(e.message || e), kind: 'streak' }); return; }
@@ -176,6 +191,7 @@ export function openRecap() {
     }
   }
 
+  drawDates();
   build();
   return dlg;
 }
