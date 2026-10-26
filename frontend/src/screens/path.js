@@ -37,7 +37,8 @@ function lessonRow(l, cur, onNote) {
       h('span', { class: 'as-lesson__id' }, l.id),
       h('span', { class: 'as-lesson__title' }, rich(l.title)),
       l.stars ? h('span', { class: 'as-stars', title: 'Как часто встречается на собеседованиях', 'aria-label': l.stars + ' из 3' }, '★'.repeat(l.stars)) : null,
-      l.note ? h('span', { class: 'as-note-dot', title: 'Есть заметка' }) : null),
+      l.note ? h('span', { class: 'as-note-dot', title: 'Есть заметка' }) : null,
+      l.doneAt ? h('span', { class: 'as-when' }, l.doneAt) : null),
     h('div', { class: 'as-lesson__actions' },
       h('button', { class: 'as-iconbtn', title: 'Скопировать для Гермеса (C)', 'aria-label': 'Скопировать для Гермеса', onclick: () => copy('lesson', l.id) }, icon('copy')),
       h('button', { class: 'as-iconbtn', title: 'Заметка', 'aria-label': 'Заметка', onclick: () => onNote(l) }, icon('note')),
@@ -68,7 +69,8 @@ async function themeScreen(root, t, focusLesson) {
   root.append(
     h('header', { class: 'as-head' },
       crumbs({ label: 'Этап ' + t.stage, to: '#/path/stage-' + t.stage }, { label: t.block + ' ' + t.blockTitle.replace(/\.$/, ''), to: '#/path/' + t.block }, { label: t.id }),
-      h('h1', { class: 'large-title', style: { margin: '6px 0 0' } }, rich(t.title))),
+      h('h1', { class: 'large-title', style: { margin: '6px 0 0' } }, rich(t.title)),
+      closedBadge(t.closedAt, 'Тема закрыта')),
     t.brief.length ? h('section', { class: 'as-card' },
       h('div', { class: 'as-eyebrow' }, 'Зачем эта тема'),
       h('div', { class: 'body', style: { textWrap: 'pretty' } }, t.brief.map((p, i) => h('p', { style: { margin: i ? '8px 0 0' : '0' } }, rich(p))))) : null,
@@ -85,7 +87,7 @@ async function themeScreen(root, t, focusLesson) {
         h('h2', { class: 'as-h2' }, 'Должен уметь ответить'),
         h('span', { class: 'callout as-muted as-tnum' }, `${t.checksDone} из ${t.checks.length}`)),
       progressBar(Math.round(t.checksDone * 100 / (t.checks.length || 1)), 'Вопросы темы'),
-      h('ul', { class: 'as-qlist', style: { marginTop: '4px' } }, t.checks.map((c) => qRow(c.text, c.done, (v) => setCheck(t.id, c.n, v)))),
+      h('ul', { class: 'as-qlist', style: { marginTop: '4px' } }, t.checks.map((c) => qRow(c.text, c.done, (v) => setCheck(t.id, c.n, v), c.doneAt ? h('div', { class: 'as-q__meta' }, 'Отвечено · ' + c.doneAt) : null))),
       t.checksDone < t.checks.length ? h('div', { class: 'as-actions' }, h('button', { class: 'as-btn as-btn--ghost as-btn--sm', onclick: () => setChecksAll(t.id, true) }, 'Отметить все')) : null),
     t.nextTheme ? h('div', { class: 'as-rowx', style: { justifyContent: 'space-between' } },
       t.prevTheme ? h('button', { class: 'as-btn as-btn--ghost', onclick: () => go('#/path/' + t.prevTheme) }, icon('chevL'), 'Назад') : h('span'),
@@ -119,7 +121,8 @@ async function blockScreen(root, id) {
   root.append(
     h('header', { class: 'as-head' },
       crumbs({ label: 'Этап ' + b.stage, to: '#/path/stage-' + b.stage }, { label: b.id }),
-      h('h1', { class: 'large-title', style: { margin: '6px 0 0' } }, b.title.replace(/\.$/, ''))),
+      h('h1', { class: 'large-title', style: { margin: '6px 0 0' } }, b.title.replace(/\.$/, '')),
+      closedBadge(b.closedAt, 'Блок закрыт')),
     b.why ? h('section', { class: 'as-card' }, h('div', { class: 'as-eyebrow' }, 'Зачем этот блок'), h('div', { class: 'body', style: { textWrap: 'pretty' } }, rich(b.why))) : null,
     b.deps.length ? h('section', { class: 'as-section' },
       h('h2', { class: 'as-h2' }, 'Стоит на'),
@@ -136,7 +139,7 @@ async function blockScreen(root, id) {
           h('div', { class: 'as-lesson__main' },
             h('div', { class: 'as-lesson__title' }, h('span', { class: 'as-lesson__id' }, t.id), rich(t.title), t.checkPending ? h('span', { class: 'as-badge as-badge--accent', style: { marginLeft: '8px' } }, 'Проверка темы') : null),
             h('div', { style: { marginTop: '6px', maxWidth: '280px' } }, progressBar(t.pct, 'Прогресс темы'))),
-          h('span', { class: 'callout as-muted as-tnum' }, t.done + '/' + t.total))))) : null,
+          h('span', { class: 'callout as-muted as-tnum', style: { textAlign: 'right' } }, t.done + '/' + t.total, t.closedAt ? h('div', { class: 'caption as-subtle' }, t.closedAt === 'ранее' ? 'закрыта ранее' : 'закрыта ' + t.closedAt) : null))))) : null,
     b.markers.length ? h('section', { class: 'as-card' },
       h('div', { class: 'as-section__head' }, h('h2', { class: 'as-h2' }, 'Маркеры ◆ блока'),
         h('span', { class: 'callout as-muted as-tnum' }, `${b.markers.filter((m) => m.done).length} из ${b.markers.length}`)),
@@ -146,8 +149,16 @@ async function blockScreen(root, id) {
   return `Путь · ${b.id} ${b.title.replace(/\.$/, '')}`;
 }
 
+export function closedBadge(when, label) {
+  if (!when) return null;
+  return h('div', { style: { marginTop: '10px' } }, h('span', { class: 'as-badge as-badge--success' },
+    h('span', { html: '<svg class="as-glyph" viewBox="0 0 10 10"><path d="M1.8 5.4l2.2 2.2 4.4-4.8"/></svg>' }),
+    when === 'ранее' ? label + ' ранее' : label + ' · ' + when));
+}
+
 export function markerMeta(m) {
   return h('div', { class: 'as-q__meta' },
+    m.doneAt ? h('span', null, 'Отвечено · ' + m.doneAt) : null,
     m.lessons.length ? ['Уроки: ', m.lessons.map((l) => h('a', { class: 'as-a as-mono', title: l.title, onclick: () => openId(l.id) }, l.id))] : null,
     m.sources.map((s) => sourceBadge(s)));
 }
@@ -163,7 +174,8 @@ async function stageScreen(root, num) {
     h('header', { class: 'as-head' },
       crumbs({ label: 'Путь', to: '#/path/stage-1' }, { label: 'Этап ' + s.num }),
       h('h1', { class: 'large-title', style: { margin: '6px 0 0' } }, s.title),
-      h('p', { class: 'as-lead as-tnum' }, `${s.done} из ${s.total} уроков · ${s.pct} %`)),
+      h('p', { class: 'as-lead as-tnum' }, `${s.done} из ${s.total} уроков · ${s.pct} %`),
+      closedBadge(s.closedAt, 'Этап закрыт')),
     s.intro.length ? h('section', { class: 'as-card' }, h('div', { class: 'as-eyebrow' }, 'О чём этап'),
       h('div', { class: 'body', style: { textWrap: 'pretty' } }, s.intro.filter((x) => x.trim() && !/^(Порядок блоков|Как читать)/.test(x.replace(/\*/g, ''))).map((p, i) => h('p', { style: { margin: i ? '8px 0 0' : '0' } }, rich(p.replace(/\*\*/g, '')))))) : null,
     s.order ? h('section', { class: 'as-section' }, h('h2', { class: 'as-h2' }, 'Порядок блоков'), h('p', { class: 'as-p-callout as-mono', style: { fontSize: '13px', overflowWrap: 'anywhere' } }, s.order)) : null,
@@ -175,6 +187,6 @@ async function stageScreen(root, num) {
           h('div', { class: 'as-lesson__main' },
             h('div', { class: 'as-lesson__title' }, h('span', { class: 'as-lesson__id' }, b.id), b.title.replace(/\.$/, '')),
             h('div', { style: { marginTop: '6px', maxWidth: '280px' } }, progressBar(b.pct, 'Прогресс блока'))),
-          h('span', { class: 'callout as-muted as-tnum' }, b.done + '/' + b.total))))));
+          h('span', { class: 'callout as-muted as-tnum', style: { textAlign: 'right' } }, b.done + '/' + b.total, b.closedAt ? h('div', { class: 'caption as-subtle' }, b.closedAt === 'ранее' ? 'закрыт ранее' : 'закрыт ' + b.closedAt) : null))))));
   return `Путь · Этап ${s.num}`;
 }

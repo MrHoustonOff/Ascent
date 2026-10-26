@@ -1,9 +1,11 @@
 package app
 
 import (
+	"fmt"
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 	"unicode"
 
 	"ascent/internal/plan"
@@ -26,6 +28,7 @@ type LessonDTO struct {
 	Kind   string     `json:"kind"`
 	Status string     `json:"status"`
 	Note   string     `json:"note"`
+	DoneAt string     `json:"doneAt"`
 	Arrows []ArrowDTO `json:"arrows"`
 	Theme  string     `json:"theme"`
 	Block  string     `json:"block"`
@@ -33,9 +36,10 @@ type LessonDTO struct {
 }
 
 type CheckDTO struct {
-	N    int    `json:"n"`
-	Text string `json:"text"`
-	Done bool   `json:"done"`
+	DoneAt string `json:"doneAt"`
+	N      int    `json:"n"`
+	Text   string `json:"text"`
+	Done   bool   `json:"done"`
 }
 
 type SourceDTO struct {
@@ -50,6 +54,7 @@ type MarkerDTO struct {
 	Block   string      `json:"block"`
 	Text    string      `json:"text"`
 	Done    bool        `json:"done"`
+	DoneAt  string      `json:"doneAt"`
 	Lessons []LessonRef `json:"lessons"`
 	Sources []SourceDTO `json:"sources"`
 }
@@ -68,7 +73,8 @@ type NodeDTO struct {
 	Total int    `json:"total"`
 	Pct   int    `json:"pct"`
 	// проверка темы: уроки пройдены, вопросы нет
-	CheckPending bool `json:"checkPending,omitempty"`
+	CheckPending bool   `json:"checkPending,omitempty"`
+	ClosedAt     string `json:"closedAt,omitempty"`
 }
 
 type TreeBlock struct {
@@ -110,6 +116,7 @@ type ThemeDTO struct {
 	Total       int         `json:"total"`
 	ChecksDone  int         `json:"checksDone"`
 	Closed      bool        `json:"closed"`
+	ClosedAt    string      `json:"closedAt"`
 	CurLesson   string      `json:"curLesson"`
 	PrevTheme   string      `json:"prevTheme"`
 	NextTheme   string      `json:"nextTheme"`
@@ -133,22 +140,24 @@ type BlockDTO struct {
 	Themes     []NodeDTO   `json:"themes"`
 	Markers    []MarkerDTO `json:"markers"`
 	Run        *LessonDTO  `json:"run"`
+	ClosedAt   string      `json:"closedAt"`
 	Done       int         `json:"done"`
 	Total      int         `json:"total"`
 	Pct        int         `json:"pct"`
 }
 
 type StageDTO struct {
-	Num    int        `json:"num"`
-	Title  string     `json:"title"`
-	Intro  []string   `json:"intro"`
-	Order  string     `json:"order"`
-	Blocks []NodeDTO  `json:"blocks"`
-	Run    *LessonDTO `json:"run"`
-	State  string     `json:"state"`
-	Done   int        `json:"done"`
-	Total  int        `json:"total"`
-	Pct    int        `json:"pct"`
+	Num      int        `json:"num"`
+	Title    string     `json:"title"`
+	Intro    []string   `json:"intro"`
+	Order    string     `json:"order"`
+	Blocks   []NodeDTO  `json:"blocks"`
+	Run      *LessonDTO `json:"run"`
+	ClosedAt string     `json:"closedAt"`
+	State    string     `json:"state"`
+	Done     int        `json:"done"`
+	Total    int        `json:"total"`
+	Pct      int        `json:"pct"`
 }
 
 type SearchHit struct {
@@ -167,6 +176,7 @@ func (s *snap) lessonDTO(l *plan.Lesson) LessonDTO {
 	if d.Status == "" {
 		d.Status = "todo"
 	}
+	d.DoneAt = s.doneLabel(r)
 	for _, a := range l.Arrows {
 		ids := a.IDs
 		if ids == nil {
@@ -197,8 +207,11 @@ func (s *snap) markerDTOs(b *plan.Block) []MarkerDTO {
 }
 
 func (s *snap) markerDTO(n int, q *plan.BankQ) MarkerDTO {
-	_, done := s.in.Markers[stats.MarkerKey(q.Block, q)]
+	mt, done := s.in.Markers[stats.MarkerKey(q.Block, q)]
 	m := MarkerDTO{N: n, Block: q.Block, Text: q.Text, Done: done, Lessons: []LessonRef{}, Sources: s.sourceDTOs(q)}
+	if done {
+		m.DoneAt = s.dayText(mt)
+	}
 	for _, id := range q.Lessons {
 		m.Lessons = append(m.Lessons, s.lessonRef(id))
 	}
@@ -224,12 +237,12 @@ func (s *snap) sourceDTOs(q *plan.BankQ) []SourceDTO {
 func (s *snap) themeNode(th *plan.Theme) NodeDTO {
 	d, t := s.themeCounts(th)
 	return NodeDTO{ID: th.ID, Title: th.Title, State: s.themeState(th), Done: d, Total: t, Pct: pct(d, t),
-		CheckPending: s.in.LessonsDone(th) && !s.in.ThemeClosed(th)}
+		CheckPending: s.in.LessonsDone(th) && !s.in.ThemeClosed(th), ClosedAt: s.themeClosedText(th)}
 }
 
 func (s *snap) blockNode(b *plan.Block) NodeDTO {
 	d, t := s.blockCounts(b)
-	return NodeDTO{ID: b.ID, Title: b.Title, State: s.blockState(b), Done: d, Total: t, Pct: pct(d, t)}
+	return NodeDTO{ID: b.ID, Title: b.Title, State: s.blockState(b), Done: d, Total: t, Pct: pct(d, t), ClosedAt: s.blockClosedText(b)}
 }
 
 func (a *App) stageByNum(n int) *plan.Stage {
@@ -255,7 +268,7 @@ func (a *App) Tree() (TreeDTO, error) {
 	t.Pct = pct(t.Done, t.Total)
 	for _, st := range a.plan.Stages {
 		d, tt := s.stageCounts(st)
-		ts := TreeStage{NodeDTO: NodeDTO{ID: "stage-" + strconv.Itoa(st.Num), Title: st.Title, State: s.stageState(st), Done: d, Total: tt, Pct: pct(d, tt)}, Num: st.Num, Blocks: []TreeBlock{}}
+		ts := TreeStage{NodeDTO: NodeDTO{ID: "stage-" + strconv.Itoa(st.Num), Title: st.Title, State: s.stageState(st), Done: d, Total: tt, Pct: pct(d, tt), ClosedAt: s.stageClosedText(st)}, Num: st.Num, Blocks: []TreeBlock{}}
 		for _, b := range st.Blocks {
 			tb := TreeBlock{NodeDTO: s.blockNode(b), Themes: []NodeDTO{}, IsRun: b.Run != nil && len(b.Themes) == 0}
 			for _, th := range b.Themes {
@@ -296,6 +309,7 @@ func (a *App) Theme(id string) (ThemeDTO, error) {
 	}
 	d.Done, d.Total = s.themeCounts(th)
 	d.Closed = s.in.ThemeClosed(th)
+	d.ClosedAt = s.themeClosedText(th)
 	if n := s.in.NextLesson(); n != nil {
 		d.CurLesson = n.ID
 	}
@@ -307,7 +321,11 @@ func (a *App) Theme(id string) (ThemeDTO, error) {
 		if ok {
 			d.ChecksDone++
 		}
-		d.Checks = append(d.Checks, CheckDTO{N: i + 1, Text: c, Done: ok})
+		at := ""
+		if t, has := s.in.Checks[store.CheckKey(th.ID, c)]; has {
+			at = s.dayText(t)
+		}
+		d.Checks = append(d.Checks, CheckDTO{N: i + 1, Text: c, Done: ok, DoneAt: at})
 	}
 	// соседние темы в порядке плана
 	var all []*plan.Theme
@@ -351,6 +369,7 @@ func (a *App) Block(id string) (BlockDTO, error) {
 	}
 	d.Done, d.Total = s.blockCounts(b)
 	d.Pct = pct(d.Done, d.Total)
+	d.ClosedAt = s.blockClosedText(b)
 	for _, dep := range b.Deps {
 		if db := a.plan.Blocks[dep]; db != nil {
 			d.Deps = append(d.Deps, DepDTO{ID: dep, Title: db.Title, State: s.blockState(db)})
@@ -384,6 +403,7 @@ func (a *App) Stage(num int) (StageDTO, error) {
 	}
 	d.Done, d.Total = s.stageCounts(st)
 	d.Pct = pct(d.Done, d.Total)
+	d.ClosedAt = s.stageClosedText(st)
 	var order []string
 	for _, b := range st.Blocks {
 		order = append(order, b.ID)
@@ -472,4 +492,57 @@ func (a *App) Search(q string) ([]SearchHit, error) {
 		out = append(out, r.h)
 	}
 	return out, nil
+}
+
+// ---------- даты закрытия ----------
+
+// dayText — «24 октября» (с годом, если он не текущий).
+func (s *snap) dayText(t time.Time) string {
+	d := stats.ParseDay(s.in.DayLabel(t))
+	if d.Year() != s.today.Year() {
+		return fmt.Sprintf("%s %d", dateGen(d), d.Year())
+	}
+	return dateGen(d)
+}
+
+func (s *snap) doneLabel(r store.Lesson) string {
+	if r.Status != "done" {
+		return ""
+	}
+	if r.Imported || !r.HasDone() {
+		return "пройдено ранее"
+	}
+	return s.dayText(r.DoneAt)
+}
+
+func (s *snap) themeClosedText(th *plan.Theme) string {
+	if !s.in.ThemeClosed(th) {
+		return ""
+	}
+	if t, ok := s.in.ThemeClosedAt(th); ok {
+		return s.dayText(t)
+	}
+	return "ранее"
+}
+
+func (s *snap) blockClosedText(b *plan.Block) string {
+	t, ok := s.in.BlockClosedAt(b)
+	if !ok {
+		return ""
+	}
+	if t.IsZero() {
+		return "ранее"
+	}
+	return s.dayText(t)
+}
+
+func (s *snap) stageClosedText(st *plan.Stage) string {
+	t, ok := s.in.StageClosedAt(st)
+	if !ok {
+		return ""
+	}
+	if t.IsZero() {
+		return "ранее"
+	}
+	return s.dayText(t)
 }

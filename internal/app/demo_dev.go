@@ -111,7 +111,6 @@ func (a *App) FillDemo() error {
 	if err != nil {
 		return err
 	}
-	a.st.Now = func() time.Time { return day.Add(12*time.Hour + 30*time.Minute) }
 	for _, b := range a.plan.Blocks {
 		if len(b.Themes) == 0 {
 			continue
@@ -125,6 +124,9 @@ func (a *App) FillDemo() error {
 		if !all {
 			continue
 		}
+		last, _ := snp.in.ThemeClosedAt(b.Themes[len(b.Themes)-1])
+		at := last.Add(10 * time.Minute)
+		a.st.Now = func() time.Time { return at }
 		for _, q := range a.plan.Markers(b.ID) {
 			_ = a.st.SetMarker(b.ID, store.CheckKey(b.ID, q.Text), true)
 		}

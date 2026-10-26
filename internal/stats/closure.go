@@ -1,6 +1,8 @@
 package stats
 
 import (
+	"time"
+
 	"ascent/internal/plan"
 	"ascent/internal/store"
 )
@@ -91,3 +93,48 @@ func (in *Input) StageClosed(s *plan.Stage) bool {
 	}
 	return true
 }
+
+// BlockClosedAt — момент закрытия блока (самая поздняя отметка внутри него).
+// ok=false, если блок не закрыт; at нулевое, если закрыт массовой отметкой.
+func (in *Input) BlockClosedAt(b *plan.Block) (at time.Time, ok bool) {
+	if !in.BlockClosed(b) {
+		return time.Time{}, false
+	}
+	bump := func(t time.Time) {
+		if t.After(at) {
+			at = t
+		}
+	}
+	for _, th := range b.Themes {
+		if t, ok := in.ThemeClosedAt(th); ok {
+			bump(t)
+		}
+	}
+	for _, q := range in.Plan.Markers(b.ID) {
+		if t, ok := in.Markers[MarkerKey(b.ID, q)]; ok {
+			bump(t)
+		}
+	}
+	if b.Run != nil {
+		if r := in.Lessons[b.Run.ID]; r.HasDone() && !r.Imported {
+			bump(r.DoneAt)
+		}
+	}
+	return at, true
+}
+
+// StageClosedAt — момент закрытия этапа.
+func (in *Input) StageClosedAt(s *plan.Stage) (at time.Time, ok bool) {
+	if !in.StageClosed(s) {
+		return time.Time{}, false
+	}
+	for _, b := range s.Blocks {
+		if t, ok := in.BlockClosedAt(b); ok && t.After(at) {
+			at = t
+		}
+	}
+	return at, true
+}
+
+// DayLabel — учебный день момента t (YYYY-MM-DD).
+func (in *Input) DayLabel(t time.Time) string { return in.day(t) }

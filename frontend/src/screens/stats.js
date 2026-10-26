@@ -12,6 +12,7 @@ const utc = (s) => new Date(s + 'T00:00:00Z');
 const addDays = (d, n) => new Date(d.getTime() + n * 864e5);
 const themesWord = (n) => pluralRu(n, 'тема', 'темы', 'тем');
 
+const KINDS = { days: 'По дням', weeks: 'По неделям', total: 'Накопленно' };
 let tab = 'week', monthOff = 0, chartTab = 'days';
 
 export async function render(root) {
@@ -29,6 +30,8 @@ export async function render(root) {
     root.append(h('div', { class: 'as-card' }, h('div', { class: 'as-empty' }, 'Здесь появится ваша неделя, как только вы отметите первый урок.')));
     return 'Статистика';
   }
+
+  root.append(stagesCard());
 
   // 1. хитмапа
   const heatBox = h('div', { class: 'as-card', style: { gap: '16px' } });
@@ -51,21 +54,24 @@ export async function render(root) {
   root.append(h('section', { class: 'as-section' }, h('h2', { class: 'as-h2' }, 'Динамика'), chartBox));
   const drawChart = () => {
     clear(chartBox);
-    const tabs = h('div', { class: 'as-tabs', role: 'tablist' }, [['days', 'По дням'], ['weeks', 'По неделям']].map(([k, l]) =>
+    const tabs = h('div', { class: 'as-tabs', role: 'tablist' }, [['days', 'По дням'], ['weeks', 'По неделям'], ['total', 'Накопленно']].map(([k, l]) =>
       h('button', { class: 'as-tab' + (chartTab === k ? ' is-active' : ''), role: 'tab', 'aria-selected': chartTab === k, onclick: () => { chartTab = k; drawChart(); } }, l)));
     const sub = chartTab === 'days'
       ? h('span', { class: 'callout as-muted' }, `За неделю: ${vel.weekThemes} ${themesWord(vel.weekThemes)} · к прошлой: ${vel.weekDelta}`)
-      : h('span', { class: 'callout as-muted' }, 'Закрытые темы по календарным неделям');
+      : chartTab === 'weeks' ? h('span', { class: 'callout as-muted' }, 'Закрытые темы по календарным неделям')
+      : h('span', { class: 'callout as-muted' }, 'Всего закрыто за 12 недель: ' + weekly.reduce((a, b) => a + b.themes, 0));
     chartBox.append(h('div', { class: 'as-rowx as-rowx--between' }, tabs, sub));
     const host = h('div', null);
     chartBox.append(host);
     requestAnimationFrame(() => {
       const w = host.clientWidth || 640;
       if (chartTab === 'days') host.append(barChart(daily.map((d) => ({ v: d.themes, label: d.label, today: d.today, avg: d.avg7 })), { w, goal: today.goal, ticks: 7 }));
+      else if (chartTab === 'total') { let acc = 0; host.append(lineChart(weekly.map((d) => ({ v: (acc += d.themes), label: d.label })), { w })); }
       else host.append(barChart(weekly.map((d) => ({ v: d.themes, label: d.label, today: d.current })), { w, ticks: 3 }));
     });
     chartBox.append(h('div', { class: 'as-chart-legend' },
-      h('span', null, h('i'), 'Закрытые темы'),
+      chartTab === 'total' ? null : h('span', null, h('i'), 'Закрытые темы'),
+      chartTab === 'total' ? h('span', null, h('i', { class: 'l' }), 'Темы нарастающим итогом') : null,
       chartTab === 'days' ? h('span', null, h('i', { class: 'l' }), 'Среднее за 7 дней') : null,
       chartTab === 'days' ? h('span', null, h('i', { class: 'd' }), 'Цель дня') : null));
   };
@@ -222,3 +228,39 @@ function forecastSection(fc) {
   return sec;
 }
 function toastOk() {}
+
+function stagesCard() {
+  const t = S.tree;
+  const rows = t.stages.map((st) => h('div', { class: 'as-stagebar', onclick: () => (location.hash = '#/path/' + st.id), title: st.title },
+    h('div', { class: 'as-stagebar__name' }, `Этап ${st.num} · ${st.title.split(':')[0]}`),
+    h('div', { class: 'as-stagebar__meta' }, st.closedAt ? (st.closedAt === 'ранее' ? 'закрыт ранее' : 'закрыт ' + st.closedAt) : `${st.done} из ${st.total} · ${st.pct} %`),
+    h('div', { class: 'as-bar', role: 'progressbar', 'aria-valuenow': st.pct }, h('i', { style: { width: st.pct + '%' } }))));
+  return h('section', { class: 'as-section' }, h('h2', { class: 'as-h2' }, 'Путь по этапам'), h('div', { class: 'as-card' }, h('div', { class: 'as-stagebars' }, rows)));
+}
+
+function lineChart(data, { w }) {
+  const H = 200, padL = 34, padB = 24, padT = 12, padR = 22;
+  const max = Math.max(...data.map((d) => d.v), 1);
+  const step = max > 40 ? 20 : max > 16 ? 10 : max > 8 ? 4 : 2;
+  const top = Math.ceil(max / step) * step || step;
+  const iw = w - padL - padR, ih = H - padT - padB;
+  const x = (i) => padL + (data.length === 1 ? iw / 2 : (i / (data.length - 1)) * iw);
+  const y = (v) => padT + ih - (v / top) * ih;
+  const ns = 'http://www.w3.org/2000/svg';
+  const el = (n, a, t) => { const e = document.createElementNS(ns, n); for (const k in a) e.setAttribute(k, a[k]); if (t != null) e.textContent = t; return e; };
+  const svg = el('svg', { class: 'as-chart', viewBox: `0 0 ${w} ${H}`, width: w, height: H, role: 'img', 'aria-label': 'Накопленно закрытых тем' });
+  for (let v = 0; v <= top; v += step) {
+    svg.append(el('line', { class: 'grid', x1: padL, x2: w - padR, y1: y(v), y2: y(v) }));
+    svg.append(el('text', { x: padL - 6, y: y(v) + 4, 'text-anchor': 'end' }, String(v)));
+  }
+  const pts = data.map((d, i) => `${x(i).toFixed(1)},${y(d.v).toFixed(1)}`);
+  svg.append(el('polygon', { class: 'area', points: `${x(0)},${y(0)} ${pts.join(' ')} ${x(data.length - 1)},${y(0)}` }));
+  svg.append(el('polyline', { class: 'line', points: pts.join(' ') }));
+  data.forEach((d, i) => {
+    const c = el('circle', { class: 'dot', cx: x(i), cy: y(d.v), r: i === data.length - 1 ? 4.5 : 3 });
+    c.append(el('title', {}, `${d.label} · всего ${d.v}`));
+    svg.append(c);
+    if (i % 2 === data.length % 2 || i === data.length - 1) svg.append(el('text', { x: x(i), y: H - 6, 'text-anchor': i === data.length - 1 ? 'end' : 'middle' }, d.label));
+  });
+  return svg;
+}

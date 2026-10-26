@@ -59,7 +59,7 @@ export function renderSidebar(el, onNavigate) {
       for (const t of b.themes) {
         const tActive = activeId === t.id;
         el.append(h('button', {
-          class: 'as-nav-item as-nav-item--theme' + (tActive ? ' is-active' : ''), title: t.id + ' ' + t.title + (t.checkPending ? ' — проверка темы' : ''),
+          class: 'as-nav-item as-nav-item--theme' + (tActive ? ' is-active' : ''), title: t.id + ' ' + t.title + (t.checkPending ? ' — проверка темы' : '') + (t.closedAt ? ' — закрыта ' + t.closedAt : ''),
           onclick: () => { go('#/path/' + t.id); onNavigate(); },
         }, stateDot(t.state), h('span', { class: 'as-nav-text' }, t.title), h('span', { class: 'as-nav-meta' }, t.done + '/' + t.total)));
       }

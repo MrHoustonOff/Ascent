@@ -16,7 +16,8 @@ export async function render(root) {
       h('p', { class: 'as-lead' }, t.status)),
     hero.el,
     h('div', { class: 'as-grid2' }, streakCard(t.streak), ringCard(t.ring)),
-    forecastCard(t.forecast));
+    forecastCard(t.forecast),
+    t.recent.length ? recentCard(t.recent) : null);
 
   if (keyHandler) document.removeEventListener('as-key', keyHandler);
   keyHandler = (ev) => {
@@ -195,4 +196,14 @@ function forecastCard(f) {
       h('h3', { class: 'as-h-headline' }, 'Прогноз'),
       h('a', { class: 'as-a callout', onclick: () => go('#/stats') }, 'Подробнее')),
     ...body);
+}
+
+const KIND = { theme: 'Тема', block: 'Блок', stage: 'Этап' };
+function recentCard(items) {
+  return h('section', { class: 'as-card' },
+    h('h3', { class: 'as-h-headline' }, 'Недавно закрыто'),
+    h('ul', { class: 'as-feed' }, items.map((r) => h('li', { onclick: () => openId(r.id), title: r.id + ' ' + r.title },
+      h('span', { class: 'as-feed__kind' }, KIND[r.kind]),
+      h('span', { class: 'as-clamp1' }, h('span', { class: 'as-mono as-subtle', style: { fontSize: '12px', marginRight: '8px' } }, r.kind === 'stage' ? '' : r.id), r.title.replace(/\.$/, '')),
+      h('span', { class: 'as-feed__when' }, r.when)))));
 }

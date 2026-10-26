@@ -2,6 +2,8 @@ package app
 
 import (
 	"fmt"
+	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -58,6 +60,14 @@ type TodayDTO struct {
 	Streak      StreakDTO     `json:"streak"`
 	Ring        RingDTO       `json:"ring"`
 	Forecast    ForecastBrief `json:"forecast"`
+	Recent      []RecentDTO   `json:"recent"`
+}
+
+type RecentDTO struct {
+	Kind  string `json:"kind"` // theme | block | stage
+	ID    string `json:"id"`
+	Title string `json:"title"`
+	When  string `json:"when"`
 }
 
 func (s *snap) dayLabel(t time.Time) string { return dateGen(t) }
@@ -174,6 +184,7 @@ func (a *App) Today() (TodayDTO, error) {
 		}
 	}
 	t.Forecast = s.forecastBrief()
+	t.Recent = s.recent(5)
 	return t, nil
 }
 
@@ -435,4 +446,38 @@ func (a *App) MilestoneIf(goal int) (string, error) {
 		}
 	}
 	return "", nil
+}
+
+// recent — недавно закрытые темы, блоки и этапы (с датой закрытия).
+func (s *snap) recent(n int) []RecentDTO {
+	type item struct {
+		at time.Time
+		d  RecentDTO
+	}
+	var xs []item
+	p := s.a.plan
+	for _, th := range p.Themes {
+		if t, ok := s.in.ThemeClosedAt(th); ok {
+			xs = append(xs, item{t, RecentDTO{"theme", th.ID, th.Title, s.dayText(t)}})
+		}
+	}
+	for _, b := range p.Blocks {
+		if len(b.Themes) == 0 {
+			continue
+		}
+		if t, ok := s.in.BlockClosedAt(b); ok && !t.IsZero() {
+			xs = append(xs, item{t.Add(time.Second), RecentDTO{"block", b.ID, b.Title, s.dayText(t)}})
+		}
+	}
+	for _, st := range p.Stages {
+		if t, ok := s.in.StageClosedAt(st); ok && !t.IsZero() {
+			xs = append(xs, item{t.Add(2 * time.Second), RecentDTO{"stage", "stage-" + strconv.Itoa(st.Num), "Этап " + strconv.Itoa(st.Num), s.dayText(t)}})
+		}
+	}
+	sort.Slice(xs, func(i, j int) bool { return xs[i].at.After(xs[j].at) })
+	out := []RecentDTO{}
+	for i := 0; i < len(xs) && i < n; i++ {
+		out = append(out, xs[i].d)
+	}
+	return out
 }
