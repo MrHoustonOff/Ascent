@@ -95,7 +95,7 @@ func main() {
 				runtime.Show(h.ctx)
 			},
 		},
-		Windows: &windows.Options{Theme: windows.SystemDefault},
+		Windows: &windows.Options{Theme: windows.SystemDefault, DisablePinchZoom: true},
 	})
 	if err != nil {
 		lg.Printf("wails: %v", err)

@@ -131,5 +131,9 @@ func (a *App) FillDemo() error {
 			_ = a.st.SetMarker(b.ID, store.CheckKey(b.ID, q.Text), true)
 		}
 	}
+	if sn, err := a.snap(); err == nil {
+		a.syncAch(sn)
+	}
+	_ = a.st.MarkAchievementsSeen()
 	return nil
 }

@@ -97,6 +97,9 @@ func (a *App) loadPlan() error {
 	_ = a.st.SetSetting("plan_version", p.Version)
 	_ = a.st.SetSetting("plan_synced_at", a.Now().UTC().Format(time.RFC3339))
 	a.lastSync = rep
+	if sn, err := a.snap(); err == nil {
+		a.syncAch(sn)
+	}
 	return nil
 }
 

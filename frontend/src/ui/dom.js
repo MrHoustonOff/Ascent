@@ -28,11 +28,16 @@ export function append(el, kids) {
 // Текст с кодом в обратных кавычках → узлы с <code class="code-sm">.
 export function rich(text) {
   const out = [];
-  const parts = String(text).split(/(`[^`]+`)/g);
+  const parts = String(text).split(/(`[^`]+`|\[\[[^\]]+\]\])/g);
   for (const p of parts) {
     if (!p) continue;
     if (p.length > 2 && p[0] === '`' && p[p.length - 1] === '`') out.push(h('code', { class: 'code-sm as-inline-code' }, p.slice(1, -1)));
-    else out.push(p);
+    else if (p.startsWith('[[') && p.endsWith(']]')) {
+      // вики-ссылка на документ плана: «[[98 ТЗ А — …]]»
+      const name = p.slice(2, -2).split('#')[0];
+      const num = /^\d\d/.exec(name);
+      out.push(h('a', { class: 'as-a', onclick: (e) => { e.stopPropagation(); if (num) document.dispatchEvent(new CustomEvent('as-open-doc', { detail: num[0] })); } }, name.replace(/^\d\d\s+/, '')));
+    } else out.push(p);
   }
   return out;
 }

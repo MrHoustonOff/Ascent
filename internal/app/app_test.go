@@ -125,3 +125,32 @@ func TestImportedThemesClosed(t *testing.T) {
 		t.Fatal("импорт попал в статистику")
 	}
 }
+
+func TestAchievementsSecret(t *testing.T) {
+	a, _, _ := newApp(t)
+	l, _ := a.Achievements()
+	if l.Total < 50 || l.Unlocked != 0 {
+		t.Fatalf("%+v", l)
+	}
+	for _, x := range l.Items {
+		if x.Name != "" || x.Desc != "" {
+			t.Fatal("секретное достижение выдало название")
+		}
+	}
+	for _, id := range []string{"ФУНД-1.1.1", "ФУНД-1.1.2"} {
+		a.CompleteLesson(id)
+	}
+	a.SetCheck("ФУНД-1.1", 1, true)
+	r, _ := a.SetCheck("ФУНД-1.1", 2, true)
+	if len(r.Achievements) == 0 || r.Achievements[0].ID != "t1" {
+		t.Fatalf("%+v", r.Achievements)
+	}
+	l, _ = a.Achievements()
+	if l.Unlocked == 0 || l.Items[0].Name == "" || l.Items[0].When == "" || l.New == 0 {
+		t.Fatalf("%+v", l.Items[0])
+	}
+	a.MarkAchievementsSeen()
+	if l, _ = a.Achievements(); l.New != 0 {
+		t.Fatal("отметка «новое» не снялась")
+	}
+}

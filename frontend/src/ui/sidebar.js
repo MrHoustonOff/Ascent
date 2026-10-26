@@ -7,9 +7,10 @@ const SCREENS = [
   { id: 'today', label: 'Сегодня', icon: 'today', hash: '#/today', key: 'Ctrl+1' },
   { id: 'path', label: 'Путь', icon: 'path', hash: '#/path', key: 'Ctrl+2', meta: true },
   { id: 'stats', label: 'Статистика', icon: 'stats', hash: '#/stats', key: 'Ctrl+3' },
-  { id: 'bank', label: 'Банк вопросов', icon: 'bank', hash: '#/bank', key: 'Ctrl+4' },
-  { id: 'glossary', label: 'Словарь', icon: 'glossary', hash: '#/glossary', key: 'Ctrl+5' },
-  { id: 'docs', label: 'Документы', icon: 'docs', hash: '#/docs/00', key: 'Ctrl+6' },
+  { id: 'achievements', label: 'Достижения', icon: 'trophy', hash: '#/achievements', key: 'Ctrl+4', ach: true },
+  { id: 'bank', label: 'Банк вопросов', icon: 'bank', hash: '#/bank', key: 'Ctrl+5' },
+  { id: 'glossary', label: 'Словарь', icon: 'glossary', hash: '#/glossary', key: 'Ctrl+6' },
+  { id: 'docs', label: 'Документы', icon: 'docs', hash: '#/docs/00', key: 'Ctrl+7' },
   { id: 'settings', label: 'Настройки', icon: 'settings', hash: '#/settings', key: 'Ctrl+,' },
 ];
 
@@ -34,7 +35,8 @@ export function renderSidebar(el, onNavigate) {
     const active = rt.name === s.id && !inPath;
     el.append(h('button', { class: 'as-nav-item as-nav-item--screen' + (active ? ' is-active' : ''), title: s.label + ' (' + s.key + ')', onclick: () => { go(s.hash === '#/path' ? pathHash() : s.hash); onNavigate(); } },
       icon(s.icon), h('span', { class: 'as-nav-text' }, s.label),
-      s.meta ? h('span', { class: 'as-nav-meta' }, tree.pct + ' %') : null));
+      s.meta ? h('span', { class: 'as-nav-meta' }, tree.pct + ' %') : null,
+      s.ach ? h('span', { class: 'as-nav-meta' }, tree.achNew ? h('span', { class: 'as-note-dot', style: { marginRight: '6px' }, title: 'Есть новые' }) : null, tree.achUnlocked + '/' + tree.achTotal) : null));
   }
   el.append(h('div', { class: 'as-nav-sep' }));
   el.append(h('div', { class: 'as-nav-label' }, 'Курс'));

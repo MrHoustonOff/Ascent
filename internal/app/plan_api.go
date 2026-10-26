@@ -99,6 +99,9 @@ type TreeDTO struct {
 	CurTheme     string      `json:"curTheme"`
 	CurLesson    string      `json:"curLesson"`
 	CurStageName string      `json:"curStageName"`
+	AchUnlocked  int         `json:"achUnlocked"`
+	AchTotal     int         `json:"achTotal"`
+	AchNew       int         `json:"achNew"`
 }
 
 type ThemeDTO struct {
@@ -282,6 +285,14 @@ func (a *App) Tree() (TreeDTO, error) {
 		t.CurStage, t.CurBlock, t.CurTheme, t.CurLesson = n.Stage, n.Block, n.Theme, n.ID
 		if st := a.stageByNum(n.Stage); st != nil {
 			t.CurStageName = st.Title
+		}
+	}
+	t.AchUnlocked, t.AchTotal = a.achCounts()
+	if m, err := a.st.Achievements(); err == nil {
+		for _, r := range m {
+			if !r.Seen {
+				t.AchNew++
+			}
 		}
 	}
 	return t, nil

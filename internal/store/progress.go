@@ -316,3 +316,44 @@ func boolInt(b bool) int {
 	}
 	return 0
 }
+
+// ---------- достижения ----------
+
+type AchRow struct {
+	At   time.Time
+	Seen bool
+}
+
+func (s *Store) Achievements() (map[string]AchRow, error) {
+	rows, err := s.db.Query(`SELECT id, unlocked_at, seen FROM achievements`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	m := map[string]AchRow{}
+	for rows.Next() {
+		var id, at string
+		var seen int
+		if err := rows.Scan(&id, &at, &seen); err != nil {
+			return nil, err
+		}
+		t, _ := time.Parse(time.RFC3339, at)
+		m[id] = AchRow{At: t, Seen: seen == 1}
+	}
+	return m, rows.Err()
+}
+
+// UnlockAchievement записывает достижение один раз; at может быть нулевым.
+func (s *Store) UnlockAchievement(id string, at time.Time, seen bool) error {
+	v := ""
+	if !at.IsZero() {
+		v = ts(at)
+	}
+	_, err := s.db.Exec(`INSERT OR IGNORE INTO achievements(id, unlocked_at, seen) VALUES(?,?,?)`, id, v, boolInt(seen))
+	return err
+}
+
+func (s *Store) MarkAchievementsSeen() error {
+	_, err := s.db.Exec(`UPDATE achievements SET seen=1 WHERE seen=0`)
+	return err
+}

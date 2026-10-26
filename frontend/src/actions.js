@@ -40,6 +40,7 @@ export function celebrate(p) {
   if (p.blockClosed) toast({ title: 'Блок закрыт', body: p.nextId ? 'Следующий — ' + p.nextId + '.' : '', kind: 'streak' });
   else if (p.themeClosed) toast({ title: 'Тема закрыта', body: 'Вы ответили на все вопросы темы.', kind: 'streak' });
   if (p.goalReached) toast({ title: 'Сегодня достаточно', body: 'Остальное — завтра.', kind: 'streak' });
+  for (const a of (p.achievements || []).slice(0, 2)) toast({ title: 'Новое достижение', body: a.name, kind: 'streak', action: { label: 'Посмотреть', onClick: () => go('#/achievements') } });
 }
 
 async function safe(fn) {

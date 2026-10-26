@@ -13,10 +13,15 @@ import * as stats from './screens/stats.js';
 import * as bank from './screens/bank.js';
 import * as glossary from './screens/glossary.js';
 import * as docs from './screens/docs.js';
+import * as achievements from './screens/achievements.js';
 import * as settings from './screens/settings.js';
 import { runOnboarding } from './screens/onboarding.js';
+import { openDoc } from './screens/docs.js';
+document.addEventListener('as-open-doc', (e) => openDoc(e.detail));
 
-const SCREENS = { today, path, stats, bank, glossary, docs, settings };
+const SCREENS = { today, path, stats, achievements, bank, glossary, docs, settings };
+let prevName = '';
+document.addEventListener('as-rerender', () => emit());
 const app = document.getElementById('app');
 let winEl, main, sideEl, bar;
 let renderSeq = 0;
@@ -75,6 +80,8 @@ function parseHash() {
 async function renderRoute() {
   const my = ++renderSeq;
   S.route = parseHash();
+  if (prevName === 'achievements' && S.route.name !== 'achievements') api.MarkAchievementsSeen().then(() => api.Tree().then((t) => { S.tree = t; renderSidebar(sideEl, closeOverlay); })).catch(() => {});
+  prevName = S.route.name;
   if (S.route.name === 'path' && !S.route.arg) { location.replace(pathHash()); return; }
   const scr = SCREENS[S.route.name];
   const keep = main.scrollTop;
@@ -110,9 +117,9 @@ window.addEventListener('keydown', async (e) => {
   if (ctrl && e.key.toLowerCase() === 'b') { e.preventDefault(); toggleSidebar(); return; }
   if (ctrl && e.key.toLowerCase() === 'z' && !inField(e)) { if (await runUndo()) e.preventDefault(); return; }
   if (ctrl && e.key === ',') { e.preventDefault(); go('#/settings'); return; }
-  if (ctrl && /^[1-6]$/.test(e.key)) {
+  if (ctrl && /^[1-7]$/.test(e.key)) {
     e.preventDefault();
-    go(['#/today', pathHash(), '#/stats', '#/bank', '#/glossary', '#/docs/00'][+e.key - 1]);
+    go(['#/today', pathHash(), '#/stats', '#/achievements', '#/bank', '#/glossary', '#/docs/00'][+e.key - 1]);
     return;
   }
   if (e.key === 'Escape') { winEl.classList.remove('is-side-open'); document.dispatchEvent(new CustomEvent('as-escape')); }

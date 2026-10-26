@@ -170,3 +170,28 @@ func TestChecksAndSettings(t *testing.T) {
 		t.Fatal(st)
 	}
 }
+
+func TestMigrationsAndAchievements(t *testing.T) {
+	s := open(t)
+	var v int
+	if err := s.db.QueryRow(`SELECT version FROM schema_version`).Scan(&v); err != nil || v != 2 {
+		t.Fatalf("версия схемы %d %v", v, err)
+	}
+	if err := s.UnlockAchievement("t1", time.Date(2026, 10, 1, 9, 0, 0, 0, time.UTC), false); err != nil {
+		t.Fatal(err)
+	}
+	s.UnlockAchievement("t1", time.Now(), true) // повтор игнорируется
+	m, _ := s.Achievements()
+	if len(m) != 1 || m["t1"].Seen || m["t1"].At.Year() != 2026 {
+		t.Fatalf("%+v", m)
+	}
+	s.MarkAchievementsSeen()
+	m, _ = s.Achievements()
+	if !m["t1"].Seen {
+		t.Fatal("не отмечено просмотренным")
+	}
+	s.Reset()
+	if m, _ = s.Achievements(); len(m) != 0 {
+		t.Fatal("сброс не очистил достижения")
+	}
+}
