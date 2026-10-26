@@ -53,6 +53,7 @@ type TodayDTO struct {
 	Eyebrow     string        `json:"eyebrow"`
 	Greeting    string        `json:"greeting"`
 	Status      string        `json:"status"`
+	Motd        string        `json:"motd"`
 	Goal        int           `json:"goal"`
 	DoneToday   int           `json:"doneToday"`
 	GoalReached bool          `json:"goalReached"`
@@ -175,6 +176,7 @@ func (a *App) Today() (TodayDTO, error) {
 	default:
 		t.Status = fmt.Sprintf("Цель на сегодня — %s. Закрыто %d.", themes(s.goal), t.DoneToday)
 	}
+	t.Motd = s.motd()
 	t.Streak = s.streak()
 	t.Ring = RingDTO{Pct: pct(done, total), Done: done, Total: total}
 	if n := s.in.NextLesson(); n != nil {

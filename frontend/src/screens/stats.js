@@ -7,6 +7,7 @@ import { refresh } from '../actions.js';
 import { openRecap } from '../ui/recap.js';
 
 const MONTHS = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
+const MNOM = ['янв', 'фев', 'мар', 'апр', 'май', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
 const MSHORT = ['янв', 'фев', 'мар', 'апр', 'мая', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
 const iso = (d) => d.toISOString().slice(0, 10);
 const utc = (s) => new Date(s + 'T00:00:00Z');
@@ -26,7 +27,7 @@ export async function render(root) {
       h('div', { class: 'as-eyebrow' }, 'Статистика'),
       h('div', { class: 'as-rowx as-rowx--between' },
         h('h1', { class: 'large-title', style: { margin: '4px 0 0' } }, 'Ваш темп'),
-        h('button', { class: 'as-btn as-btn--secondary', onclick: openRecap, title: 'Картинки с итогами дня или недели' }, icon('share'), 'Итоги дня и недели')),
+        vel.empty ? null : h('button', { class: 'as-btn as-btn--secondary', onclick: openRecap, title: 'Картинки с итогами дня или недели' }, icon('share'), 'Итоги дня и недели')),
       h('p', { class: 'as-lead' }, 'Единица — закрытая тема: пройдены уроки и отвечены вопросы. Уроки по времени не считаются.')));
 
   if (vel.empty) {
@@ -165,7 +166,7 @@ async function yearView(box, tdy) {
   for (let w = 0; w < weeks; w++) {
     const first = days[w * 7];
     const showsMonth = days.slice(w * 7, w * 7 + 7).find((d) => d.dom === 1) || (w === 0 && !days.slice(7, 28).some((d) => d.dom === 1) && first);
-    months.append(h('span', null, showsMonth ? MSHORT[showsMonth.month] : ''));
+    months.append(h('span', null, showsMonth ? MNOM[showsMonth.month] : ''));
   }
   box.append(h('div', { class: 'as-heat-wrap' },
     h('div', { class: 'as-heat-year' },

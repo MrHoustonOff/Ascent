@@ -50,7 +50,7 @@ function lessonRow(l, cur, onNote) {
 }
 
 // «стоит на: GO-6.2, GO-6.3 …» — ID кликабельны
-function idLinks(a) {
+export function idLinks(a) {
   const out = [];
   const re = /[A-ZА-ЯЁ]+-\d+(?:\.\d+){0,2}/g;
   let last = 0, m;
@@ -123,7 +123,7 @@ async function blockScreen(root, id) {
       crumbs({ label: 'Этап ' + b.stage, to: '#/path/stage-' + b.stage }, { label: b.id }),
       h('h1', { class: 'large-title', style: { margin: '6px 0 0' } }, b.title.replace(/\.$/, '')),
       closedBadge(b.closedAt, 'Блок закрыт')),
-    b.why ? h('section', { class: 'as-card' }, h('div', { class: 'as-eyebrow' }, 'Зачем этот блок'), h('div', { class: 'body', style: { textWrap: 'pretty' } }, rich(b.why))) : null,
+    b.why ? h('section', { class: 'as-card' }, h('div', { class: 'as-eyebrow' }, 'Зачем этот блок'), h('div', { class: 'body', style: { textWrap: 'pretty' } }, rich(b.why.charAt(0).toUpperCase() + b.why.slice(1)))) : null,
     b.deps.length ? h('section', { class: 'as-section' },
       h('h2', { class: 'as-h2' }, 'Стоит на'),
       h('div', { class: 'as-rowx' }, b.deps.map((d) =>

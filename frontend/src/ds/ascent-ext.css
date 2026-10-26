@@ -354,3 +354,5 @@ html,body{margin:0;height:100%;overflow:hidden;background:var(--surface-window)}
 .as-hbar b{font-weight:600}
 .as-hbar span:last-child{text-align:right;color:var(--ink-muted);font-variant-numeric:tabular-nums}
 .as-hbar.is-best .as-bar>i{background:var(--streak)}
+.as-motd{margin:2px 0 0;font:400 14px/20px var(--font-sans);color:var(--ink-subtle);text-wrap:pretty;max-width:640px}
+.as-ring.is-zero .as-ring__value{stroke-opacity:0}

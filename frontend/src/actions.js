@@ -26,7 +26,7 @@ export async function refresh() {
 export async function copy(kind, ref = '', quiet = false) {
   try {
     const t = await api.Copy(kind, ref);
-    try { if (navigator.clipboard && !(window.go && window.go.app)) await navigator.clipboard.writeText(t); } catch { /* буфер ставит Go */ }
+    if (navigator.clipboard && !(window.go && window.go.app)) navigator.clipboard.writeText(t).catch(() => {}); // в Wails буфер ставит Go
     if (!quiet) toast({ title: 'Скопировано', body: t.split('\n')[0] });
     return t;
   } catch (e) {
@@ -37,10 +37,14 @@ export async function copy(kind, ref = '', quiet = false) {
 // Реакция на закрытие темы/блока/цель дня.
 export function celebrate(p) {
   if (!p) return;
-  if (p.blockClosed) toast({ title: 'Блок закрыт', body: p.nextId ? 'Следующий — ' + p.nextId + '.' : '', kind: 'streak' });
-  else if (p.themeClosed) toast({ title: 'Тема закрыта', body: 'Вы ответили на все вопросы темы.', kind: 'streak' });
+  // Одно событие — один тост: несколько поводов сводим вместе, чтобы не закрыть главную кнопку.
+  const ach = (p.achievements || []);
+  const achLine = ach.length ? (ach.length === 1 ? 'Новое достижение: ' + ach[0].name : `Новых достижений: ${ach.length}`) : '';
+  const look = ach.length ? { label: 'Посмотреть', onClick: () => go('#/achievements') } : null;
+  if (p.blockClosed) toast({ title: 'Блок закрыт', body: achLine || (p.nextId ? 'Следующий — ' + p.nextId + '.' : ''), kind: 'streak', action: look });
+  else if (p.themeClosed) toast({ title: 'Тема закрыта', body: achLine || 'Вы ответили на все вопросы темы.', kind: 'streak', action: look });
+  else if (ach.length) toast({ title: 'Новое достижение', body: ach.length === 1 ? ach[0].name : achLine, kind: 'streak', action: look });
   if (p.goalReached) toast({ title: 'Сегодня достаточно', body: 'Остальное — завтра.', kind: 'streak' });
-  for (const a of (p.achievements || []).slice(0, 2)) toast({ title: 'Новое достижение', body: a.name, kind: 'streak', action: { label: 'Посмотреть', onClick: () => go('#/achievements') } });
 }
 
 async function safe(fn) {

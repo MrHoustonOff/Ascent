@@ -15,9 +15,10 @@ export async function render(root) {
       h('div', { class: 'as-rowx as-rowx--between' }, h('div', { class: 'as-eyebrow' }, t.eyebrow),
         t.fresh ? null : h('button', { class: 'as-btn as-btn--ghost as-btn--sm', onclick: openRecap, title: 'Картинки с итогами дня или недели' }, 'Итоги дня')),
       h('h1', { class: 'large-title', style: { margin: '4px 0 0' } }, t.greeting),
-      h('p', { class: 'as-lead' }, t.status)),
+      h('p', { class: 'as-lead' }, t.status),
+      t.motd && !t.fresh ? h('p', { class: 'as-motd' }, t.motd) : null),
     hero.el,
-    h('div', { class: 'as-grid2' }, streakCard(t.streak), ringCard(t.ring)),
+    h('div', { class: 'as-grid2' }, streakCard({ ...t.streak, fresh: t.fresh }), ringCard(t.ring)),
     forecastCard(t.forecast),
     t.recent.length ? recentCard(t.recent) : null);
 
@@ -43,7 +44,7 @@ function themeLine(n) {
 function arrowsList(l) {
   if (!l.arrows.length) return null;
   return h('div', { class: 'as-lesson__arrows', style: { gridColumn: 'auto' } }, l.arrows.map((a) =>
-    h('div', { class: 'as-lesson__arrow' }, h('b', null, '↳ ' + a.kind + ': '), rich(a.text))));
+    h('div', { class: 'as-lesson__arrow' }, h('b', null, '↳ ' + a.kind + ': '), a.kind === 'стоит на' ? idLinksT(a) : rich(a.text))));
 }
 
 function themeBar(n) {
@@ -166,13 +167,13 @@ function streakCard(s) {
   return h('section', { class: 'as-card as-streak' },
     h('div', { class: 'as-streak__head' }, flame, head),
     h('div', { class: 'as-week' }, s.week.map(dot)),
-    s.canRest ? h('div', null, btn('Сегодня отдыхаю', 'ghost', rest, { title: 'День отдыха не обнуляет серию' }))
+    s.canRest && !s.fresh ? h('div', null, btn('Сегодня отдыхаю', 'ghost', rest, { title: 'День отдыха не обнуляет серию' }))
       : s.restUsed ? h('div', { class: 'caption as-subtle' }, 'Один день отдыха в неделю уже взят') : null);
 }
 
 function ringCard(r) {
   const C = 2 * Math.PI * 40;
-  const ring = h('div', { class: 'as-ring', role: 'img', 'aria-label': `Пройдено ${r.pct} %` },
+  const ring = h('div', { class: 'as-ring' + (r.pct === 0 ? ' is-zero' : ''), role: 'img', 'aria-label': `Пройдено ${r.pct} %` },
     h('div', { html: `<svg viewBox="0 0 96 96"><circle class="as-ring__track" cx="48" cy="48" r="40"/><circle class="as-ring__value" cx="48" cy="48" r="40" stroke-dasharray="${(r.pct / 100 * C).toFixed(1)} 999"/></svg>`, style: { width: '100%', height: '100%' } }),
     h('div', { class: 'as-ring__label' }, h('span', null, countUp(h('span'), r.pct, '%'), h('small', null, 'пройдено'))));
   const word = r.total % 10 === 1 && r.total % 100 !== 11 ? 'урока' : 'уроков';
@@ -180,7 +181,7 @@ function ringCard(r) {
     ring,
     h('div', { style: { minWidth: 0 } },
       h('h3', { class: 'as-h-headline', style: { marginBottom: '2px' } }, r.stageNum ? `Этап ${r.stageNum} · ${r.stageTitle.split(':')[0]}` : 'Путь по курсу'),
-      h('p', { class: 'as-p-callout' }, `${r.done} из ${r.total} ${word}.` + (r.block ? ` Текущий блок — ${r.block}.` : ''))));
+      h('p', { class: 'as-p-callout' }, `${r.done} из ${r.total} ${word}.` + (r.block ? ` Текущий блок —\u00a0${r.block}.` : ''))));
 }
 
 function forecastCard(f) {
@@ -209,4 +210,18 @@ function recentCard(items) {
       h('span', { class: 'as-feed__kind' }, KIND[r.kind]),
       h('span', { class: 'as-clamp1' }, h('span', { class: 'as-mono as-subtle', style: { fontSize: '12px', marginRight: '8px' } }, r.kind === 'stage' ? '' : r.id), r.title.replace(/\.$/, '')),
       h('span', { class: 'as-feed__when' }, r.when)))));
+}
+
+function idLinksT(a) {
+  const out = [];
+  const re = /[A-ZА-ЯЁ]+-\d+(?:\.\d+){0,2}/g;
+  let last = 0, m;
+  while ((m = re.exec(a.text))) {
+    if (m.index > last) out.push(...rich(a.text.slice(last, m.index)));
+    const id = m[0];
+    out.push(h('a', { class: 'as-a', onclick: () => openId(id) }, id));
+    last = m.index + id.length;
+  }
+  if (last < a.text.length) out.push(...rich(a.text.slice(last)));
+  return out;
 }

@@ -28,7 +28,7 @@ export function toast({ title, body, kind = 'ok', action, ms = 6000 }) {
   };
   [...host.children].forEach((c) => { const t = c.querySelector('.as-toast__title'); if (t && t.textContent === title) c.remove(); });
   host.append(el);
-  while (host.children.length > 3) host.firstChild.remove();
+  while (host.children.length > 2) host.firstChild.remove();
   t = setTimeout(close, ms);
   return close;
 }

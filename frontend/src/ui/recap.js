@@ -24,7 +24,7 @@ export function openRecap() {
     h('div', { class: 'as-rowx' }, tabs, dateInp), preview, info);
   dateInp.addEventListener('change', () => { date = dateInp.value; build(); });
   const dlg = openDialog({
-    title: 'Итоги', body, cls: 'as-recap',
+    title: 'Итоги', body, cls: 'as-recap', focus: '.as-dialog__actions .as-btn',
     actions: [
       { label: 'Закрыть', onClick: (d) => d.close() },
       { label: 'Сохранить картинки', kind: 'primary', onClick: save },
@@ -36,7 +36,7 @@ export function openRecap() {
     preview.append(h('div', { class: 'as-recap__loading' }, 'Собираю…'));
     try {
       data = await api.Recap(kind, date);
-      if (!date) { /* показать выбранную дату */ }
+      if (!dateInp.value) dateInp.value = data.date;
       pages = await render(data);
       clear(preview);
       pages.forEach((cv, i) => {

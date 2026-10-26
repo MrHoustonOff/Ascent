@@ -174,3 +174,26 @@ func TestRecapAndInsights(t *testing.T) {
 		t.Fatalf("%+v", in)
 	}
 }
+
+func TestMotd(t *testing.T) {
+	a, _, _ := newApp(t)
+	td, _ := a.Today()
+	if td.Motd == "" || strings.Contains(td.Motd, "!") {
+		t.Fatal(td.Motd)
+	}
+	a.CompleteLesson("ФУНД-1.1.1")
+	td, _ = a.Today()
+	if td.Motd == "" || strings.Contains(td.Motd, "!") {
+		t.Fatal(td.Motd)
+	}
+	for k, xs := range motdBlock {
+		if a.plan.Blocks[k] == nil {
+			t.Errorf("нет блока %s", k)
+		}
+		for _, x := range xs {
+			if strings.Contains(strings.ReplaceAll(x, "!=", ""), "!") {
+				t.Errorf("восклицание: %s", x)
+			}
+		}
+	}
+}

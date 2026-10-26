@@ -80,6 +80,7 @@ function parseHash() {
 async function renderRoute() {
   const my = ++renderSeq;
   S.route = parseHash();
+  winEl.classList.remove('is-side-open');
   if (prevName === 'achievements' && S.route.name !== 'achievements') api.MarkAchievementsSeen().then(() => api.Tree().then((t) => { S.tree = t; renderSidebar(sideEl, closeOverlay); })).catch(() => {});
   prevName = S.route.name;
   if (S.route.name === 'path' && !S.route.arg) { location.replace(pathHash()); return; }
@@ -114,6 +115,8 @@ function inField(e) {
 }
 window.addEventListener('keydown', async (e) => {
   const ctrl = e.ctrlKey || e.metaKey;
+  // пока открыт диалог, горячие клавиши приложения не работают: у диалога свои
+  if (document.querySelector('.as-scrim')) return;
   if (ctrl && e.key.toLowerCase() === 'k') { e.preventDefault(); search(); return; }
   if (ctrl && e.key.toLowerCase() === 'b') { e.preventDefault(); toggleSidebar(); return; }
   if (ctrl && e.key.toLowerCase() === 'z' && !inField(e)) { if (await runUndo()) e.preventDefault(); return; }

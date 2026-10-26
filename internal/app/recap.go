@@ -24,6 +24,7 @@ type RecapDTO struct {
 	Kind         string      `json:"kind"`
 	Title        string      `json:"title"`
 	Period       string      `json:"period"`
+	Date         string      `json:"date"`
 	Themes       []RecapItem `json:"themes"`
 	Blocks       []RecapItem `json:"blocks"`
 	Achievements []AchRef    `json:"achievements"`
@@ -52,7 +53,7 @@ func (a *App) Recap(kind, date string) (RecapDTO, error) {
 		day = t
 	}
 	from, to := day, day
-	r := RecapDTO{Kind: kind, Themes: []RecapItem{}, Blocks: []RecapItem{}, Achievements: []AchRef{}, Days: []RecapDay{}}
+	r := RecapDTO{Date: day.Format("2006-01-02"), Kind: kind, Themes: []RecapItem{}, Blocks: []RecapItem{}, Achievements: []AchRef{}, Days: []RecapDay{}}
 	if kind == "week" {
 		from = stats.WeekStart(day)
 		to = from.AddDate(0, 0, 6)

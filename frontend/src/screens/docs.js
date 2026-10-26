@@ -3,6 +3,7 @@ import { h } from '../ui/dom.js';
 import { go, openId } from '../actions.js';
 
 const NAMES = { '00': 'Карта', '98': 'ТЗ А', '99': 'ТЗ Б' };
+const ORDER = ['00', '98', '99'];
 
 export async function render(root, arg) {
   const key = NAMES[arg] ? arg : '00';
@@ -19,7 +20,7 @@ export async function render(root, arg) {
   root.append(
     h('header', { class: 'as-head' },
       h('div', { class: 'as-eyebrow' }, 'Документы'),
-      h('div', { class: 'as-tabs', role: 'tablist', style: { marginTop: '10px', alignSelf: 'flex-start' } }, Object.entries(NAMES).map(([k, t]) =>
+      h('div', { class: 'as-tabs', role: 'tablist', style: { marginTop: '10px', alignSelf: 'flex-start' } }, ORDER.map((k) => [k, NAMES[k]]).map(([k, t]) =>
         h('button', { class: 'as-tab' + (k === key ? ' is-active' : ''), role: 'tab', 'aria-selected': k === key, onclick: () => go('#/docs/' + k) }, t)))),
     body);
   return 'Документы · ' + d.title;
