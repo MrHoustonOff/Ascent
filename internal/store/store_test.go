@@ -174,7 +174,7 @@ func TestChecksAndSettings(t *testing.T) {
 func TestMigrationsAndAchievements(t *testing.T) {
 	s := open(t)
 	var v int
-	if err := s.db.QueryRow(`SELECT version FROM schema_version`).Scan(&v); err != nil || v != 2 {
+	if err := s.db.QueryRow(`SELECT version FROM schema_version`).Scan(&v); err != nil || v != 3 {
 		t.Fatalf("версия схемы %d %v", v, err)
 	}
 	if err := s.UnlockAchievement("t1", time.Date(2026, 10, 1, 9, 0, 0, 0, time.UTC), false); err != nil {
@@ -193,5 +193,25 @@ func TestMigrationsAndAchievements(t *testing.T) {
 	s.Reset()
 	if m, _ = s.Achievements(); len(m) != 0 {
 		t.Fatal("сброс не очистил достижения")
+	}
+}
+
+func TestKQ(t *testing.T) {
+	s := open(t)
+	if err := s.SetKQ("GO-1.1.1", "GO-1.1.1#abc", true); err != nil {
+		t.Fatal(err)
+	}
+	s.SetKQ("GO-1.1.1", "GO-1.1.1#abc", true) // повтор игнорируется
+	if m, _ := s.KQs(); len(m) != 1 {
+		t.Fatalf("%v", m)
+	}
+	s.SetKQ("GO-1.1.1", "GO-1.1.1#abc", false)
+	if m, _ := s.KQs(); len(m) != 0 {
+		t.Fatalf("снятие: %v", m)
+	}
+	s.SetKQ("GO-1.1.1", "GO-1.1.1#abc", true)
+	s.Reset()
+	if m, _ := s.KQs(); len(m) != 0 {
+		t.Fatal("сброс не очистил вопросы конспектов")
 	}
 }

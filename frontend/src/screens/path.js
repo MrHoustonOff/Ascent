@@ -5,6 +5,7 @@ import { icon, stateDot } from '../ui/icons.js';
 import { go, openId, copy, startLesson, completeLesson, undoLesson, setCheck, setChecksAll, setMarker } from '../actions.js';
 import { checkbox, qRow } from './today.js';
 import { openNote } from '../ui/note.js';
+import { konspektPanel, kbar, isOpen, setOpen } from '../ui/konspekt.js';
 
 let keyHandler = null;
 
@@ -31,21 +32,38 @@ function lessonRow(l, cur, onNote) {
   const box = checkbox(done, () => (done ? undoLesson(l.id) : completeLesson(l.id)), done ? 'Урок пройден' : 'Отметить урок пройденным');
   box.setAttribute('aria-checked', done ? 'true' : l.status === 'doing' ? 'mixed' : 'false');
   if (l.status === 'doing') { box.replaceChildren(stateDot('doing')); }
-  const row = h('div', { class: 'as-lesson' + (cur === l.id ? ' is-current' : ''), 'data-id': l.id, tabindex: '-1' },
-    box,
-    h('div', { class: 'as-lesson__main' },
+  let bar = kbar(l.kqDone, l.kq);
+  const onCount = (d, t) => { const nb = kbar(d, t); if (bar && nb) bar.replaceWith(nb); bar = nb; };
+  let panel = null;
+  const toggle = () => {
+    const v = !row.classList.contains('is-open');
+    setOpen(l.id, v);
+    row.classList.toggle('is-open', v);
+    tbtn.setAttribute('aria-expanded', String(v));
+    if (v) { panel = konspektPanel(l.id, { onCount }); row.append(panel); } else if (panel) { panel.remove(); panel = null; }
+  };
+  const tbtn = l.kq ? h('button', { class: 'as-iconbtn as-ktoggle', title: 'Конспект урока', 'aria-label': 'Конспект урока', 'aria-expanded': 'false', onclick: (e) => { e.stopPropagation(); toggle(); } }, icon('chevD')) : null;
+  const main = h('div', { class: 'as-lesson__main' + (l.kq ? ' is-toggle' : '') },
       idTag(l.id, 'as-lesson__id'),
       h('span', { class: 'as-lesson__title' }, rich(l.title)),
       starChip(l.stars),
       l.note ? h('span', { class: 'as-note-dot', title: 'Есть заметка' }) : null,
-      l.doneAt ? h('span', { class: 'as-when' }, l.doneAt) : null),
+      l.doneAt ? h('span', { class: 'as-when' }, l.doneAt) : null,
+      bar);
+  // щелчок по заголовку раскрывает конспект, но не мешает выделять текст
+  if (l.kq) main.addEventListener('click', (e) => { if (e.target.closest('a,button') || String(window.getSelection())) return; toggle(); });
+  const row = h('div', { class: 'as-lesson' + (cur === l.id ? ' is-current' : ''), 'data-id': l.id, tabindex: '-1' },
+    box,
+    main,
     h('div', { class: 'as-lesson__actions' },
+      tbtn,
       h('button', { class: 'as-iconbtn', title: 'Скопировать для Гермеса (C)', 'aria-label': 'Скопировать для Гермеса', onclick: () => copy('lesson', l.id) }, icon('copy')),
       h('button', { class: 'as-iconbtn', title: 'Заметка', 'aria-label': 'Заметка', onclick: () => onNote(l) }, icon('note')),
       !done ? h('button', { class: 'as-btn as-btn--ghost as-btn--sm', title: 'Начать и скопировать', onclick: () => startLesson(l.id) }, l.status === 'doing' ? 'Продолжить' : 'Начать') : null),
     l.arrows.length ? h('div', { class: 'as-lesson__arrows' }, l.arrows.map((a) => h('div', { class: 'as-lesson__arrow' },
       h('b', null, a.kind + ': '),
       a.kind === 'стоит на' ? idLinks(a) : rich(a.text)))) : null);
+  if (l.kq && isOpen(l.id, cur)) toggle();
   return row;
 }
 
@@ -130,7 +148,8 @@ async function blockScreen(root, id) {
         h('button', { class: 'as-btn as-btn--secondary as-btn--sm', title: d.title, onclick: () => openId(d.id) }, stateDot(d.state), h('span', { class: 'as-mono', style: { fontWeight: 500 } }, d.id))))) : null,
     isRun ? h('section', { class: 'as-card' }, h('div', { class: 'as-eyebrow' }, 'Прогон'), h('div', { class: 'body' }, rich(b.run.title)),
       h('div', { class: 'as-actions' }, h('button', { class: 'as-btn as-btn--secondary', onclick: () => copy('stage_run', String(b.stage)) }, icon('copy'), 'Скопировать прогон для Гермеса'),
-        h('button', { class: 'as-btn as-btn--ghost', onclick: () => (b.run.status === 'done' ? undoLesson(b.run.id) : completeLesson(b.run.id)) }, b.run.status === 'done' ? 'Снять отметку' : 'Пройдено'))) : null,
+        h('button', { class: 'as-btn as-btn--ghost', onclick: () => (b.run.status === 'done' ? undoLesson(b.run.id) : completeLesson(b.run.id)) }, b.run.status === 'done' ? 'Снять отметку' : 'Пройдено')),
+      b.run.kq ? konspektPanel(b.run.id) : null) : null,
     b.themes.length ? h('section', { class: 'as-section' },
       h('div', { class: 'as-section__head' }, h('h2', { class: 'as-h2' }, 'Темы'), h('span', { class: 'callout as-muted as-tnum' }, `${b.done} из ${b.total} уроков`)),
       h('div', { class: 'as-card', style: { padding: '8px', gap: '0' } }, b.themes.map((t) =>

@@ -3,6 +3,7 @@ import { S } from '../state.js';
 import { h, rich, countUp, gem, idTag, markerLabel, starChip } from '../ui/dom.js';
 import { icon, stateDot, FLAME, CHECK_GLYPH, DASH_GLYPH } from '../ui/icons.js';
 import { openRecap } from '../ui/recap.js';
+import { konspektPanel, kbar, isOpen, setOpen } from '../ui/konspekt.js';
 import { go, openId, copy, startLesson, completeLesson, setCheck, setChecksAll, setMarker, rest, refresh } from '../actions.js';
 
 let keyHandler = null;
@@ -52,6 +53,23 @@ function themeBar(n) {
   return h('div', { class: 'as-bar', role: 'progressbar', 'aria-valuenow': n.theme.pct, 'aria-label': 'Прогресс темы' }, h('i', { style: { width: n.theme.pct + '%' } }));
 }
 
+// Конспект текущего урока на главной: свёрнут, пока урок не начат.
+function konspektFold(l, openByDefault) {
+  if (!l.kq) return null;
+  const wrap = h('div', { class: 'as-kfold' });
+  let bar = kbar(l.kqDone, l.kq), panel = null;
+  const onCount = (d, t) => { const nb = kbar(d, t); bar.replaceWith(nb); bar = nb; };
+  const head = h('button', { class: 'as-kfold__head', 'aria-expanded': 'false', onclick: () => set(!wrap.classList.contains('is-open')) },
+    icon('chevD'), h('span', { class: 'as-kfold__label' }, 'Конспект урока'), bar);
+  const set = (v) => {
+    setOpen(l.id, v); wrap.classList.toggle('is-open', v); head.setAttribute('aria-expanded', String(v));
+    if (v && !panel) { panel = konspektPanel(l.id, { onCount }); wrap.append(panel); } else if (!v && panel) { panel.remove(); panel = null; }
+  };
+  wrap.append(head);
+  if (isOpen(l.id, openByDefault ? l.id : '')) set(true);
+  return wrap;
+}
+
 function heroCard(n, t) {
   const card = h('section', { class: 'as-card as-card--lg', 'aria-live': 'polite' });
   let primary = null;
@@ -67,7 +85,7 @@ function heroCard(n, t) {
           h('div', { class: 'as-actions' },
             btn('Открыть тему', 'ghost', () => openId(l.theme || l.block)),
             btn('Пройдено', 'secondary', () => completeLesson(l.id)),
-            mk('Начать урок', () => startLesson(l.id), { icon: 'play', title: 'Начать урок (Enter)' }))));
+            mk('Начать урок', () => startLesson(l.id), { icon: 'play', title: 'Начать урок (Enter)' }))), konspektFold(l, false));
       break;
     }
     case 'lesson_doing': {
@@ -79,7 +97,7 @@ function heroCard(n, t) {
           h('div', { class: 'as-actions' },
             btn('Открыть тему', 'ghost', () => openId(l.theme || l.block)),
             btn('Скопировать ещё раз', 'secondary', () => copy('lesson', l.id)),
-            mk('Урок пройден', () => completeLesson(l.id), { title: 'Урок пройден (Enter)' }))));
+            mk('Урок пройден', () => completeLesson(l.id), { title: 'Урок пройден (Enter)' }))), konspektFold(l, true));
       break;
     }
     case 'theme_check': {

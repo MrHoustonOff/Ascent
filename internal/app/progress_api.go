@@ -343,6 +343,10 @@ func (a *App) Copy(kind, ref string) (string, error) {
 			}
 		}
 		txt, err = clip.Lesson(a.plan, id, clip.LessonOpts{Template: s.set["hermes_template"], WithBrief: true})
+	case "konspekt":
+		txt, err = a.konspektText(ref, false)
+	case "konspekt_qs":
+		txt, err = a.konspektText(ref, true)
 	case "theme_check":
 		txt, err = clip.ThemeCheck(a.plan, ref)
 	case "block_markers":

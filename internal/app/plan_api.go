@@ -33,6 +33,8 @@ type LessonDTO struct {
 	Theme  string     `json:"theme"`
 	Block  string     `json:"block"`
 	Stage  int        `json:"stage"`
+	KQ     int        `json:"kq"`     // вопросов в конспекте
+	KQDone int        `json:"kqDone"` // из них отмечено
 }
 
 type CheckDTO struct {
@@ -180,6 +182,7 @@ func (s *snap) lessonDTO(l *plan.Lesson) LessonDTO {
 		d.Status = "todo"
 	}
 	d.DoneAt = s.doneLabel(r)
+	d.KQDone, d.KQ = s.kqCounts(l.ID)
 	for _, a := range l.Arrows {
 		ids := a.IDs
 		if ids == nil {

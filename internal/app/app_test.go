@@ -196,3 +196,47 @@ func TestSpeedTarget(t *testing.T) {
 		t.Fatal("дневная цель больше не настраивается")
 	}
 }
+
+func TestKonspekt(t *testing.T) {
+	a, h, _ := newApp(t)
+	k, err := a.Konspekt("ФУНД-1.2.1")
+	if err != nil || len(k.Qs) < 2 || len(k.Know) == 0 || k.Done != 0 {
+		t.Fatalf("%+v %v", k, err)
+	}
+	if err := a.SetKQ("ФУНД-1.2.1", 2, true); err != nil {
+		t.Fatal(err)
+	}
+	if err := a.SetKQ("ФУНД-1.2.1", 99, true); err == nil {
+		t.Fatal("номер вне диапазона принят")
+	}
+	k, _ = a.Konspekt("ФУНД-1.2.1")
+	if k.Done != 1 || !k.Qs[1].Done || k.Qs[0].Done {
+		t.Fatalf("отметка: %+v", k.Qs)
+	}
+	th, _ := a.Theme("ФУНД-1.2")
+	if th.Lessons[0].KQ != len(k.Qs) || th.Lessons[0].KQDone != 1 {
+		t.Fatalf("счётчик в строке урока: %+v", th.Lessons[0])
+	}
+	// закрытие темы от вопросов конспекта не зависит
+	if th.Closed {
+		t.Fatal("тема закрылась от вопроса конспекта")
+	}
+	var rel bool
+	for _, l := range k.Later {
+		for _, x := range l.Links {
+			if strings.HasPrefix(x.Rel, "через ") || strings.Contains(x.Rel, "в этой теме") {
+				rel = true
+			}
+		}
+	}
+	if !rel {
+		t.Fatalf("нет относительных ссылок: %+v", k.Later)
+	}
+	if _, err := a.Copy("konspekt", "ФУНД-1.2.1"); err != nil || !strings.Contains(h.clip, "Должен знать:") {
+		t.Fatalf("%q %v", h.clip, err)
+	}
+	r, _ := a.Konspekt("ПРОГОН-1")
+	if len(r.Qs) == 0 || len(r.Qs[0].Refs) == 0 || r.Qs[0].Refs[0].Rel == "" {
+		t.Fatalf("прогон: %+v", r.Qs)
+	}
+}

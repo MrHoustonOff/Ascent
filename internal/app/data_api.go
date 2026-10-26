@@ -286,6 +286,7 @@ func (a *App) ReloadPlanFromDir() (store.SyncReport, error) {
 		return rep, err
 	}
 	a.plan, a.planFS, a.lastSync = p, os.DirFS(dir), rep
+	a.loadKonspekt(a.planFS)
 	_ = a.st.SetSetting("plan_source", dir)
 	_ = a.st.SetSetting("plan_version", p.Version)
 	_ = a.st.SetSetting("plan_synced_at", a.Now().UTC().Format(time.RFC3339))

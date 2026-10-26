@@ -11,6 +11,7 @@ import (
 	"sync"
 	"time"
 
+	"ascent/internal/konspekt"
 	"ascent/internal/plan"
 	"ascent/internal/stats"
 	"ascent/internal/store"
@@ -28,6 +29,7 @@ type App struct {
 	st       *store.Store
 	plan     *plan.Plan
 	planFS   fs.FS
+	ksp      map[string]*konspekt.Lesson
 	host     Host
 	Now      func() time.Time
 	Loc      *time.Location
@@ -90,6 +92,7 @@ func (a *App) loadPlan() error {
 		}
 	}
 	a.plan, a.planFS = p, fsys
+	a.loadKonspekt(fsys)
 	rep, err := a.st.Sync(p)
 	if err != nil {
 		return err
@@ -109,6 +112,7 @@ type snap struct {
 	a     *App
 	in    *stats.Input
 	set   map[string]string
+	kq    map[string]time.Time
 	now   time.Time
 	today time.Time
 }
@@ -142,6 +146,10 @@ func (a *App) snap() (*snap, error) {
 	if err != nil {
 		return nil, err
 	}
+	kq, err := a.st.KQs()
+	if err != nil {
+		return nil, err
+	}
 	now := a.Now()
 	in := &stats.Input{
 		Plan: a.plan, Lessons: ls, Checks: ck, Markers: mk, Rest: rest, Now: now, Loc: a.Loc,
@@ -153,7 +161,7 @@ func (a *App) snap() (*snap, error) {
 			MilestoneDate:  set["milestone_target"],
 		},
 	}
-	return &snap{a: a, in: in, set: set, now: now, today: in.Today()}, nil
+	return &snap{a: a, in: in, set: set, kq: kq, now: now, today: in.Today()}, nil
 }
 
 func (s *snap) status(id string) string { return s.in.Lessons[id].Status }

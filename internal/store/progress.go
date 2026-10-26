@@ -176,6 +176,15 @@ func (s *Store) SetCheck(theme, key string, done bool) error {
 	return s.setKey("check_progress", "check_key", "theme_id", "check", theme, key, done)
 }
 
+// KQs — отмеченные вопросы конспектов.
+func (s *Store) KQs() (map[string]time.Time, error) {
+	return s.keySet(`SELECT kq_key, done_at FROM kq_progress`)
+}
+
+func (s *Store) SetKQ(lesson, key string, done bool) error {
+	return s.setKey("kq_progress", "kq_key", "lesson_id", "kq", lesson, key, done)
+}
+
 func (s *Store) SetMarker(block, key string, done bool) error {
 	return s.setKey("marker_progress", "marker_key", "block_id", "marker", block, key, done)
 }
