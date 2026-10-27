@@ -311,6 +311,8 @@ async function cardThemes(g, W, H, c, list, first, more) {
     const l = wrap(g, plain(t.title), W - 160 * u - 140 * u);
     g.fillText(l[0] + (l.length > 1 ? '…' : ''), 180 * u, y + rowH * 0.78);
     y += rowH + 16 * u;
+    const note = noteOf(d, t);
+    if (note) y += bubbleNote(g, S, acc, u, 80 * u + IND * u, W - 160 * u - IND * u, y - 6 * u, note, (sq ? 30 : 34) * u, false) + 10 * u;
   }
   if (more) { g.fillStyle = S.muted; g.font = `500 ${32 * u}px ${S.font}`; g.fillText(`и ещё ${more} ${W_(more, 'тема', 'темы', 'тем')}`, 80 * u, y + 40 * u); }
   const flip = !more && rng() < 0.5; // строку «и ещё N» слева не закрываем
@@ -641,12 +643,12 @@ export function mdRuns(text) {
   if (last < text.length) out.push({ t: text.slice(last) });
   return out;
 }
-const runFont = (r, S, px) => r.code ? `600 ${px * 0.88}px ${MONO}` : `${r.i ? 'italic ' : ''}${r.b ? 800 : 500} ${px}px ${S.font}`;
+const runFont = (r, S, px, wt = 500) => r.code ? `600 ${px * 0.88}px ${MONO}` : `${r.i ? 'italic ' : ''}${r.b ? 800 : wt} ${px}px ${S.font}`;
 // раскладка по строкам: слова со своим начертанием, перенос по ширине
-function runLines(g, S, runs, maxW, px) {
+function runLines(g, S, runs, maxW, px, wt) {
   const lines = [[]]; let x = 0;
   for (const r of runs) {
-    g.font = runFont(r, S, px);
+    g.font = runFont(r, S, px, wt);
     for (const t of r.t.split(/(\s+)/)) {
       if (!t) continue;
       const w = g.measureText(t).width, sp = /^\s+$/.test(t);
@@ -657,73 +659,117 @@ function runLines(g, S, runs, maxW, px) {
   }
   return lines;
 }
-// один проход: dry — только посчитать высоту; возвращает низ содержимого
-function tasksPass(g, S, acc, u, card, items, x0, y0, w, titleW, minY, dry) {
-  let y = y0;
-  const ts = 84 * u;
-  if (card.title && card.title.trim()) {
-    g.font = `800 ${ts}px ${S.head}`;
-    for (const l of wrap(g, card.title, titleW)) { y += ts; if (!dry) { g.fillStyle = S.ink; g.fillText(l, x0, y); } y += ts * 0.14; }
-  }
-  y = Math.max(y + 56 * u, minY);
-  for (const it of items) {
-    const sub = it.lvl === 1, px = (sub ? 34 : 42) * u, box = (sub ? 30 : 40) * u, lh = px * 1.32;
-    const ix = x0 + (sub ? 64 * u : 0), tx = ix + box + 18 * u;
-    const lines = runLines(g, S, mdRuns(it.text), x0 + w - tx, px);
-    if (!dry) {
-      const my = y + lh * 0.5; // маркер: у пункта — точка акцента, у подпункта — кружок
-      if (S === STYLES.terminal) { g.fillStyle = sub ? S.muted : acc; g.font = `700 ${px}px ${MONO}`; g.fillText(sub ? '-' : '>', ix + box * 0.2, y + lh * 0.74); }
-      else if (sub) { g.strokeStyle = S.muted; g.lineWidth = Math.max(2, box * 0.09); g.beginPath(); g.arc(ix + box / 2, my, box * 0.2, 0, Math.PI * 2); g.stroke(); }
-      else { g.fillStyle = acc; blob(g, ix + box / 2, my, box * 0.26); }
-      lines.forEach((l, i) => {
-        const base = y + lh * 0.74 + i * lh;
-        for (const tk of l) {
-          if (tk.sp) continue;
-          if (tk.r.code) { g.fillStyle = hexA(acc, 0.16); rr(g, tx + tk.x - 6 * u, base - px * 0.86, tk.w + 12 * u, px * 1.14, 8 * u); g.fill(); }
-          g.font = runFont(tk.r, S, px);
-          g.fillStyle = tk.r.code ? acc : sub ? hexA(S.ink.startsWith('#') ? S.ink : '#888888', 0.86) : S.ink;
-          g.fillText(tk.t, tx + tk.x, base);
-        }
-      });
+// текст с мини-markdown: y — верх строки; dry — только высота
+function mdText(g, S, acc, u, text, x, y, maxW, px, color, dry, wt = 500) {
+  const lines = runLines(g, S, mdRuns(String(text)), maxW, px, wt), lh = px * 1.3;
+  if (!dry) lines.forEach((l, i) => {
+    const base = y + lh * 0.76 + i * lh;
+    for (const tk of l) {
+      if (tk.sp) continue;
+      if (tk.r.code) { g.fillStyle = hexA(acc, 0.16); rr(g, x + tk.x - 6 * u, base - px * 0.86, tk.w + 12 * u, px * 1.14, 8 * u); g.fill(); }
+      g.font = runFont(tk.r, S, px, wt); g.fillStyle = tk.r.code ? acc : color; g.fillText(tk.t, x + tk.x, base);
     }
-    y += Math.max(1, lines.length) * lh + (sub ? 14 : 26) * u;
-  }
-  return y;
+  });
+  return Math.max(1, lines.length) * lh;
 }
-// card = { kind: 'list', bg, title, tasks: [{ text, lvl }], gopher: 'auto' | 'none' | поза, flip }
-export async function drawList(g, W, H, card, acc) {
-  const S = STYLES[card.bg] || STYLES.night;
+// пузыри списка (вариант «лесенка»): пункт — с галочкой, подпункт — с точкой, комментарий — с кавычкой
+const IND = 56; // сдвиг подпунктов и комментария
+function bubbleItem(g, S, acc, u, x, w, y, text, px, dry) {
+  const tx = x + 100 * u, tw = x + w - 32 * u - tx, h = mdText(g, S, acc, u, text, tx, 0, tw, px, S.ink, true) + 52 * u;
+  if (dry) return h;
+  g.fillStyle = S.card; rr(g, x, y, w, h, 28 * u); g.fill();
+  const cy = y + 26 * u + px * 0.65;
+  g.fillStyle = acc; blob(g, x + 52 * u, cy, 22 * u); check(g, x + 52 * u, cy, 26 * u, onAcc(acc), 5 * u);
+  mdText(g, S, acc, u, text, tx, y + 26 * u, tw, px, S.ink);
+  return h;
+}
+function bubbleSub(g, S, acc, u, x, w, y, text, px, dry) {
+  const tx = x + 50 * u, tw = x + w - 32 * u - tx, h = mdText(g, S, acc, u, text, tx, 0, tw, px, S.ink, true) + 40 * u;
+  if (dry) return h;
+  g.fillStyle = S.card; rr(g, x, y, w, h, 28 * u); g.fill();
+  g.fillStyle = acc; blob(g, x + 26 * u, y + 20 * u + px * 0.62, 8 * u);
+  mdText(g, S, acc, u, text, tx, y + 20 * u, tw, px, S.ink);
+  return h;
+}
+function bubbleNote(g, S, acc, u, x, w, y, text, px, dry) {
+  const tx = x + 84 * u, tw = x + w - 32 * u - tx, h = mdText(g, S, acc, u, text, tx, 0, tw, px, S.ink, true) + 48 * u;
+  if (dry) return h;
+  g.fillStyle = hexA(acc, 0.16); rr(g, x, y, w, h, 28 * u); g.fill();
+  g.fillStyle = acc; g.font = `800 ${100 * u}px Georgia, serif`; g.fillText('“', x + 22 * u, y + 96 * u);
+  mdText(g, S, acc, u, text, tx, y + 24 * u, tw, px, S.ink);
+  return h;
+}
+const BUBBLE = { item: bubbleItem, sub: bubbleSub, note: bubbleNote };
+
+// раскладка списка: блоки (пункт, подпункты, комментарий внизу) → страницы; текст не уменьшается
+function listLayout(g, W, H, card) {
+  const S = STYLES[card.bg] || STYLES.night, u = W / 1080, sq = H === W;
+  const px = (sq ? 40 : 44) * u, npx = (sq ? 32 : 36) * u, x0 = 80 * u, w = W - 160 * u;
+  const groups = [];
+  for (const t of card.tasks || []) {
+    if (!String(t.text).trim()) continue;
+    if (t.lvl === 1 && groups.length) groups[groups.length - 1].push({ type: 'sub', text: t.text });
+    else groups.push([{ type: 'item', text: t.text, note: t.comment }]);
+  }
+  for (const gr of groups) if (gr[0].note && String(gr[0].note).trim()) gr.push({ type: 'note', text: gr[0].note }); // комментарий — в самый низ блока
+  const gw = card.gopher === 'none' ? 0 : (sq ? 200 : 240) * u; // гофер у заголовка
+  const ts = (sq ? 80 : 96) * u;
+  g.font = `800 ${ts}px ${S.head}`;
+  const title = String(card.title || '').trim() ? wrap(g, card.title, w - gw) : [];
+  const top = (sq ? 175 : 215) * u + title.length * ts * 1.08 + (title.length ? 46 * u : 0);
+  const contentTop = Math.max(top, gw ? (sq ? 350 : 420) * u : 0), limit = H - (sq ? 70 : 90) * u;
+  const meas = (bl) => BUBBLE[bl.type](g, S, STYLES.night.accents[0], u, bl.type === 'item' ? x0 : x0 + IND * u, bl.type === 'item' ? w : w - IND * u, 0, bl.text, bl.type === 'note' ? npx : px, true);
+  const pages = [[]]; let y = contentTop;
+  const empty = () => !pages[pages.length - 1].length;
+  const next = () => { pages.push([]); y = contentTop; };
+  for (const gr of groups) {
+    const hs = gr.map(meas), body = hs.reduce((a, b) => a + b, 0) + 10 * u * (gr.length - 1);
+    if (!empty() && y + 28 * u + body > limit && body <= limit - contentTop) next(); // блок целиком — на новую страницу
+    gr.forEach((bl, i) => { // блок длиннее страницы — делится по подпунктам
+      let gap = empty() ? 0 : i ? 10 * u : 28 * u;
+      if (!empty() && y + gap + hs[i] > limit) { next(); gap = 0; }
+      pages[pages.length - 1].push({ ...bl, h: hs[i], gap });
+      y += gap + hs[i];
+    });
+  }
+  return { S, u, sq, px, npx, x0, w, title, ts, gw, contentTop, limit, pages };
+}
+export function listPages(card, format) {
+  const [W, H] = FORMATS[format]; const cv = document.createElement('canvas');
+  return Math.max(1, listLayout(cv.getContext('2d'), W, H, card).pages.length);
+}
+const LIST_POSES = ['point', 'proud', 'think', 'wave', 'idle'];
+// card = { kind: 'list', bg, title, tasks: [{ text, lvl, comment }], gopher: 'auto' | 'none' | поза, flip }
+export async function drawList(g, W, H, card, acc, page = 0) {
+  const L = listLayout(g, W, H, card), { S, u, sq } = L;
   if (!S.accents.includes(acc)) acc = S.accents[0]; // акцент — из своего фона, иначе код на светлом не читается
   S.bg(g, W, H, acc);
-  const u = W / 1080, sq = H === W;
   g.textBaseline = 'alphabetic'; g.textAlign = 'left';
   if (LOGO.complete && LOGO.naturalWidth) g.drawImage(LOGO, 80 * u, 80 * u, 56 * u, 56 * u);
   g.fillStyle = S.ink; g.font = `700 ${32 * u}px ${S.font}`; g.fillText('Ascent', 154 * u, 108 * u);
-  g.fillStyle = S.muted; g.font = `400 ${24 * u}px ${S.font}`; g.fillText(card.sub || 'конспект', 154 * u, 138 * u);
-  const items = (card.tasks || []).filter((t) => String(t.text).trim());
-  const gp = card.gopher || 'auto';
-  const pose = gp === 'auto' ? (items.length >= 6 ? 'proud' : 'point') : gp;
-  const x0 = 80 * u, w = W - 160 * u, y0 = (sq ? 170 : 220) * u, limit = H - (sq ? 70 : 110) * u;
-  // самый крупный масштаб, при котором всё влезает выше lim (короткий список — крупнее обычного)
-  const fit = (titleW, minY, lim) => {
-    let k = 1.5, end = 0;
-    for (; k > 0.45; k -= 0.05) { end = tasksPass(g, S, acc, u * k, card, items, x0, y0, w, titleW, minY, true); if (end <= lim) break; }
-    return { k: Math.max(0.45, k), end };
-  };
-  if (gp === 'none') { const f = fit(w, 0, limit); tasksPass(g, S, acc, u * f.k, card, items, x0, y0, w, w, 0, false); return; }
-  // гофер: внизу, если список помещается над ним крупно, иначе — в углу у заголовка
-  const zone = (sq ? 260 : 460) * u;
-  let f = fit(w, 0, H - zone);
-  if (f.k >= 0.9) {
-    tasksPass(g, S, acc, u * f.k, card, items, x0, y0, w, w, 0, false);
-    const gh = Math.min((sq ? 360 : 560) * u, H - 50 * u - f.end - 30 * u);
-    await drawGopher(g, pose, W - 80 * u - gh * 0.42, H - 50 * u, gh, -0.05, !card.flip);
+  g.fillStyle = S.muted; g.font = `400 ${24 * u}px ${S.font}`;
+  g.fillText(card.sub || new Date().toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' }), 154 * u, 138 * u);
+  const n = L.pages.length; page = Math.min(page, n - 1);
+  if (n > 1) { g.textAlign = 'right'; g.font = `500 ${26 * u}px ${S.font}`; g.fillText(`${page + 1} / ${n}`, W - 80 * u, 118 * u); g.textAlign = 'left'; }
+  g.fillStyle = S.ink; g.font = `800 ${L.ts}px ${S.head}`;
+  L.title.forEach((l, i) => g.fillText(l, 80 * u, (sq ? 175 : 215) * u + L.ts * (0.9 + i * 1.08)));
+  let y = L.contentTop;
+  for (const bl of L.pages[page] || []) {
+    y += bl.gap;
+    const x = bl.type === 'item' ? L.x0 : L.x0 + IND * u, w = bl.type === 'item' ? L.w : L.w - IND * u;
+    BUBBLE[bl.type](g, S, acc, u, x, w, y, bl.text, bl.type === 'note' ? L.npx : L.px, false);
+    y += bl.h;
+  }
+  if (card.gopher === 'none') return;
+  const auto = (card.gopher || 'auto') === 'auto';
+  const last = page === n - 1, free = H - 50 * u - y;
+  if (last && free >= (sq ? 300 : 400) * u) { // на последней странице, если внизу есть место, — крупно
+    const gh = Math.min((sq ? 340 : 540) * u, free - 110 * u); // запас сверху: поднятые лапки и искры
+    await drawGopher(g, auto ? (n > 1 || (L.pages[0] || []).length > 5 ? 'cheer' : 'proud') : card.gopher, W - 80 * u - gh * 0.42, H - 50 * u, gh, -0.05, !card.flip);
     return;
   }
-  const gh = (sq ? 210 : 270) * u, gBottom = y0 + gh + 10 * u;
-  f = fit(w - gh * 1.05, gBottom, limit);
-  tasksPass(g, S, acc, u * f.k, card, items, x0, y0, w, w - gh * 1.05, gBottom, false);
-  await drawGopher(g, pose, W - 80 * u - gh * 0.42, gBottom, gh, 0.04, !!card.flip);
+  const gh = (sq ? 180 : 220) * u;
+  await drawGopher(g, auto ? LIST_POSES[page % LIST_POSES.length] : card.gopher, W - 80 * u - gh * 0.42, L.contentTop - 24 * u, gh, 0.04, !!card.flip);
 }
 
 // ---------- своя карточка (редактор) ----------
@@ -793,6 +839,9 @@ function wrapByChars(s, n) {
   }).join('\n');
 }
 
+// комментарий к пройденной теме (настройка theme_notes)
+function noteOf(d, t) { const n = d.notes && d.notes[t.id]; return n && String(n).trim() ? String(n) : ''; }
+
 // ---------- набор карточек ----------
 export const EXTRA_CARDS = [
   ['heat', 'Хитмапа'], ['tracks', 'Треки'], ['compare', 'Сравнение'], ['mountain', 'Гора'], ['forecast', 'Прогноз'],
@@ -818,13 +867,16 @@ export function planCards(d, opts) {
   if (d.kind === 'month' && d.days.length) out.push({ key: 'month', name: 'Календарь' });
   if (d.kind === 'range' && d.days.length > 1 && d.days.length <= 42) out.push({ key: 'month', name: 'Календарь' });
   if (d.kind === 'all' && d.dayN > 0) out.push({ key: 'journey', name: 'Путь' });
-  // темы: до трёх картинок; на первой место занимают закрытые блоки
-  const per = opts.format === 'square' ? 3 : 6, sq = opts.format === 'square';
+  // темы: до четырёх картинок, по высоте (комментарии занимают место); на первой место занимают закрытые блоки
+  const sq = opts.format === 'square', rowH = sq ? 104 : 128, avail = sq ? 3 * 120 : 6 * 144;
+  const mg = document.createElement('canvas').getContext('2d');
+  const cost = (t) => { const n = noteOf(d, t); return rowH + 16 + (n ? bubbleNote(mg, STYLES.terminal, '#888888', 1, 136, 864, 0, n, sq ? 30 : 34, true) + 4 : 0); };
   let i = 0;
-  for (let page = 0; page < 3 && i < d.themes.length; page++) {
-    const cap = page === 0 ? Math.max(1, per - Math.min(d.blocks.length, sq ? 1 : 2)) : per;
-    out.push({ key: 'themes', name: 'Темы', from: i, count: cap });
-    i += cap;
+  for (let page = 0; page < 4 && i < d.themes.length; page++) {
+    let room = avail - (page === 0 ? Math.min(d.blocks.length, sq ? 1 : 2) * (rowH + 18) : 0);
+    const from = i;
+    while (i < d.themes.length) { const c = cost(d.themes[i]); if (c > room && i > from) break; room -= c; i++; }
+    out.push({ key: 'themes', name: 'Темы', from, count: i - from });
   }
   if (!d.themes.length && d.blocks.length) out.push({ key: 'themes', name: 'Темы', from: 0, count: 0 });
   const last = out.filter((x) => x.key === 'themes').pop();
@@ -846,7 +898,7 @@ export async function drawCard(card, d, { format, style, acc, seed, index, total
   const [W, H] = FORMATS[format];
   const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
   const g = cv.getContext('2d');
-  if (card.key === 'custom') { await (card.card.kind ? drawList : drawCustom)(g, W, H, card.card, acc); return cv; }
+  if (card.key === 'custom') { if (card.card.kind) await drawList(g, W, H, card.card, acc, card.page || 0); else await drawCustom(g, W, H, card.card, acc); return cv; }
   const S = STYLES[style];
   const rng = rngFrom(seed * 31 + index * 7 + 1);
   const c = { S, acc, d, rng, layout: Math.floor(rng() * 3), full, dayX };

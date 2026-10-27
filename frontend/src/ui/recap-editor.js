@@ -1,5 +1,5 @@
 // Редактор своей карточки: тексты и гоферы (сколько угодно) — двигать, масштабировать, поворачивать; фон из четырёх стилей.
-// Авто-режим: ввёл текст — редактор сам раскладывает заголовок, подпись и гофера.
+// Авто-режим: вводишь текст — редактор сразу раскладывает заголовок, подпись и гофера.
 // Мышь: перетаскивание; угловая ручка — размер, верхняя — поворот; колесо — размер, Shift+колесо — поворот.
 import { h, clear } from './dom.js';
 import { POSES } from './gopher.js';
@@ -113,14 +113,23 @@ export function openEditor({ card, format, acc, seed }) {
       s.addEventListener('change', () => { on(s.value); redraw(); });
       return s;
     };
-    let autoText = '';
+    // авто-режим: карточка собирается на лету, пока печатаешь; раскладка держится, пока не нажать «Другая раскладка»
+    let autoText = '', autoSeed = Math.floor(rng() * 2 ** 31);
+    const autoBuild = () => { c = autoCard(autoText, rngFrom(autoSeed)); };
     function panel() {
       clear(side);
       const ta = h('textarea', { class: 'as-textarea', rows: 3, placeholder: 'Первая строка — заголовок, дальше — подпись' });
-      ta.value = autoText; ta.addEventListener('input', () => { autoText = ta.value; });
+      ta.value = autoText;
+      ta.addEventListener('input', () => {
+        autoText = ta.value;
+        if (!autoText.trim()) return;
+        autoBuild();
+        if (sel >= 0) { sel = -1; panel(); requestAnimationFrame(() => { const t = side.querySelector('textarea'); t.focus(); t.setSelectionRange(t.value.length, t.value.length); }); }
+        redraw();
+      });
       side.append(
         h('div', { class: 'as-editor__sec' }, h('div', { class: 'as-eyebrow' }, 'Авто'), ta,
-          h('button', { class: 'as-btn as-btn--secondary as-btn--sm', onclick: () => { if (!autoText.trim()) { ta.focus(); return; } c = autoCard(autoText, rng); sel = -1; panel(); redraw(); } }, 'Собрать сам')),
+          h('button', { class: 'as-btn as-btn--secondary as-btn--sm', onclick: () => { if (!autoText.trim()) { ta.focus(); return; } autoSeed = Math.floor(rng() * 2 ** 31); autoBuild(); sel = -1; panel(); redraw(); } }, 'Другая раскладка')),
         h('div', { class: 'as-editor__sec' }, h('div', { class: 'as-eyebrow' }, 'Фон'),
           h('div', { class: 'as-editor__bgs' }, STYLE_KEYS.map((k) => h('button', { class: 'as-editor__bg is-' + k + (c.bg === k ? ' is-on' : ''), title: STYLES[k].label, onclick: () => { c.bg = k; panel(); redraw(); } }, STYLES[k].label)))),
         h('div', { class: 'as-editor__sec' }, h('div', { class: 'as-eyebrow' }, 'Добавить'),

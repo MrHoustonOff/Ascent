@@ -6,9 +6,10 @@ import { S } from '../state.js';
 import { h, clear, pluralRu } from './dom.js';
 import { openDialog } from './dialog.js';
 import { toast } from './toast.js';
-import { FORMATS, STYLES, STYLE_KEYS, EXTRA_CARDS, planCards, drawCard, rngFrom, pick } from './recap-draw.js';
+import { FORMATS, STYLES, STYLE_KEYS, EXTRA_CARDS, planCards, drawCard, listPages, rngFrom, pick } from './recap-draw.js';
 import { openEditor } from './recap-editor.js';
 import { openListEditor } from './recap-list.js';
+import { openNotes } from './recap-notes.js';
 
 const KINDS = [['day', 'День'], ['week', 'Неделя'], ['month', 'Месяц'], ['range', 'Период'], ['all', 'Весь путь']];
 const TOGGLE_NEXT = { auto: 'on', on: 'off', off: 'auto' };
@@ -17,6 +18,13 @@ const TOGGLE_TEXT = { auto: 'случайно', on: 'всегда', off: 'нет
 function loadPrefs() {
   const def = { format: 'story', mode: 'carousel', style: 'random', toggles: {}, custom: [], dayX: true };
   try { return { ...def, ...JSON.parse(S.settings.recap_prefs || '{}') }; } catch { return def; }
+}
+// комментарии к пройденным темам: id темы → текст (общие для всех периодов)
+function loadNotes() { try { return JSON.parse(S.settings.theme_notes || '{}') || {}; } catch { return {}; } }
+function saveNotes(n) {
+  const v = JSON.stringify(n);
+  S.settings.theme_notes = v;
+  api.SetSetting('theme_notes', v).catch(() => {});
 }
 function savePrefs(p) {
   const v = JSON.stringify(p);
@@ -40,7 +48,7 @@ export function openRecap() {
   let kind = 'day', date = '', data = null, list = [], canvases = [], buildNo = 0;
   // правки готовых страниц: id → { hidden, style }; сбрасываются при смене периода, формата или режима
   let over = {};
-  const cardId = (c) => c.key === 'custom' ? 'custom:' + c.ci : c.key + ':' + (c.from || 0);
+  const cardId = (c) => c.key === 'custom' ? 'custom:' + c.ci + ':' + (c.page || 0) : c.key + ':' + (c.from || 0);
   let order = []; // порядок страниц (id), если его меняли стрелками или перетаскиванием
   const reset = () => { over = {}; order = []; };
 
@@ -114,6 +122,12 @@ export function openRecap() {
     savePrefs(p); build();
   }
 
+  async function editNotes() {
+    const res = await openNotes({ themes: data.themes, notes: loadNotes() });
+    if (!res) return;
+    saveNotes(res); reset(); build(); // страниц с темами могло стать больше
+  }
+
   async function build() {
     const my = ++buildNo;
     clear(preview);
@@ -121,10 +135,15 @@ export function openRecap() {
     try {
       data = await api.Recap(kind, query());
       if (my !== buildNo) return;
+      data.notes = loadNotes();
       if (kind === 'range') { fromInp.value = data.from; toInp.value = data.date; rFrom = data.from; rTo = data.date; }
       else if (!dateInp.value && kind !== 'all') dateInp.value = data.date;
       const all = planCards(data, { mode: p.mode, toggles: p.toggles, seed, format: p.format });
-      p.custom.forEach((c, i) => all.push({ key: 'custom', name: c.kind ? 'Список' : 'Своя карточка', card: c, ci: i }));
+      p.custom.forEach((c, i) => {
+        if (!c.kind) { all.push({ key: 'custom', name: 'Своя карточка', card: c, ci: i }); return; }
+        const n = listPages(c, p.format); // длинный список — несколько страниц
+        for (let k = 0; k < n; k++) all.push({ key: 'custom', name: n > 1 ? `Список ${k + 1}` : 'Список', card: c, ci: i, page: k });
+      });
       const hidden = all.filter((c) => over[cardId(c)]?.hidden).length;
       list = all.filter((c) => !over[cardId(c)]?.hidden);
       if (order.length) { // переставленные — в своём порядке, новые — следом в исходном
@@ -165,7 +184,9 @@ export function openRecap() {
           const bg = h('select', { class: 'as-input as-recap__bgsel', 'aria-label': 'Фон страницы', title: 'Фон этой страницы' },
             STYLE_KEYS.map((k) => h('option', { value: k, selected: k === (over[id]?.style || style) }, STYLES[k].label)));
           bg.addEventListener('change', () => { over[id] = { ...over[id], style: bg.value }; build(); });
-          tools = h('div', { class: 'as-recap__customtools' }, arrows[0], bg,
+          const notesBtn = c.key === 'themes' && data.themes.length
+            ? h('button', { class: 'as-btn as-btn--secondary as-btn--sm', title: 'Комментарии к пройденным темам', onclick: editNotes }, 'Редактировать') : null;
+          tools = h('div', { class: 'as-recap__customtools' }, arrows[0], notesBtn, bg,
             h('button', { class: 'as-iconbtn as-recap__del', title: 'Удалить страницу', 'aria-label': 'Удалить страницу', onclick: () => { over[id] = { ...over[id], hidden: true }; build(); } }, '✕'), arrows[1]);
         }
         const page = h('div', { class: 'as-recap__custom', draggable: 'true', title: 'Перетащите, чтобы поменять порядок' }, img, tools);

@@ -1,10 +1,12 @@
 // Редактор списка («Изучил…»): пункты с одним уровнем вложенности; слева сразу видно готовую страницу.
+// К пункту (не к подпункту) можно добавить комментарий — на картинке он встаёт в самый низ блока.
+// Длинный список делится на страницы, текст не уменьшается.
 // В пункте — мини-markdown: `код`, **жирный**, *курсив*. Гофер — авто (место и поза по списку), нет или своя поза.
 // Клавиши в пункте: Enter — новый пункт, Tab / Shift+Tab — вложить / вынести, Backspace в пустом — удалить,
 // ↑ ↓ — соседний пункт, Alt+↑ ↓ — переставить.
 import { h, clear } from './dom.js';
 import { POSES } from './gopher.js';
-import { FORMATS, STYLES, STYLE_KEYS, drawList, rngFrom } from './recap-draw.js';
+import { FORMATS, STYLES, STYLE_KEYS, drawList, listPages, rngFrom } from './recap-draw.js';
 
 const clone = (x) => JSON.parse(JSON.stringify(x));
 
@@ -18,8 +20,14 @@ export function openListEditor({ card, format, acc, seed }) {
     const cv = h('canvas', { class: 'as-editor__canvas', width: W, height: H, 'aria-label': 'Как будет выглядеть страница' });
     const g = cv.getContext('2d');
     const side = h('div', { class: 'as-editor__side' });
+    // страницы предпросмотра
+    let page = 0;
+    const pgLabel = h('span', { class: 'as-editor__pgnum' }, '');
+    const pgPrev = h('button', { class: 'as-iconbtn', title: 'Предыдущая страница', 'aria-label': 'Предыдущая страница', onclick: () => { page--; redraw(); } }, '‹');
+    const pgNext = h('button', { class: 'as-iconbtn', title: 'Следующая страница', 'aria-label': 'Следующая страница', onclick: () => { page++; redraw(); } }, '›');
+    const pager = h('div', { class: 'as-editor__pager' }, pgPrev, pgLabel, pgNext);
     const root = h('div', { class: 'as-editor as-editor--tasks', role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Список' },
-      h('div', { class: 'as-editor__stage' }, cv), side);
+      h('div', { class: 'as-editor__stage as-editor__stage--pages' }, cv, pager), side);
     const scrim = h('div', { class: 'as-scrim as-editor__scrim' }, root);
     (document.querySelector('.as-window') || document.body).append(scrim);
 
@@ -28,8 +36,11 @@ export function openListEditor({ card, format, acc, seed }) {
       if (pending) return; pending = true;
       requestAnimationFrame(async () => {
         pending = false;
+        const n = listPages(c, format);
+        page = Math.max(0, Math.min(page, n - 1));
+        pager.hidden = n < 2; pgLabel.textContent = `${page + 1} / ${n}`; pgPrev.disabled = page === 0; pgNext.disabled = page === n - 1;
         const off = document.createElement('canvas'); off.width = W; off.height = H;
-        await drawList(off.getContext('2d'), W, H, c, acc);
+        await drawList(off.getContext('2d'), W, H, c, acc, page);
         g.clearRect(0, 0, W, H); g.drawImage(off, 0, 0);
       });
     };
@@ -51,12 +62,19 @@ export function openListEditor({ card, format, acc, seed }) {
         inp.addEventListener('input', () => { t.text = inp.value; redraw(); });
         inp.dataset.i = String(i);
         inputs.push(inp);
-        const ib = (txt, title, on, dis) => h('button', { class: 'as-iconbtn as-tasks__btn', title, 'aria-label': title, disabled: !!dis, onclick: on }, txt);
+        const ib = (txt, title, on, dis, act) => h('button', { class: 'as-iconbtn as-tasks__btn' + (act ? ' is-on' : ''), title, 'aria-label': title, disabled: !!dis, onclick: on }, txt);
         list.append(h('div', { class: 'as-tasks__row' + (t.lvl ? ' is-sub' : '') }, dot, inp,
           t.lvl ? ib('⇤', 'Вынести (Shift+Tab)', () => setLvl(i, 0)) : ib('⇥', 'Вложить (Tab)', () => setLvl(i, 1), i === 0),
           ib('↑', 'Выше (Alt+↑)', () => move(i, i - 1), i === 0),
           ib('↓', 'Ниже (Alt+↓)', () => move(i, i + 1), i === c.tasks.length - 1),
+          t.lvl ? null : ib('“', t.comment != null ? 'Убрать комментарий' : 'Комментарий к пункту', () => { if (t.comment != null) delete t.comment; else t.comment = ''; rows(); if (t.comment != null) list.querySelector(`[data-note="${i}"]`)?.focus(); redraw(); }, false, t.comment != null),
           ib('✕', 'Удалить', () => remove(i))));
+        if (!t.lvl && t.comment != null) { // комментарий — только у пункта
+          const ta = h('textarea', { class: 'as-textarea as-tasks__note', rows: 2, placeholder: 'Комментарий: что понравилось, что запомнилось…', 'aria-label': 'Комментарий к пункту' });
+          ta.value = t.comment; ta.dataset.note = String(i);
+          ta.addEventListener('input', () => { t.comment = ta.value; redraw(); });
+          list.append(ta);
+        }
       });
     }
     // клавиши пункта (вызываются из общего обработчика: он гасит горячие клавиши приложения)
@@ -94,7 +112,7 @@ export function openListEditor({ card, format, acc, seed }) {
       h('div', { class: 'as-editor__sec' }, h('div', { class: 'as-eyebrow' }, 'Подпись'), title),
       h('div', { class: 'as-editor__sec' }, h('div', { class: 'as-eyebrow' }, 'Список'), list,
         h('button', { class: 'as-btn as-btn--secondary as-btn--sm as-tasks__add', onclick: () => insert(c.tasks.length, 0) }, '＋ Пункт'),
-        h('div', { class: 'caption as-subtle' }, 'Enter — новый пункт, Tab — вложить, Shift+Tab — вынести, Alt+↑↓ — переставить. В тексте: `код`, **жирный**, *курсив*.')),
+        h('div', { class: 'caption as-subtle' }, 'Enter — новый пункт, Tab — вложить, Shift+Tab — вынести, Alt+↑↓ — переставить. «“» — комментарий к пункту, он встанет в самый низ блока. В тексте: `код`, **жирный**, *курсив*.')),
       h('div', { class: 'as-editor__sec' }, h('div', { class: 'as-eyebrow' }, 'Гофер'), field('Поза', gs), field('Зеркально', fl)),
       h('div', { class: 'as-editor__sec' }, h('div', { class: 'as-eyebrow' }, 'Фон'), bgs),
       h('div', { class: 'as-editor__actions' },

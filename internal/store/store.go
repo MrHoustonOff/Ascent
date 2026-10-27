@@ -142,6 +142,7 @@ var Defaults = map[string]string{
 	"nick":              "",    // подпись на картинках итогов
 	"export_dir":        "",    // папка экспорта итогов (внутри — подпапка на каждый экспорт)
 	"recap_prefs":       "",    // выбор в окне итогов (JSON)
+	"theme_notes":       "",    // комментарии к пройденным темам для итогов (JSON: id темы → текст)
 }
 
 const DefaultHermesTemplate = "Тема {theme_id} {theme_title}\n{brief}\nУрок {lesson_id} — {lesson_title}{stars}\n{arrows}"
