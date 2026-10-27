@@ -627,6 +627,121 @@ async function cardJourney(g, W, H, c) {
   });
 }
 
+// ---------- список задач (своя карточка) ----------
+// Мини-markdown в пункте: `код`, **жирный**, *курсив*. Вложенность — один уровень (lvl 0 или 1).
+export function mdRuns(text) {
+  const out = []; const re = /`([^`]+)`|\*\*(.+?)\*\*|\*(.+?)\*/g; let last = 0, m;
+  while ((m = re.exec(text))) {
+    if (m.index > last) out.push({ t: text.slice(last, m.index) });
+    if (m[1] != null) out.push({ t: m[1], code: true });
+    else if (m[2] != null) out.push({ t: m[2], b: true });
+    else out.push({ t: m[3], i: true });
+    last = re.lastIndex;
+  }
+  if (last < text.length) out.push({ t: text.slice(last) });
+  return out;
+}
+const runFont = (r, S, px) => r.code ? `600 ${px * 0.88}px ${MONO}` : `${r.i ? 'italic ' : ''}${r.b ? 800 : 500} ${px}px ${S.font}`;
+// раскладка по строкам: слова со своим начертанием, перенос по ширине
+function runLines(g, S, runs, maxW, px) {
+  const lines = [[]]; let x = 0;
+  for (const r of runs) {
+    g.font = runFont(r, S, px);
+    for (const t of r.t.split(/(\s+)/)) {
+      if (!t) continue;
+      const w = g.measureText(t).width, sp = /^\s+$/.test(t);
+      if (sp) { if (x > 0) { lines[lines.length - 1].push({ t: ' ', r, x, w, sp }); x += w; } continue; }
+      if (x + w > maxW && x > 0) { const l = lines[lines.length - 1]; while (l.length && l[l.length - 1].sp) l.pop(); lines.push([]); x = 0; }
+      lines[lines.length - 1].push({ t, r, x, w }); x += w;
+    }
+  }
+  return lines;
+}
+// один проход: dry — только посчитать высоту; возвращает низ содержимого
+function tasksPass(g, S, acc, u, card, items, x0, y0, w, titleW, minY, dry) {
+  let y = y0;
+  const ts = 84 * u;
+  if (card.title && card.title.trim()) {
+    g.font = `800 ${ts}px ${S.head}`;
+    for (const l of wrap(g, card.title, titleW)) { y += ts; if (!dry) { g.fillStyle = S.ink; g.fillText(l, x0, y); } y += ts * 0.14; }
+  }
+  const done = items.filter((t) => t.done).length;
+  if (items.length) {
+    y += 52 * u;
+    if (!dry) {
+      g.fillStyle = S.muted; g.font = `500 ${30 * u}px ${S.font}`; g.fillText(`${done} из ${items.length} готово`, x0, y);
+      const bx = x0 + 300 * u, bw = Math.max(80 * u, x0 + titleW - bx);
+      g.fillStyle = S.track; rr(g, bx, y - 22 * u, bw, 16 * u, 8 * u); g.fill();
+      if (done) { g.fillStyle = acc; rr(g, bx, y - 22 * u, Math.max(16 * u, bw * done / items.length), 16 * u, 8 * u); g.fill(); }
+    }
+  }
+  y = Math.max(y + 64 * u, minY);
+  for (const it of items) {
+    const sub = it.lvl === 1, px = (sub ? 34 : 42) * u, box = (sub ? 34 : 44) * u, lh = px * 1.32;
+    const ix = x0 + (sub ? 70 * u : 0), tx = ix + box + 28 * u;
+    const lines = runLines(g, S, mdRuns(it.text), x0 + w - tx, px);
+    if (!dry) {
+      const by = y + (lh - box) / 2;
+      if (it.done) {
+        g.fillStyle = acc; rr(g, ix, by, box, box, box * 0.3); g.fill();
+        check(g, ix + box / 2, by + box / 2, box * 0.62, onAcc(acc), box * 0.13);
+      } else { g.strokeStyle = S.muted; g.lineWidth = Math.max(2, box * 0.08); rr(g, ix, by, box, box, box * 0.3); g.stroke(); }
+      lines.forEach((l, i) => {
+        const base = y + lh * 0.74 + i * lh;
+        for (const tk of l) {
+          if (tk.sp) continue;
+          if (tk.r.code) { g.fillStyle = hexA(acc, 0.16); rr(g, tx + tk.x - 6 * u, base - px * 0.86, tk.w + 12 * u, px * 1.14, 8 * u); g.fill(); }
+          g.font = runFont(tk.r, S, px);
+          g.fillStyle = it.done ? S.muted : tk.r.code ? acc : S.ink;
+          g.fillText(tk.t, tx + tk.x, base);
+        }
+        if (it.done && l.length) { // зачёркнуто
+          const end = l[l.length - 1]; g.strokeStyle = S.muted; g.lineWidth = Math.max(2, px * 0.07);
+          g.beginPath(); g.moveTo(tx, base - px * 0.3); g.lineTo(tx + end.x + end.w, base - px * 0.3); g.stroke();
+        }
+      });
+    }
+    y += Math.max(1, lines.length) * lh + (sub ? 14 : 26) * u;
+  }
+  return y;
+}
+// card = { kind: 'tasks', bg, title, tasks: [{ text, done, lvl }], gopher: 'auto' | 'none' | поза, flip }
+export async function drawTasks(g, W, H, card, acc) {
+  const S = STYLES[card.bg] || STYLES.night;
+  if (!S.accents.includes(acc)) acc = S.accents[0]; // акцент — из своего фона, иначе код на светлом не читается
+  S.bg(g, W, H, acc);
+  const u = W / 1080, sq = H === W;
+  g.textBaseline = 'alphabetic'; g.textAlign = 'left';
+  if (LOGO.complete && LOGO.naturalWidth) g.drawImage(LOGO, 80 * u, 80 * u, 56 * u, 56 * u);
+  g.fillStyle = S.ink; g.font = `700 ${32 * u}px ${S.font}`; g.fillText('Ascent', 154 * u, 108 * u);
+  g.fillStyle = S.muted; g.font = `400 ${24 * u}px ${S.font}`; g.fillText('список задач', 154 * u, 138 * u);
+  const items = (card.tasks || []).filter((t) => String(t.text).trim());
+  const total = items.length, done = items.filter((t) => t.done).length;
+  const gp = card.gopher || 'auto';
+  const pose = gp === 'auto' ? (total && done === total ? 'cheer' : total && done * 2 >= total ? 'proud' : 'point') : gp;
+  const x0 = 80 * u, w = W - 160 * u, y0 = (sq ? 170 : 220) * u, limit = H - (sq ? 70 : 110) * u;
+  // самый крупный масштаб, при котором всё влезает выше lim (короткий список — крупнее обычного)
+  const fit = (titleW, minY, lim) => {
+    let k = 1.5, end = 0;
+    for (; k > 0.45; k -= 0.05) { end = tasksPass(g, S, acc, u * k, card, items, x0, y0, w, titleW, minY, true); if (end <= lim) break; }
+    return { k: Math.max(0.45, k), end };
+  };
+  if (gp === 'none') { const f = fit(w, 0, limit); tasksPass(g, S, acc, u * f.k, card, items, x0, y0, w, w, 0, false); return; }
+  // гофер: внизу, если список помещается над ним крупно, иначе — в углу у заголовка
+  const zone = (sq ? 260 : 460) * u;
+  let f = fit(w, 0, H - zone);
+  if (f.k >= 0.9) {
+    tasksPass(g, S, acc, u * f.k, card, items, x0, y0, w, w, 0, false);
+    const gh = Math.min((sq ? 360 : 560) * u, H - 50 * u - f.end - 30 * u);
+    await drawGopher(g, pose, W - 80 * u - gh * 0.42, H - 50 * u, gh, -0.05, !card.flip);
+    return;
+  }
+  const gh = (sq ? 210 : 270) * u, gBottom = y0 + gh + 10 * u;
+  f = fit(w - gh * 1.05, gBottom, limit);
+  tasksPass(g, S, acc, u * f.k, card, items, x0, y0, w, w - gh * 1.05, gBottom, false);
+  await drawGopher(g, pose, W - 80 * u - gh * 0.42, gBottom, gh, 0.04, !!card.flip);
+}
+
 // ---------- своя карточка (редактор) ----------
 // Шрифты текста: системные, без загрузки из сети (есть и в Windows, и в macOS; иначе — общий запасной).
 export const TEXT_FONTS = {
@@ -747,7 +862,7 @@ export async function drawCard(card, d, { format, style, acc, seed, index, total
   const [W, H] = FORMATS[format];
   const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
   const g = cv.getContext('2d');
-  if (card.key === 'custom') { await drawCustom(g, W, H, card.card, acc); return cv; }
+  if (card.key === 'custom') { await (card.card.kind === 'tasks' ? drawTasks : drawCustom)(g, W, H, card.card, acc); return cv; }
   const S = STYLES[style];
   const rng = rngFrom(seed * 31 + index * 7 + 1);
   const c = { S, acc, d, rng, layout: Math.floor(rng() * 3), full, dayX };

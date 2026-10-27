@@ -8,6 +8,7 @@ import { openDialog } from './dialog.js';
 import { toast } from './toast.js';
 import { FORMATS, STYLES, STYLE_KEYS, EXTRA_CARDS, planCards, drawCard, rngFrom, pick } from './recap-draw.js';
 import { openEditor } from './recap-editor.js';
+import { openTasksEditor } from './recap-tasks.js';
 
 const KINDS = [['day', 'День'], ['week', 'Неделя'], ['month', 'Месяц'], ['range', 'Период'], ['all', 'Весь путь']];
 const TOGGLE_NEXT = { auto: 'on', on: 'off', off: 'auto' };
@@ -88,7 +89,9 @@ export function openRecap() {
     toggles,
     preview,
     h('div', { class: 'as-rowx as-rowx--between' }, info,
-      h('button', { class: 'as-btn as-btn--secondary as-btn--sm', onclick: () => edit(null) }, '＋ Своя карточка')));
+      h('div', { class: 'as-rowx' },
+        h('button', { class: 'as-btn as-btn--secondary as-btn--sm', onclick: () => edit(null, 'tasks') }, '＋ Список задач'),
+        h('button', { class: 'as-btn as-btn--secondary as-btn--sm', onclick: () => edit(null) }, '＋ Своя карточка'))));
 
   const dlg = openDialog({
     title: 'Итоги', body, cls: 'as-recap', focus: '.as-dialog__actions .as-btn',
@@ -101,8 +104,11 @@ export function openRecap() {
   const styleNow = () => (p.style === 'random' ? randStyle : p.style);
   const accent = () => pick(rngFrom(seed + 5), STYLES[styleNow()].accents);
 
-  async function edit(i) {
-    const card = await openEditor({ card: i == null ? null : p.custom[i], format: p.format, acc: accent(), seed: seed + 11 + (i ?? p.custom.length) });
+  // своя карточка: свободный холст или список задач
+  async function edit(i, kind) {
+    const old = i == null ? null : p.custom[i];
+    const open = (old ? old.kind : kind) === 'tasks' ? openTasksEditor : openEditor;
+    const card = await open({ card: old, format: p.format, acc: accent(), seed: seed + 11 + (i ?? p.custom.length) });
     if (!card) return;
     if (i == null) p.custom.push(card); else p.custom[i] = card;
     savePrefs(p); build();
@@ -118,7 +124,7 @@ export function openRecap() {
       if (kind === 'range') { fromInp.value = data.from; toInp.value = data.date; rFrom = data.from; rTo = data.date; }
       else if (!dateInp.value && kind !== 'all') dateInp.value = data.date;
       const all = planCards(data, { mode: p.mode, toggles: p.toggles, seed, format: p.format });
-      p.custom.forEach((c, i) => all.push({ key: 'custom', name: 'Своя карточка', card: c, ci: i }));
+      p.custom.forEach((c, i) => all.push({ key: 'custom', name: c.kind === 'tasks' ? 'Задачи' : 'Своя карточка', card: c, ci: i }));
       const hidden = all.filter((c) => over[cardId(c)]?.hidden).length;
       list = all.filter((c) => !over[cardId(c)]?.hidden);
       if (order.length) { // переставленные — в своём порядке, новые — следом в исходном

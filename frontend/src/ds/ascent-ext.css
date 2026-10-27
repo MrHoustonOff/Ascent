@@ -714,3 +714,15 @@ html,body{margin:0;height:100%;overflow:hidden;background:var(--surface-window)}
 .as-recap__custom[draggable=true]{cursor:grab}
 .as-recap__custom.is-drag{opacity:.45}
 .as-recap__custom.is-over .as-recap__thumb{outline:3px solid var(--accent);outline-offset:3px}
+/* список задач в итогах */
+.as-editor--tasks{grid-template-columns:minmax(0,1fr) 400px}
+.as-tasks{display:flex;flex-direction:column;gap:4px}
+.as-tasks__row{display:flex;align-items:center;gap:4px}
+.as-tasks__row.is-sub{padding-left:26px}
+.as-tasks__row.is-done .as-tasks__text{color:var(--ink-subtle);text-decoration:line-through}
+.as-tasks__cb{flex:none;width:16px;height:16px;margin:0 4px 0 0;accent-color:var(--accent)}
+.as-tasks__text{flex:1;min-width:0;height:32px;font-size:13px}
+.as-tasks__btn{width:26px;height:28px;font-size:13px}
+.as-tasks__btn:disabled{opacity:.3}
+.as-tasks__add{align-self:flex-start}
+@media (max-width:760px){.as-editor--tasks{grid-template-columns:1fr}}
