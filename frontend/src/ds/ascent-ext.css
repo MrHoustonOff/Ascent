@@ -750,3 +750,6 @@ html,body{margin:0;height:100%;overflow:hidden;background:var(--surface-window)}
 .as-anki__status.is-err{color:var(--danger,#C2412D)}
 .as-recap__anki{display:inline-flex;align-items:center;gap:2px}
 .as-recap__anki .as-btn{max-width:320px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block}
+.as-editor__seg{display:flex;width:100%}
+.as-editor__seg .as-seg__tab{flex:1;padding:4px 6px;font-size:12px;white-space:nowrap}
+.as-editor{grid-template-columns:minmax(0,1fr) 340px}

@@ -792,29 +792,95 @@ export function textFont(it, S) {
   const f = TEXT_FONTS[it.font];
   return f && f[1] ? f[1] : S.head;
 }
-// card = { bg: ключ стиля, items: [{ type: 'text', text, x, y, size, rot, color } | { type: 'gopher', pose, x, y, size, rot, flip }] }
-// x, y — доли ширины/высоты (центр элемента), size — px при ширине 1080
+// card = { bg: ключ стиля, items: [{ type: 'text', … } | { type: 'gopher', pose, x, y, size, rot, flip }] }
+// x, y — доли ширины/высоты (центр элемента), size — px при ширине 1080.
+// Текстовый блок с рамкой (bw — ширина рамки в px при 1080; bh — высота для режима «вписать»):
+//   fit: 'none' — без рамки, строки как набраны; 'wrap' — перенос по ширине рамки; 'fit' — кегль подбирается,
+//   чтобы текст влез в рамку (не больше size). align — left|center|right, valign — top|middle|bottom (для «вписать»),
+//   lh — межстрочный, upper — заглавные, plate — none|card|accent (подложка), shadow — тень. В тексте — мини-markdown.
+const CUSTOM_LH = 1.15;
+function customFont(it, S, r, px) { return `${r.i ? 'italic ' : ''}${r.b ? 900 : it.weight || 800} ${px}px ${r.code ? MONO : textFont(it, S)}`; }
+function customLines(g, it, S, px, maxW) {
+  const text = it.upper ? String(it.text).toUpperCase() : String(it.text);
+  const out = [];
+  for (const para of text.split('\n')) {
+    let cur = [], x = 0;
+    for (const r of mdRuns(para)) {
+      g.font = customFont(it, S, r, px);
+      for (const t of r.t.split(/(\s+)/)) {
+        if (!t) continue;
+        const w = g.measureText(t).width, sp = /^\s+$/.test(t);
+        if (sp) { if (x > 0) { cur.push({ t: ' ', r, x, w, sp }); x += w; } continue; }
+        if (maxW && x + w > maxW && x > 0) { while (cur.length && cur[cur.length - 1].sp) x -= cur.pop().w; out.push({ toks: cur, w: x }); cur = []; x = 0; }
+        cur.push({ t, r, x, w }); x += w;
+      }
+    }
+    while (cur.length && cur[cur.length - 1].sp) x -= cur.pop().w;
+    out.push({ toks: cur, w: x });
+  }
+  return out;
+}
+// раскладка текстового блока: строки, кегль, размеры рамки (px холста)
+export function textLayout(g, W, it, S = STYLES.night) {
+  const u = W / 1080, mode = it.fit || 'none', lh = it.lh || CUSTOM_LH, pad = it.plate && it.plate !== 'none' ? 0.6 : 0;
+  let px = it.size * u;
+  const bw = mode === 'none' ? 0 : (it.bw || 800) * u;
+  let lines = customLines(g, it, S, px, bw);
+  if (mode === 'fit') { // уменьшать, пока не влезет в рамку
+    const bh = (it.bh || 400) * u;
+    for (let k = 0; k < 60 && px > 8 * u; k++) {
+      lines = customLines(g, it, S, px, bw);
+      const tooWide = lines.some((l) => l.w > bw + 0.5);
+      if (lines.length * px * lh <= bh && !tooWide) break;
+      px *= 0.95;
+    }
+  }
+  const textW = Math.max(1, ...lines.map((l) => l.w)), textH = lines.length * px * lh;
+  const w = mode === 'none' ? textW : bw, h = mode === 'fit' ? (it.bh || 400) * u : textH;
+  return { lines, px, lh, w, h, textH, pad: pad * px };
+}
+function drawTextItem(g, W, H, it, S, acc) {
+  const L = textLayout(g, W, it, S), u = W / 1080;
+  g.save(); g.translate(it.x * W, it.y * H); g.rotate(it.rot || 0);
+  const col = textColor(it, S, acc);
+  if (it.plate === 'card' || it.plate === 'accent') { // подложка
+    const p = L.pad;
+    g.fillStyle = it.plate === 'accent' ? acc : S.card; rr(g, -L.w / 2 - p, -L.h / 2 - p, L.w + p * 2, L.h + p * 2, Math.min(40 * u, p + 12 * u)); g.fill();
+  }
+  if (it.shadow) { g.shadowColor = 'rgba(0,0,0,0.45)'; g.shadowBlur = L.px * 0.25; g.shadowOffsetY = L.px * 0.06; }
+  const al = it.align || 'center', va = it.valign || 'middle';
+  let y0 = -L.h / 2; if (L.h > L.textH) y0 += va === 'bottom' ? L.h - L.textH : va === 'middle' ? (L.h - L.textH) / 2 : 0;
+  g.textBaseline = 'alphabetic'; g.textAlign = 'left';
+  const ink = it.plate === 'accent' && (!it.color || it.color === 'ink' || it.color === 'accent') ? onAcc(acc) : col;
+  L.lines.forEach((l, i) => {
+    const x0 = al === 'left' ? -L.w / 2 : al === 'right' ? L.w / 2 - l.w : -l.w / 2;
+    const base = y0 + i * L.px * L.lh + L.px * (0.5 * L.lh + 0.36);
+    for (const k of l.toks) {
+      if (k.sp) continue;
+      if (k.r.code) { g.save(); g.shadowColor = 'transparent'; g.fillStyle = hexA(acc, 0.2); rr(g, x0 + k.x - 4 * u, base - L.px * 0.86, k.w + 8 * u, L.px * 1.1, 8 * u); g.fill(); g.restore(); }
+      g.font = customFont(it, S, k.r, L.px);
+      g.fillStyle = k.r.b && it.plate !== 'accent' ? acc : ink; // жирное — акцентом
+      g.fillText(k.t, x0 + k.x, base);
+    }
+  });
+  g.restore();
+}
 export async function drawCustom(g, W, H, card, acc) {
   const S = STYLES[card.bg] || STYLES.night;
-  S.bg(g, W, H, acc || S.accents[0]);
+  acc = acc || S.accents[0];
+  S.bg(g, W, H, acc);
   const u = W / 1080;
   for (const it of card.items) {
     if (it.type === 'gopher') { await drawGopher(g, it.pose, it.x * W, it.y * H + it.size * u / 2, it.size * u, it.rot || 0, !!it.flip); continue; }
-    g.save(); g.translate(it.x * W, it.y * H); g.rotate(it.rot || 0);
-    g.fillStyle = textColor(it, S, acc);
-    g.font = `${it.weight || 800} ${it.size * u}px ${textFont(it, S)}`; g.textAlign = 'center'; g.textBaseline = 'middle';
-    const lines = String(it.text).split('\n');
-    lines.forEach((l, i) => g.fillText(l, 0, (i - (lines.length - 1) / 2) * it.size * u * 1.12));
-    g.restore();
+    drawTextItem(g, W, H, it, S, acc);
   }
 }
 // размеры элемента для выделения в редакторе (в px холста, без поворота)
 export function itemBox(g, W, H, it) {
   const u = W / 1080;
   if (it.type === 'gopher') return { w: it.size * u * 0.86, h: it.size * u * 1.02 };
-  g.font = `${it.weight || 800} ${it.size * u}px ${textFont(it, STYLES.night)}`;
-  const lines = String(it.text).split('\n');
-  return { w: Math.max(...lines.map((l) => g.measureText(l).width)) + 20 * u, h: lines.length * it.size * u * 1.12 + 10 * u };
+  const L = textLayout(g, W, it);
+  return { w: L.w + (it.fit && it.fit !== 'none' ? 0 : 20 * u), h: L.h + 10 * u };
 }
 
 // авто-режим: из текста — заголовок, подзаголовок, гофер в свободном углу
@@ -825,19 +891,11 @@ export function autoCard(text, rng) {
   const rest = lines.slice(1).join('\n');
   const size = Math.max(64, Math.min(150, Math.round(1500 / Math.max(6, head.length))));
   const top = rng() < 0.5;
-  const items = [{ type: 'text', text: wrapByChars(head, Math.max(8, Math.round(1700 / size))), x: 0.5, y: top ? 0.24 : 0.5, size, rot: 0, color: 'ink' }];
-  if (rest) items.push({ type: 'text', text: wrapByChars(rest, 28), x: 0.5, y: top ? 0.38 : 0.64, size: 44, rot: 0, color: 'accent', weight: 600, font: 'body' });
+  const items = [{ type: 'text', text: head, x: 0.5, y: top ? 0.24 : 0.5, size, rot: 0, color: 'ink', fit: 'wrap', bw: 900, align: 'center' }];
+  if (rest) items.push({ type: 'text', text: rest, x: 0.5, y: top ? 0.4 : 0.66, size: 46, rot: 0, color: 'ink', weight: 500, font: 'sans', fit: 'wrap', bw: 860, align: 'center', lh: 1.35 });
   const pose = pick(rng, ['cheer', 'wave', 'proud', 'dance', 'point', 'jump', 'derp', 'think']);
   items.push({ type: 'gopher', pose, x: top ? 0.5 : (rng() < 0.5 ? 0.24 : 0.76), y: top ? 0.7 : 0.84, size: top ? 640 : 380, rot: 0, flip: rng() < 0.5 });
   return { bg, items };
-}
-function wrapByChars(s, n) {
-  return s.split('\n').map((line) => {
-    const out = []; let cur = '';
-    for (const w of line.split(/\s+/)) { if ((cur + ' ' + w).trim().length > n && cur) { out.push(cur); cur = w; } else cur = (cur + ' ' + w).trim(); }
-    if (cur) out.push(cur);
-    return out.join('\n');
-  }).join('\n');
 }
 
 // ---------- Anki: итоги повторений из расширения «Итоги периода (JSON)» ----------
