@@ -10,6 +10,8 @@ import { FORMATS, STYLES, STYLE_KEYS, EXTRA_CARDS, planCards, drawCard, listPage
 import { openEditor } from './recap-editor.js';
 import { openListEditor } from './recap-list.js';
 import { openNotes } from './recap-notes.js';
+import { openAnkiImport } from './recap-anki.js';
+import { parseAnki, ankiInfo } from './anki.js';
 
 const KINDS = [['day', 'День'], ['week', 'Неделя'], ['month', 'Месяц'], ['range', 'Период'], ['all', 'Весь путь']];
 const TOGGLE_NEXT = { auto: 'on', on: 'off', off: 'auto' };
@@ -25,6 +27,13 @@ function saveNotes(n) {
   const v = JSON.stringify(n);
   S.settings.theme_notes = v;
   api.SetSetting('theme_notes', v).catch(() => {});
+}
+// итоги Anki: последний загруженный JSON (настройка anki_recap)
+function loadAnki() { const r = parseAnki(S.settings.anki_recap || ''); return r.ok ? r.data : null; }
+function saveAnki(a) {
+  const v = a ? JSON.stringify(a) : '';
+  S.settings.anki_recap = v;
+  api.SetSetting('anki_recap', v).catch(() => {});
 }
 function savePrefs(p) {
   const v = JSON.stringify(p);
@@ -88,6 +97,22 @@ export function openRecap() {
   };
   drawToggles();
 
+  // кнопка «Данные из Anki»; когда данные есть — колода и дата, рядом ✕ убрать
+  const ankiBtns = h('div', { class: 'as-recap__anki' });
+  const drawAnkiBtns = () => {
+    clear(ankiBtns);
+    const a = loadAnki();
+    ankiBtns.append(h('button', { class: 'as-btn as-btn--secondary as-btn--sm', title: 'Вставить JSON или прикрепить файл из Anki', onclick: importAnki },
+      a ? `Anki · ${a.deck} · ${ankiInfo(a).short}` : 'Данные из Anki'));
+    if (a) ankiBtns.append(h('button', { class: 'as-iconbtn', title: 'Убрать данные Anki', 'aria-label': 'Убрать данные Anki', onclick: () => { saveAnki(null); drawAnkiBtns(); reset(); build(); } }, '✕'));
+  };
+  async function importAnki() {
+    const a = await openAnkiImport();
+    if (!a) return;
+    saveAnki(a); drawAnkiBtns(); reset(); build();
+  }
+  drawAnkiBtns();
+
   const body = h('div', { class: 'as-recap__body' },
     h('div', { class: 'as-rowx' }, seg(KINDS, kind, (k) => { kind = k; drawDates(); reset(); build(); }), dates),
     h('div', { class: 'as-rowx' },
@@ -97,7 +122,7 @@ export function openRecap() {
     toggles,
     preview,
     h('div', { class: 'as-rowx as-rowx--between' }, info,
-      h('div', { class: 'as-rowx' },
+      h('div', { class: 'as-rowx' }, ankiBtns,
         h('button', { class: 'as-btn as-btn--secondary as-btn--sm', onclick: () => edit(null, 'list') }, '＋ Список'),
         h('button', { class: 'as-btn as-btn--secondary as-btn--sm', onclick: () => edit(null) }, '＋ Своя карточка'))));
 
@@ -136,6 +161,7 @@ export function openRecap() {
       data = await api.Recap(kind, query());
       if (my !== buildNo) return;
       data.notes = loadNotes();
+      data.anki = loadAnki();
       if (kind === 'range') { fromInp.value = data.from; toInp.value = data.date; rFrom = data.from; rTo = data.date; }
       else if (!dateInp.value && kind !== 'all') dateInp.value = data.date;
       const all = planCards(data, { mode: p.mode, toggles: p.toggles, seed, format: p.format });

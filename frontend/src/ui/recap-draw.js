@@ -3,6 +3,7 @@
 import { gopherSVG, POSES } from './gopher.js';
 import { pluralRu } from './dom.js';
 import { achBadge } from './achicons.js';
+import { ankiInfo } from './anki.js';
 
 export const FONT = '-apple-system, "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif';
 export const MONO = 'ui-monospace, "Cascadia Code", Consolas, monospace';
@@ -839,6 +840,124 @@ function wrapByChars(s, n) {
   }).join('\n');
 }
 
+// ---------- Anki: итоги повторений из расширения «Итоги периода (JSON)» ----------
+// Главное — карточки (новые и старые) и время на ответы; ниже — серия с огнём и созданные карточки.
+function fitPx(g, text, font, size, maxW, min = 40) { // самый крупный кегль, при котором текст влезает
+  let px = size; g.font = font(px);
+  while (px > min && g.measureText(text).width > maxW) { px -= 4; g.font = font(px); }
+  return px;
+}
+function flamePath(g, x, y, h) {
+  const w = h * 0.72; g.beginPath();
+  g.moveTo(x + w * 0.06, y - h);
+  g.bezierCurveTo(x + w * 0.2, y - h * 0.78, x + w * 0.58, y - h * 0.64, x + w * 0.52, y - h * 0.34);
+  g.bezierCurveTo(x + w * 0.5, y - h * 0.08, x + w * 0.26, y, x, y);
+  g.bezierCurveTo(x - w * 0.26, y, x - w * 0.52, y - h * 0.08, x - w * 0.52, y - h * 0.32);
+  g.bezierCurveTo(x - w * 0.52, y - h * 0.5, x - w * 0.36, y - h * 0.56, x - w * 0.3, y - h * 0.74);
+  g.bezierCurveTo(x - w * 0.16, y - h * 0.6, x - w * 0.08, y - h * 0.66, x - w * 0.04, y - h * 0.82);
+  g.bezierCurveTo(x, y - h * 0.9, x + w * 0.02, y - h * 0.95, x + w * 0.06, y - h); g.closePath();
+}
+// огонь: цвета огня, не акцента. Серия 0 — погасший; от недели — два языка, от месяца — три, от сотни — с искрами
+function flame(g, x, y, s, days) {
+  const one = (fx, fh, out) => {
+    const gr = g.createLinearGradient(0, y - fh, 0, y);
+    gr.addColorStop(0, out ? '#8C8C92' : '#FF4D2E'); gr.addColorStop(1, out ? '#B9B9BE' : '#FF9A2E');
+    flamePath(g, fx, y, fh); g.fillStyle = gr; g.fill();
+    if (out) return;
+    flamePath(g, fx + fh * 0.02, y, fh * 0.58); g.fillStyle = '#FFD24A'; g.fill();
+    flamePath(g, fx + fh * 0.03, y, fh * 0.28); g.fillStyle = '#FFF4C2'; g.fill();
+  };
+  if (!days) { one(x, s * 0.8, true); return; }
+  if (days >= 100) { const gl = g.createRadialGradient(x, y - s * 0.4, 0, x, y - s * 0.4, s * 0.9); gl.addColorStop(0, 'rgba(255,140,40,0.35)'); gl.addColorStop(1, 'rgba(255,140,40,0)'); g.fillStyle = gl; g.fillRect(x - s, y - s * 1.4, s * 2, s * 1.6); }
+  if (days >= 30) one(x + s * 0.3, s * 0.62);
+  if (days >= 7) one(x - s * 0.28, s * 0.72);
+  one(x, s);
+  if (days >= 100) { g.fillStyle = '#FFD24A'; [[0.42, 0.95, 0.05], [-0.4, 1.02, 0.04], [0.15, 1.18, 0.035]].forEach(([dx, dy, r]) => blob(g, x + s * dx, y - s * dy, s * r)); }
+}
+function ankiClock(g, acc, cx, cy, r) {
+  g.strokeStyle = acc; g.lineWidth = r * 0.16; g.lineCap = 'round'; g.beginPath(); g.arc(cx, cy, r, 0, Math.PI * 2); g.stroke();
+  g.beginPath(); g.moveTo(cx, cy); g.lineTo(cx, cy - r * 0.58); g.moveTo(cx, cy); g.lineTo(cx + r * 0.42, cy + r * 0.2); g.stroke();
+}
+function ankiNewCard(g, acc, x, y, s) { // стопка карточек с плюсом
+  g.save(); g.translate(x + s * 0.55, y + s * 0.5); g.rotate(0.18); g.fillStyle = hexA(acc, 0.35); rr(g, -s * 0.34, -s * 0.44, s * 0.68, s * 0.88, s * 0.12); g.fill(); g.restore();
+  g.save(); g.translate(x + s * 0.45, y + s * 0.5); g.rotate(-0.08); g.fillStyle = acc; rr(g, -s * 0.34, -s * 0.44, s * 0.68, s * 0.88, s * 0.12); g.fill();
+  g.strokeStyle = onAcc(acc); g.lineWidth = s * 0.09; g.lineCap = 'round'; g.beginPath(); g.moveTo(-s * 0.15, 0); g.lineTo(s * 0.15, 0); g.moveTo(0, -s * 0.15); g.lineTo(0, s * 0.15); g.stroke(); g.restore();
+}
+const num1 = (x) => String(Math.round(x * 10) / 10).replace('.', ',');
+async function cardAnki(g, W, H, c, page, total) {
+  const { S, acc, d } = c, a = d.anki, i = ankiInfo(a), u = W / 1080, sq = H === W;
+  const cards = a.unique_cards_reviewed, NEW = a.new_cards_first_studied, OLD = i.old;
+  // рамка: своя дата периода из Anki, подпись «данные из Anki»
+  S.bg(g, W, H, acc);
+  if (LOGO.complete && LOGO.naturalWidth) g.drawImage(LOGO, 80 * u, 80 * u, 56 * u, 56 * u);
+  g.textBaseline = 'alphabetic'; g.textAlign = 'left';
+  g.fillStyle = S.ink; g.font = `700 ${32 * u}px ${S.font}`; g.fillText('Ascent', 154 * u, 108 * u);
+  g.fillStyle = S.muted; g.font = `400 ${24 * u}px ${S.font}`; g.fillText(i.period, 154 * u, 138 * u);
+  if (total > 1) { g.textAlign = 'right'; g.font = `500 ${26 * u}px ${S.font}`; g.fillText(`${page} / ${total}`, W - 80 * u, 118 * u); g.textAlign = 'left'; }
+  g.font = `500 ${26 * u}px ${S.font}`; g.fillText(d.nick || 'Go — ROADMAP', 80 * u, H - 70 * u);
+  g.textAlign = 'right'; g.fillText('данные из Anki', W - 80 * u, H - 70 * u); g.textAlign = 'left';
+  // колода и подзаголовок
+  const L = sq ? { chipY: 166, kick: [0, 0], heroY: 420, heroMax: 200, labY: 482, divTop: 300, divBot: 500, minY: 400, minMax: 120, clockY: 462, barY: 530, barH: 110, footY: 690, boxY: 730, boxH: 190 }
+    : { chipY: 200, kick: [80, 330], heroY: 610, heroMax: 280, labY: 694, divTop: 400, divBot: 710, minY: 580, minMax: 160, clockY: 648, barY: 800, barH: 140, footY: 1000, boxY: 1070, boxH: 230 };
+  g.font = `700 ${30 * u}px ${S.font}`;
+  let deck = a.deck; while (g.measureText(deck).width > W - 160 * u - (sq ? 420 : 64) * u && deck.length > 4) deck = deck.slice(0, -2) + '…';
+  const cw = g.measureText(deck).width + 64 * u;
+  g.fillStyle = hexA(acc, 0.18); rr(g, 80 * u, L.chipY * u, cw, 56 * u, 28 * u); g.fill();
+  g.fillStyle = acc; rr(g, 98 * u, L.chipY * u + 18 * u, 14 * u, 20 * u, 3 * u); g.fill();
+  g.fillText(deck, 124 * u, L.chipY * u + 39 * u);
+  if (sq) g.fillText(i.kicker, 80 * u + cw + 24 * u, L.chipY * u + 39 * u);
+  else g.fillText(i.kicker, L.kick[0] * u, L.kick[1] * u);
+  // главное: карточки | минуты
+  const mid = W / 2 + 40 * u;
+  fitPx(g, String(cards), (p) => `800 ${p}px ${S.head}`, L.heroMax * u, mid - 120 * u - 66 * u);
+  g.fillStyle = S.ink; g.fillText(String(cards), 66 * u, L.heroY * u);
+  g.font = `700 ${(sq ? 42 : 50) * u}px ${S.font}`; g.fillText(W_(cards, 'карточка', 'карточки', 'карточек'), 80 * u, L.labY * u);
+  g.strokeStyle = S.line; g.lineWidth = 3 * u; g.beginPath(); g.moveTo(mid - 40 * u, L.divTop * u); g.lineTo(mid - 40 * u, L.divBot * u); g.stroke();
+  const mins = num1(a.minutes_spent);
+  fitPx(g, mins, (p) => `800 ${p}px ${S.head}`, L.minMax * u, W - 80 * u - mid);
+  g.fillStyle = acc; g.fillText(mins, mid, L.minY * u);
+  const cr = (sq ? 22 : 26) * u;
+  ankiClock(g, acc, mid + cr + 4 * u, L.clockY * u, cr);
+  g.fillStyle = S.ink; g.font = `700 ${(sq ? 32 : 40) * u}px ${S.font}`; g.fillText('мин на ответы', mid + cr * 2 + 22 * u, L.clockY * u + 14 * u);
+  // новые | старые
+  const bx = 80 * u, by = L.barY * u, bw = W - 160 * u, bh = L.barH * u;
+  const fn = `800 ${bh * 0.46}px ${S.head}`, fl = `600 ${bh * 0.24}px ${S.font}`;
+  const labW = (n, l) => { g.font = fn; const w1 = g.measureText(String(n)).width; g.font = fl; return [w1, g.measureText(l).width]; };
+  const lN = W_(NEW, 'новая', 'новых', 'новых'), lO = W_(OLD, 'старая', 'старых', 'старых');
+  const [n1, n2] = labW(NEW, lN), [o1, o2] = labW(OLD, lO);
+  const minN = n1 + n2 + 12 * u + 64 * u, minO = o1 + o2 + 12 * u + 64 * u; // каждая часть не уже своей подписи
+  let nw = cards ? bw * NEW / cards : bw / 2;
+  nw = Math.max(minN, Math.min(bw - minO, nw));
+  g.fillStyle = hexA(acc, 0.28); rr(g, bx, by, bw, bh, bh * 0.3); g.fill();
+  g.fillStyle = acc; rr(g, bx, by, nw, bh, bh * 0.3); g.fill();
+  const lab = (n, l, w1, x0, col) => { g.fillStyle = col; g.font = fn; g.fillText(String(n), x0, by + bh * 0.66); g.font = fl; g.fillText(l, x0 + w1 + 12 * u, by + bh * 0.64); };
+  lab(NEW, lN, n1, bx + 32 * u, onAcc(acc));
+  lab(OLD, lO, o1, bx + bw - 32 * u - o1 - 12 * u - o2, S.ink);
+  // второстепенное
+  const foot = !a.total_reviews ? 'ответов не было' : [`${a.total_reviews} ${W_(a.total_reviews, 'ответ', 'ответа', 'ответов')}`,
+    i.perCard ? `${num1(i.perCard)} показа на карточку` : '', i.secPer ? `≈ ${Math.round(i.secPer)} с на ответ` : ''].filter(Boolean).join(' · ');
+  g.fillStyle = S.muted; fitPx(g, foot, (p) => `400 ${p}px ${S.font}`, 28 * u, W - 160 * u, 18 * u); g.fillText(foot, 80 * u, L.footY * u);
+  // серия с огнём | созданные — одна плашка
+  const y = L.boxY * u, bH = L.boxH * u, half = bw * 0.64, st = a.deck_streak_days, rec = a.deck_longest_streak_days;
+  g.fillStyle = S.card; rr(g, bx, y, bw, bH, 40 * u); g.fill();
+  flame(g, 152 * u, y + bH * 0.79, bH * 0.6, st);
+  const tx = 236 * u, tw = bx + half - 24 * u - tx;
+  const sTxt = st ? `${st} ${W_(st, 'день', 'дня', 'дней')} подряд` : 'серия прервалась';
+  g.fillStyle = st ? S.ink : S.muted; fitPx(g, sTxt, (p) => `800 ${p}px ${S.head}`, (sq ? 48 : 54) * u, tw, 24 * u); g.fillText(sTxt, tx, y + bH * 0.5);
+  const sub = st && st >= rec && st > 1 ? 'это рекорд колоды!' : `рекорд колоды — ${rec}`;
+  g.fillStyle = st && st >= rec && st > 1 ? acc : S.muted; fitPx(g, sub, (p) => `${st >= rec && st > 1 ? 700 : 500} ${p}px ${S.font}`, 28 * u, tw, 18 * u); g.fillText(sub, tx + 2 * u, y + bH * 0.74);
+  g.strokeStyle = S.line; g.lineWidth = 3 * u; g.beginPath(); g.moveTo(bx + half, y + 36 * u); g.lineTo(bx + half, y + bH - 36 * u); g.stroke();
+  const cx = bx + half + 36 * u, rw = bx + bw - 32 * u - cx, ic = bH * 0.37;
+  ankiNewCard(g, acc, cx, y + bH * 0.16, ic);
+  g.fillStyle = S.ink; fitPx(g, String(a.new_cards_created), (p) => `800 ${p}px ${S.head}`, (sq ? 54 : 60) * u, rw - ic - 26 * u, 24 * u); g.fillText(String(a.new_cards_created), cx + ic + 26 * u, y + bH * 0.48);
+  const cl = W_(a.new_cards_created, 'карточка создана', 'карточки создано', 'карточек создано');
+  g.fillStyle = S.muted; fitPx(g, cl, (p) => `500 ${p}px ${S.font}`, 28 * u, rw, 18 * u); g.fillText(cl, cx, y + bH * 0.75);
+  if (!sq) {
+    const pose = !cards ? 'sleep' : st > 1 && st >= rec ? 'cheer' : NEW ? 'proud' : 'wave';
+    await drawGopher(g, pose, W - 230 * u, H - 120 * u, 380 * u, -0.04, false);
+  }
+}
+
 // комментарий к пройденной теме (настройка theme_notes)
 function noteOf(d, t) { const n = d.notes && d.notes[t.id]; return n && String(n).trim() ? String(n) : ''; }
 
@@ -888,6 +1007,7 @@ export function planCards(d, opts) {
   const n = auto.length ? Math.floor(rng() * (auto.length + 1)) : 0;
   const chosen = [...auto].sort(() => rng() - 0.5).slice(0, n);
   for (const [k, name] of EXTRA_CARDS) if (on.includes(k) || chosen.includes(k)) out.push({ key: k, name });
+  if (d.anki) out.push({ key: 'anki', name: 'Anki' }); // итоги Anki, если загружены
   out.push({ key: 'ach', name: 'Достижения' });
   return out;
 }
@@ -902,6 +1022,7 @@ export async function drawCard(card, d, { format, style, acc, seed, index, total
   const S = STYLES[style];
   const rng = rngFrom(seed * 31 + index * 7 + 1);
   const c = { S, acc, d, rng, layout: Math.floor(rng() * 3), full, dayX };
+  if (card.key === 'anki') { await cardAnki(g, W, H, c, index + 1, total); return cv; } // своя рамка
   frame(g, W, H, S, acc, d, index + 1, total);
   const sq = H === W;
   if (card.key === 'summary') await cardSummary(g, W, H, c);
