@@ -627,7 +627,7 @@ async function cardJourney(g, W, H, c) {
   });
 }
 
-// ---------- список задач (своя карточка) ----------
+// ---------- список (своя карточка): что изучил ----------
 // Мини-markdown в пункте: `код`, **жирный**, *курсив*. Вложенность — один уровень (lvl 0 или 1).
 export function mdRuns(text) {
   const out = []; const re = /`([^`]+)`|\*\*(.+?)\*\*|\*(.+?)\*/g; let last = 0, m;
@@ -665,39 +665,24 @@ function tasksPass(g, S, acc, u, card, items, x0, y0, w, titleW, minY, dry) {
     g.font = `800 ${ts}px ${S.head}`;
     for (const l of wrap(g, card.title, titleW)) { y += ts; if (!dry) { g.fillStyle = S.ink; g.fillText(l, x0, y); } y += ts * 0.14; }
   }
-  const done = items.filter((t) => t.done).length;
-  if (items.length) {
-    y += 52 * u;
-    if (!dry) {
-      g.fillStyle = S.muted; g.font = `500 ${30 * u}px ${S.font}`; g.fillText(`${done} из ${items.length} готово`, x0, y);
-      const bx = x0 + 300 * u, bw = Math.max(80 * u, x0 + titleW - bx);
-      g.fillStyle = S.track; rr(g, bx, y - 22 * u, bw, 16 * u, 8 * u); g.fill();
-      if (done) { g.fillStyle = acc; rr(g, bx, y - 22 * u, Math.max(16 * u, bw * done / items.length), 16 * u, 8 * u); g.fill(); }
-    }
-  }
-  y = Math.max(y + 64 * u, minY);
+  y = Math.max(y + 56 * u, minY);
   for (const it of items) {
-    const sub = it.lvl === 1, px = (sub ? 34 : 42) * u, box = (sub ? 34 : 44) * u, lh = px * 1.32;
-    const ix = x0 + (sub ? 70 * u : 0), tx = ix + box + 28 * u;
+    const sub = it.lvl === 1, px = (sub ? 34 : 42) * u, box = (sub ? 30 : 40) * u, lh = px * 1.32;
+    const ix = x0 + (sub ? 64 * u : 0), tx = ix + box + 18 * u;
     const lines = runLines(g, S, mdRuns(it.text), x0 + w - tx, px);
     if (!dry) {
-      const by = y + (lh - box) / 2;
-      if (it.done) {
-        g.fillStyle = acc; rr(g, ix, by, box, box, box * 0.3); g.fill();
-        check(g, ix + box / 2, by + box / 2, box * 0.62, onAcc(acc), box * 0.13);
-      } else { g.strokeStyle = S.muted; g.lineWidth = Math.max(2, box * 0.08); rr(g, ix, by, box, box, box * 0.3); g.stroke(); }
+      const my = y + lh * 0.5; // маркер: у пункта — точка акцента, у подпункта — кружок
+      if (S === STYLES.terminal) { g.fillStyle = sub ? S.muted : acc; g.font = `700 ${px}px ${MONO}`; g.fillText(sub ? '-' : '>', ix + box * 0.2, y + lh * 0.74); }
+      else if (sub) { g.strokeStyle = S.muted; g.lineWidth = Math.max(2, box * 0.09); g.beginPath(); g.arc(ix + box / 2, my, box * 0.2, 0, Math.PI * 2); g.stroke(); }
+      else { g.fillStyle = acc; blob(g, ix + box / 2, my, box * 0.26); }
       lines.forEach((l, i) => {
         const base = y + lh * 0.74 + i * lh;
         for (const tk of l) {
           if (tk.sp) continue;
           if (tk.r.code) { g.fillStyle = hexA(acc, 0.16); rr(g, tx + tk.x - 6 * u, base - px * 0.86, tk.w + 12 * u, px * 1.14, 8 * u); g.fill(); }
           g.font = runFont(tk.r, S, px);
-          g.fillStyle = it.done ? S.muted : tk.r.code ? acc : S.ink;
+          g.fillStyle = tk.r.code ? acc : sub ? hexA(S.ink.startsWith('#') ? S.ink : '#888888', 0.86) : S.ink;
           g.fillText(tk.t, tx + tk.x, base);
-        }
-        if (it.done && l.length) { // зачёркнуто
-          const end = l[l.length - 1]; g.strokeStyle = S.muted; g.lineWidth = Math.max(2, px * 0.07);
-          g.beginPath(); g.moveTo(tx, base - px * 0.3); g.lineTo(tx + end.x + end.w, base - px * 0.3); g.stroke();
         }
       });
     }
@@ -705,8 +690,8 @@ function tasksPass(g, S, acc, u, card, items, x0, y0, w, titleW, minY, dry) {
   }
   return y;
 }
-// card = { kind: 'tasks', bg, title, tasks: [{ text, done, lvl }], gopher: 'auto' | 'none' | поза, flip }
-export async function drawTasks(g, W, H, card, acc) {
+// card = { kind: 'list', bg, title, tasks: [{ text, lvl }], gopher: 'auto' | 'none' | поза, flip }
+export async function drawList(g, W, H, card, acc) {
   const S = STYLES[card.bg] || STYLES.night;
   if (!S.accents.includes(acc)) acc = S.accents[0]; // акцент — из своего фона, иначе код на светлом не читается
   S.bg(g, W, H, acc);
@@ -714,11 +699,10 @@ export async function drawTasks(g, W, H, card, acc) {
   g.textBaseline = 'alphabetic'; g.textAlign = 'left';
   if (LOGO.complete && LOGO.naturalWidth) g.drawImage(LOGO, 80 * u, 80 * u, 56 * u, 56 * u);
   g.fillStyle = S.ink; g.font = `700 ${32 * u}px ${S.font}`; g.fillText('Ascent', 154 * u, 108 * u);
-  g.fillStyle = S.muted; g.font = `400 ${24 * u}px ${S.font}`; g.fillText('список задач', 154 * u, 138 * u);
+  g.fillStyle = S.muted; g.font = `400 ${24 * u}px ${S.font}`; g.fillText(card.sub || 'конспект', 154 * u, 138 * u);
   const items = (card.tasks || []).filter((t) => String(t.text).trim());
-  const total = items.length, done = items.filter((t) => t.done).length;
   const gp = card.gopher || 'auto';
-  const pose = gp === 'auto' ? (total && done === total ? 'cheer' : total && done * 2 >= total ? 'proud' : 'point') : gp;
+  const pose = gp === 'auto' ? (items.length >= 6 ? 'proud' : 'point') : gp;
   const x0 = 80 * u, w = W - 160 * u, y0 = (sq ? 170 : 220) * u, limit = H - (sq ? 70 : 110) * u;
   // самый крупный масштаб, при котором всё влезает выше lim (короткий список — крупнее обычного)
   const fit = (titleW, minY, lim) => {
@@ -862,7 +846,7 @@ export async function drawCard(card, d, { format, style, acc, seed, index, total
   const [W, H] = FORMATS[format];
   const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
   const g = cv.getContext('2d');
-  if (card.key === 'custom') { await (card.card.kind === 'tasks' ? drawTasks : drawCustom)(g, W, H, card.card, acc); return cv; }
+  if (card.key === 'custom') { await (card.card.kind ? drawList : drawCustom)(g, W, H, card.card, acc); return cv; }
   const S = STYLES[style];
   const rng = rngFrom(seed * 31 + index * 7 + 1);
   const c = { S, acc, d, rng, layout: Math.floor(rng() * 3), full, dayX };
