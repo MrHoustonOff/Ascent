@@ -164,7 +164,7 @@ export function openRecap() {
       data.anki = loadAnki();
       if (kind === 'range') { fromInp.value = data.from; toInp.value = data.date; rFrom = data.from; rTo = data.date; }
       else if (!dateInp.value && kind !== 'all') dateInp.value = data.date;
-      const all = planCards(data, { mode: p.mode, toggles: p.toggles, seed, format: p.format });
+      const all = planCards(data, { mode: p.mode, toggles: p.toggles, seed, format: p.format, tasks: !!p.tasks });
       p.custom.forEach((c, i) => {
         if (!c.kind) { all.push({ key: 'custom', name: 'Своя карточка', card: c, ci: i }); return; }
         const n = listPages(c, p.format); // длинный список — несколько страниц
@@ -181,7 +181,7 @@ export function openRecap() {
       for (let i = 0; i < list.length; i++) {
         const st = over[cardId(list[i])]?.style || style; // свой фон у страницы
         const a = st === style ? acc : pick(rngFrom(seed + 5), STYLES[st].accents);
-        out.push(await drawCard(list[i], data, { format: p.format, style: st, acc: a, seed, index: i, total: list.length, full: p.mode === 'one', dayX: p.dayX }));
+        out.push(await drawCard(list[i], data, { format: p.format, style: st, acc: a, seed, index: i, total: list.length, full: p.mode === 'one', dayX: p.dayX, tasks: !!p.tasks }));
         if (my !== buildNo) return;
       }
       canvases = out;
@@ -212,7 +212,10 @@ export function openRecap() {
           bg.addEventListener('change', () => { over[id] = { ...over[id], style: bg.value }; build(); });
           const notesBtn = c.key === 'themes' && data.themes.length
             ? h('button', { class: 'as-btn as-btn--secondary as-btn--sm', title: 'Комментарии к пройденным темам', onclick: editNotes }, 'Редактировать') : null;
-          tools = h('div', { class: 'as-recap__customtools' }, arrows[0], notesBtn, bg,
+          // «Показывать задачи» — темы раскрываются в свои задачи
+          const tasksChk = c.key === 'themes' && data.themes.length ? h('label', { class: 'as-recap__chk', title: 'Показывать задачи каждой темы' },
+            (() => { const i = h('input', { type: 'checkbox', checked: !!p.tasks }); i.addEventListener('change', () => { p.tasks = i.checked; savePrefs(p); reset(); build(); }); return i; })(), 'задачи') : null;
+          tools = h('div', { class: 'as-recap__customtools' }, arrows[0], tasksChk, notesBtn, bg,
             h('button', { class: 'as-iconbtn as-recap__del', title: 'Удалить страницу', 'aria-label': 'Удалить страницу', onclick: () => { over[id] = { ...over[id], hidden: true }; build(); } }, '✕'), arrows[1]);
         }
         const page = h('div', { class: 'as-recap__custom', draggable: 'true', title: 'Перетащите, чтобы поменять порядок' }, img, tools);

@@ -16,6 +16,10 @@ type RecapItem struct {
 	ID    string `json:"id"`
 	Title string `json:"title"`
 	Sub   string `json:"sub"`
+	// для тем: задачи (уроки) темы и вопросы «должен уметь ответить»
+	Lessons []RecapItem `json:"lessons,omitempty"`
+	Checks  int         `json:"checks,omitempty"`
+	ChecksN int         `json:"checksN,omitempty"`
 }
 
 type RecapDay struct {
@@ -212,7 +216,11 @@ func (a *App) Recap(kind, date string) (RecapDTO, error) {
 	var ths []it
 	for _, th := range a.plan.Themes {
 		if t, ok := in.ThemeClosedAt(th); ok && inRange(t) {
-			ths = append(ths, it{t, RecapItem{th.ID, th.Title, th.Block}})
+			x := RecapItem{ID: th.ID, Title: th.Title, Sub: th.Block, Lessons: []RecapItem{}, Checks: in.ChecksDone(th), ChecksN: len(th.Checks)}
+			for _, l := range th.Lessons {
+				x.Lessons = append(x.Lessons, RecapItem{ID: l.ID, Title: l.Title})
+			}
+			ths = append(ths, it{t, x})
 		}
 	}
 	sort.Slice(ths, func(i, j int) bool { return ths[i].at.Before(ths[j].at) })
@@ -221,7 +229,7 @@ func (a *App) Recap(kind, date string) (RecapDTO, error) {
 	}
 	for _, b := range a.plan.Blocks {
 		if t, ok := in.BlockClosedAt(b); ok && !t.IsZero() && inRange(t) {
-			r.Blocks = append(r.Blocks, RecapItem{b.ID, b.Title, ""})
+			r.Blocks = append(r.Blocks, RecapItem{ID: b.ID, Title: b.Title})
 		}
 	}
 	for _, l := range in.Lessons {
