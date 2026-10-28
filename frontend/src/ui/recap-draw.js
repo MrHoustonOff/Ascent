@@ -376,6 +376,22 @@ function mixHex(a, b, p) {
   return '#' + x.map((v, i) => Math.round(v * p + y[i] * (1 - p)).toString(16).padStart(2, '0')).join('');
 }
 
+// много достижений — сетка квадратных плиток: значок и название (без описания)
+export const ACH_ROWS = { story: 4, square: 2 }; // сколько строками с описанием; больше — сеткой
+export const ACH_GRID = { story: 12, square: 8 }; // плиток на страницу
+async function achGrid(g, S, acc, u, W, list) {
+  const sq = W === g.canvas.height, cols = sq ? 4 : 3, gap = (sq ? 16 : 20) * u, tw = (W - 160 * u - gap * (cols - 1)) / cols, th = sq ? 250 * u : tw;
+  for (let i = 0; i < list.length; i++) {
+    const a = list[i], x = 80 * u + (i % cols) * (tw + gap), y = 420 * u + Math.floor(i / cols) * (th + gap);
+    g.fillStyle = S.card; rr(g, x, y, tw, th, 32 * u); g.fill();
+    const img = await badgeImage(a), bs = (sq ? 0.5 : 0.46) * tw, fs = (sq ? 25 : 30) * u;
+    try { g.drawImage(img, x + (tw - bs) / 2, y + 26 * u, bs, bs); } catch { /* значок необязателен */ }
+    g.textAlign = 'center'; g.fillStyle = S.ink; g.font = `700 ${fs}px ${S.font}`;
+    const all = wrap(g, a.name, tw - 28 * u), l = all.slice(0, 2);
+    l.forEach((s, k) => g.fillText(s + (k === 1 && all.length > 2 ? '…' : ''), x + tw / 2, y + 26 * u + bs + fs * 1.6 + k * fs * 1.2));
+    g.textAlign = 'left';
+  }
+}
 async function cardAch(g, W, H, c, list) {
   const { S, acc, d, rng } = c; const u = W / 1080, sq = H === W;
   title(g, S, u, 'Достижения', 80 * u, 290 * u);
@@ -391,6 +407,7 @@ async function cardAch(g, W, H, c, list) {
   }
   g.fillStyle = acc; g.font = `800 ${44 * u}px ${S.font}`; g.fillText(`+${d.achievements.length}`, 80 * u, 360 * u);
   g.fillStyle = S.muted; g.font = `400 ${30 * u}px ${S.font}`; g.fillText(`· всего ${d.achOpen} из ${d.achTotal}`, 80 * u + g.measureText(`+${d.achievements.length}`).width * 1.5 + 20 * u, 358 * u);
+  if (c.grid) { await achGrid(g, S, acc, u, W, list); return; }
   let y = 420 * u; const rowH = (sq ? 150 : 180) * u;
   for (const a of list) {
     g.fillStyle = S.card; rr(g, 80 * u, y, W - 160 * u, rowH, 32 * u); g.fill();
@@ -1120,7 +1137,10 @@ export function planCards(d, opts) {
   const chosen = [...auto].sort(() => rng() - 0.5).slice(0, n);
   for (const [k, name] of EXTRA_CARDS) if (on.includes(k) || chosen.includes(k)) out.push({ key: k, name });
   if (d.anki) out.push({ key: 'anki', name: 'Anki' }); // итоги Anki, если загружены
-  out.push({ key: 'ach', name: 'Достижения' });
+  // достижения: немного — строками с описанием, много — сеткой плиток, не влезло — на несколько страниц
+  const fmt = opts.format === 'square' ? 'square' : 'story', na = d.achievements.length;
+  if (na <= ACH_ROWS[fmt]) out.push({ key: 'ach', name: 'Достижения', from: 0, count: na });
+  else for (let k = 0; k < na; k += ACH_GRID[fmt]) out.push({ key: 'ach', name: na > ACH_GRID[fmt] ? `Достижения ${k / ACH_GRID[fmt] + 1}` : 'Достижения', from: k, count: ACH_GRID[fmt], grid: true });
   return out;
 }
 
@@ -1141,7 +1161,7 @@ export async function drawCard(card, d, { format, style, acc, seed, index, total
   if (card.key === 'summary') await cardSummary(g, W, H, c);
   else if (card.key === 'quiet') await cardQuiet(g, W, H, c);
   else if (card.key === 'themes') await cardThemes(g, W, H, c, d.themes.slice(card.from, card.from + card.count), card.first ?? card.from === 0, card.more || 0);
-  else if (card.key === 'ach') await cardAch(g, W, H, c, d.achievements.slice(0, sq ? 2 : 5));
+  else if (card.key === 'ach') { c.grid = !!card.grid; await cardAch(g, W, H, c, d.achievements.slice(card.from || 0, (card.from || 0) + (card.count ?? (sq ? 2 : 5)))); }
   else await draws[card.key](g, W, H, c);
   return cv;
 }
