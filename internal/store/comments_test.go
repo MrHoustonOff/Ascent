@@ -12,6 +12,8 @@ func TestCommentsMigrationFromNotes(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	first := s
+	t.Cleanup(func() { first.db.Close() })
 	for _, q := range []string{
 		`DROP TABLE comments`,
 		`UPDATE schema_version SET version=3`,
@@ -28,6 +30,7 @@ func TestCommentsMigrationFromNotes(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	t.Cleanup(func() { s.db.Close() }) // иначе на Windows временная папка с открытой базой не удаляется
 	cs, err := s.Comments()
 	if err != nil || len(cs) != 2 {
 		t.Fatalf("%v %+v", err, cs)
