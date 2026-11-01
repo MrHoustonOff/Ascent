@@ -1,0 +1,217 @@
+# Этап 2 — Данные в Go
+GO-7.1.1	Массивы в Go / Go arrays
+GO-7.1.2	Массивы в памяти / array memory layout
+GO-7.1.3	Массивы в Go / Go arrays
+GO-7.1.4	Проверка границ / bounds checking
+GO-7.1.4	Индекс вне диапазона / index out of range panic
+GO-7.1.5	Семантика значений массивов / array value semantics
+GO-7.1.6	Сравнение массивов / array comparison
+GO-7.1.7	Многомерные массивы / multidimensional arrays
+GO-7.2.1	Слайсы в Go / Go slices
+GO-7.2.2	Устройство слайса / slice internals (pointer, len, cap)	https://pkg.go.dev/builtin#cap
+GO-7.2.3	Функция make / make	https://pkg.go.dev/builtin#make
+GO-7.2.3	Литералы слайсов / slice literals
+GO-7.2.4	nil-слайс / nil slice
+GO-7.2.5	Выражения среза / slice expressions
+GO-7.2.6	Слайсы и общий массив / slices sharing an underlying array
+GO-7.2.7	Ёмкость слайса / slice capacity	https://pkg.go.dev/builtin#cap
+GO-7.3.1	Функция append / append	https://pkg.go.dev/builtin#append
+GO-7.3.2	Функция append / append	https://pkg.go.dev/builtin#append
+GO-7.3.3	Рост слайса / slice growth (reallocation)
+GO-7.3.4	Рост ёмкости слайса / slice growth strategy
+GO-7.3.5	Функция append / append	https://pkg.go.dev/builtin#append
+GO-7.3.6	Подводные камни append / append gotchas (shared backing array)
+GO-7.3.7	Предварительное выделение памяти / preallocating slices	https://pkg.go.dev/builtin#make
+GO-7.4.1	Передача слайса в функцию / passing slices to functions
+GO-7.4.2	Передача слайса в функцию / passing slices to functions
+GO-7.4.3	append внутри функции / append inside function
+GO-7.4.4	Указатель на слайс / pointer to slice
+GO-7.5.1	Функция copy / copy	https://pkg.go.dev/builtin#copy
+GO-7.5.2	Полное выражение среза / full slice expression (s[a:b:c])
+GO-7.5.3	nil-слайс и пустой слайс / nil vs empty slice
+GO-7.5.4	Цикл for range / for range loop
+GO-7.5.5	Копия в переменной range / range value copy
+GO-7.5.6	Удаление элемента из слайса / remove element from slice	https://pkg.go.dev/slices#Delete
+GO-7.5.7	Утечка памяти через слайс / slice memory leak
+GO-7.5.8	Пакет slices / slices package	https://pkg.go.dev/slices https://pkg.go.dev/builtin#clear
+GO-7.5.9	Вариадические функции / variadic functions
+GO-8.1.1	Устройство строк в Go / Go string internals
+GO-8.1.2	Неизменяемость строк / string immutability
+GO-8.1.3	Индексация строк / string indexing (bytes)
+GO-8.1.4	range по строке / range over string (runes)
+GO-8.1.5	Подсчёт символов / counting runes	https://pkg.go.dev/unicode/utf8#RuneCountInString
+GO-8.1.6	Срез строки / string slicing
+GO-8.1.7	Подстроки и память / substring memory retention	https://pkg.go.dev/strings#Clone
+GO-8.2.1	Преобразование string и []byte / string to byte slice conversion
+GO-8.2.2	Преобразование string и []rune / string to rune slice conversion
+GO-8.2.3	Стоимость преобразования строк / string conversion allocations
+GO-8.3.1	Конкатенация строк / string concatenation
+GO-8.3.2	strings.Builder / strings.Builder	https://pkg.go.dev/strings#Builder
+GO-8.3.3	Пакет strings / strings package	https://pkg.go.dev/strings https://pkg.go.dev/strings#Split https://pkg.go.dev/strings#ReplaceAll
+GO-8.3.4	Пакет unicode/utf8 / unicode/utf8 package	https://pkg.go.dev/unicode/utf8
+GO-9.1.1	Map в Go / Go maps
+GO-9.1.2	Создание map / map literals and make	https://pkg.go.dev/builtin#make
+GO-9.1.3	Идиома comma ok / comma ok idiom
+GO-9.1.4	Удаление из map / delete	https://pkg.go.dev/builtin#delete
+GO-9.1.5	nil map / nil map
+GO-9.1.6	Сравнимые типы / comparable types
+GO-9.1.7	Типы ключей map / map key types
+GO-9.1.8	Обход map / map iteration (range)
+GO-9.1.9	Map как ссылочный тип / maps are reference types
+GO-9.1.10	Изменение map во время обхода / modifying map during iteration
+GO-9.1.11	Вложенные map / nested maps
+GO-9.1.12	make и new / make vs new	https://pkg.go.dev/builtin#make https://pkg.go.dev/builtin#new
+GO-9.2.1	Хеш-функция / hash function	https://pkg.go.dev/hash
+GO-9.2.2	Хеш-таблица / hash table
+GO-9.2.2	Коллизии хешей / hash collision
+GO-9.2.3	Коэффициент заполнения / load factor
+GO-9.2.3	Рехеширование / rehashing
+GO-9.3.1	Устройство map в Go / Go map internals (buckets)
+GO-9.3.2	Устройство map в Go / Go map internals (tophash)
+GO-9.3.3	Переполненные бакеты / overflow buckets
+GO-9.3.4	Рост map / map growth (load factor)
+GO-9.3.5	Инкрементальная эвакуация / incremental map evacuation
+GO-9.3.6	Неадресуемость элементов map / map elements are not addressable
+GO-9.3.7	Случайный порядок обхода map / random map iteration order
+GO-9.3.8	Swiss Tables / Swiss Tables (Go 1.24 maps)
+GO-9.3.9	Заголовок map / hmap (map header)
+SQL-2.1.1	Внешний ключ / foreign key
+SQL-2.1.2	Связь один ко многим / one-to-many relationship
+SQL-2.1.3	Связь многие ко многим / many-to-many relationship
+SQL-2.1.3	Связующая таблица / junction table
+SQL-2.1.4	Связь один к одному / one-to-one relationship
+SQL-2.1.5	Ограничения целостности / constraints (UNIQUE, NOT NULL, CHECK)
+SQL-2.1.6	Каскадное удаление / ON DELETE CASCADE
+SQL-2.2.1	Аномалии данных / data anomalies (insert, update, delete)
+SQL-2.2.1	Нормализация баз данных / database normalization
+SQL-2.2.2	Первая нормальная форма / first normal form (1NF)
+SQL-2.2.3	Вторая нормальная форма / second normal form (2NF)
+SQL-2.2.4	Третья нормальная форма / third normal form (3NF)
+SQL-2.2.5	Денормализация / denormalization
+SQL-2.3.1	INNER JOIN / INNER JOIN
+SQL-2.3.2	LEFT JOIN / LEFT OUTER JOIN
+SQL-2.3.3	RIGHT JOIN и FULL JOIN / RIGHT JOIN and FULL OUTER JOIN
+SQL-2.3.4	Соединение таблицы с собой / self join
+SQL-2.3.5	CROSS JOIN / CROSS JOIN
+SQL-2.3.6	Условия в ON и WHERE / ON vs WHERE in LEFT JOIN
+SQL-2.3.7	Соединение нескольких таблиц / multiple joins
+SQL-2.3.8	Дублирование строк при JOIN / row duplication in joins (fan-out)
+GO-10.1.1	Структуры в Go / Go structs
+GO-10.1.2	Литералы структур / struct literals
+GO-10.1.3	Указатель на структуру / pointer to struct
+GO-10.1.4	Семантика значений структур / struct value semantics
+GO-10.1.5	Поверхностное копирование / shallow copy
+GO-10.1.6	Функции-конструкторы / constructor functions (NewX)
+GO-10.1.7	Анонимные структуры / anonymous structs
+GO-10.1.8	Сравнение структур / struct comparison
+GO-10.1.9	Изменение структуры в map / modify struct in map
+GO-10.1.10	Пустая структура / empty struct
+GO-10.1.11	Множество в Go / set in Go (map[T]struct{})
+GO-10.1.12	Глаголы форматирования / fmt verbs (%v, %+v, %#v, %T)	https://pkg.go.dev/fmt
+GO-10.2.1	Выравнивание данных / data structure alignment	https://pkg.go.dev/unsafe#Alignof
+GO-10.2.2	Паддинг структур / struct padding	https://pkg.go.dev/unsafe#Sizeof
+GO-10.2.3	Пустая структура / empty struct	https://pkg.go.dev/unsafe#Sizeof
+GO-10.3.1	JSON / JSON
+GO-10.3.2	Теги структур / struct tags	https://pkg.go.dev/reflect#StructTag
+GO-10.3.3	Пакет encoding/json / encoding/json package	https://pkg.go.dev/encoding/json https://pkg.go.dev/encoding/json#Marshal https://pkg.go.dev/encoding/json#Unmarshal
+GO-10.3.4	JSON и неэкспортируемые поля / JSON unexported fields	https://pkg.go.dev/encoding/json#Marshal
+GO-10.3.5	omitempty / omitempty	https://pkg.go.dev/encoding/json#Marshal
+GO-10.4.1	Пакет slices / slices package	https://pkg.go.dev/slices#Sort https://pkg.go.dev/slices#SortFunc
+GO-10.4.2	Пакет sort / sort package	https://pkg.go.dev/sort#Slice
+GO-10.4.3	Устойчивая сортировка / stable sort	https://pkg.go.dev/slices#SortStableFunc https://pkg.go.dev/sort#SliceStable
+GO-11.1.1	Методы в Go / Go methods
+GO-11.1.2	Получатель по значению / value receiver
+GO-11.1.3	Получатель по указателю / pointer receiver
+GO-11.1.4	Автоматическое взятие адреса / automatic address taking for method calls
+GO-11.1.5	Значение или указатель в получателе / value vs pointer receiver
+GO-11.1.6	Методы у пользовательских типов / methods on defined types
+GO-11.1.7	Методы на nil-указателе / methods on nil receivers
+GO-11.1.8	Значения-методы / method values and method expressions
+GO-11.2.1	Встраивание / embedding
+GO-11.2.2	Продвижение полей и методов / promoted fields and methods
+GO-11.2.3	Композиция вместо наследования / composition over inheritance
+GO-11.2.4	Конфликт имён при встраивании / embedding name conflicts (depth)
+GO-11.2.5	Встраивание указателя / embedding a pointer type
+GO-11.3.1	Пакет time / time package	https://pkg.go.dev/time#Time https://pkg.go.dev/time#Now
+GO-11.3.2	time.Duration / time.Duration	https://pkg.go.dev/time#Duration
+GO-11.3.3	Умножение длительности / multiplying time.Duration	https://pkg.go.dev/time#Duration
+GO-11.3.4	Измерение времени выполнения / measuring elapsed time	https://pkg.go.dev/time#Since
+GO-11.3.5	Форматирование времени / time formatting (reference layout)	https://pkg.go.dev/time#Time.Format https://pkg.go.dev/time#pkg-constants
+GO-12.1.1	Интерфейсы в Go / Go interfaces
+GO-12.1.2	Неявная реализация интерфейсов / implicit interface implementation
+GO-12.1.2	Утиная типизация / duck typing (structural typing)
+GO-12.1.3	Набор методов / method sets
+GO-12.1.4	Набор методов / method sets (T vs *T)
+GO-12.1.5	Проверка реализации интерфейса / interface compliance check (var _ I = (*T)(nil))
+GO-12.2.1	Устройство интерфейсов / interface internals
+GO-12.2.2	iface и itab / iface and itab
+GO-12.2.3	Пустой интерфейс / empty interface (any)	https://pkg.go.dev/builtin#any
+GO-12.2.4	eface / eface (empty interface layout)
+GO-12.2.5	nil-интерфейс / nil interface
+GO-12.2.6	nil-указатель в интерфейсе / nil pointer in interface (typed nil)
+GO-12.2.7	Динамическая диспетчеризация / dynamic dispatch
+GO-12.2.7	Девиртуализация / devirtualization
+GO-12.3.1	Утверждение типа / type assertion
+GO-12.3.2	Утверждение типа / type assertion (comma ok)
+GO-12.3.3	type switch / type switch
+GO-12.3.4	Сравнение интерфейсов / interface comparison
+GO-12.3.5	Сравнение несравнимых типов / comparing uncomparable types (runtime panic)
+GO-12.4.1	Интерфейс fmt.Stringer / fmt.Stringer	https://pkg.go.dev/fmt#Stringer
+GO-12.4.2	Встраивание интерфейсов / interface embedding	https://pkg.go.dev/io#ReadWriter
+GO-12.4.3	Маленькие интерфейсы / small interfaces (interface segregation)
+GO-12.4.4	Интерфейсы на стороне потребителя / consumer-side interfaces
+GO-12.4.5	Принимай интерфейсы, возвращай структуры / accept interfaces, return structs
+GO-12.4.6	ООП в Go / object-oriented programming in Go
+GO-13.1.1	Тип error / error interface	https://pkg.go.dev/builtin#error
+GO-13.1.2	Создание ошибок / creating errors	https://pkg.go.dev/errors#New https://pkg.go.dev/fmt#Errorf
+GO-13.1.3	Обработка ошибок в Go / Go error handling
+GO-13.1.4	Обработка ошибок в Go / Go error handling (if err != nil)
+GO-13.1.5	Пакет strconv / strconv package	https://pkg.go.dev/strconv#Atoi https://pkg.go.dev/strconv#NumError
+GO-13.2.1	Sentinel-ошибки / sentinel errors
+GO-13.2.2	io.Reader и io.Writer / io.Reader and io.Writer	https://pkg.go.dev/io#Reader https://pkg.go.dev/io#Writer https://pkg.go.dev/io#EOF
+GO-13.2.3	Пользовательские типы ошибок / custom error types
+GO-13.2.4	Оборачивание ошибок / error wrapping	https://pkg.go.dev/fmt#Errorf
+GO-13.2.5	Цепочка ошибок / error chain (Unwrap)	https://pkg.go.dev/errors#Unwrap
+GO-13.2.6	errors.Is / errors.Is	https://pkg.go.dev/errors#Is
+GO-13.2.7	errors.As / errors.As	https://pkg.go.dev/errors#As
+GO-13.2.8	errors.Join / errors.Join	https://pkg.go.dev/errors#Join
+GO-13.3.1	Typed nil у ошибки / nil error interface gotcha (typed nil)
+GO-13.3.2	Ошибки и паники в Go / errors vs panics
+GO-13.3.3	recover / recover	https://pkg.go.dev/builtin#recover
+GO-13.3.4	Логирование ошибок / error logging vs returning (handle once)
+SQL-3.1.1	Агрегатные функции / aggregate functions
+SQL-3.1.2	COUNT / COUNT(*) vs COUNT(column)
+SQL-3.1.3	GROUP BY / GROUP BY
+SQL-3.1.4	HAVING / HAVING
+SQL-3.1.5	WHERE и HAVING / WHERE vs HAVING
+SQL-3.1.6	Логический порядок выполнения SELECT / SQL logical query processing order
+SQL-3.2.1	Подзапросы / subqueries (IN)
+SQL-3.2.2	EXISTS / EXISTS
+SQL-3.2.3	NOT IN и NULL / NOT IN with NULL
+SQL-3.2.4	Подзапрос в FROM / derived table
+SQL-3.2.5	Коррелированный подзапрос / correlated subquery
+SQL-3.2.6	CTE / common table expressions (WITH)
+SQL-3.3.1	Оконные функции / window functions (OVER)
+SQL-3.3.2	PARTITION BY / PARTITION BY
+SQL-3.3.3	Функции ранжирования / ROW_NUMBER, RANK, DENSE_RANK
+SQL-3.3.4	Топ-N в группе / top-N per group
+SQL-3.3.5	LAG и LEAD / LAG and LEAD
+SQL-3.3.6	Накопительная сумма / running total
+SQL-3.4.1	UNION и UNION ALL / UNION vs UNION ALL
+SQL-3.4.2	UPSERT / INSERT ON CONFLICT (upsert)
+SQL-3.4.3	RETURNING / RETURNING clause
+GO-14.1.1	Дженерики в Go / Go generics
+GO-14.1.2	Параметры типа / type parameters
+GO-14.1.3	Вывод типов / type inference
+GO-14.1.4	Ограничения типов / type constraints
+GO-14.1.5	any и comparable / any and comparable	https://pkg.go.dev/builtin#any https://pkg.go.dev/builtin#comparable
+GO-14.1.6	Наборы типов / type sets (~)
+GO-14.1.7	Пакет cmp / cmp package	https://pkg.go.dev/cmp https://pkg.go.dev/cmp#Ordered
+GO-14.2.1	Обобщённые типы / generic types
+GO-14.2.2	Методы обобщённых типов / methods on generic types
+GO-14.2.3	Дженерики или интерфейсы / generics vs interfaces
+GO-14.2.4	Реализация дженериков в Go / GC shape stenciling
+GO-14.3.1	range по функциям / range over func
+GO-14.3.2	Итераторы в Go / Go iterators (yield)	https://pkg.go.dev/iter
+GO-14.3.3	Пакет iter / iter package	https://pkg.go.dev/iter#Seq https://pkg.go.dev/iter#Seq2
+ПРОГОН-2	?

@@ -1,0 +1,182 @@
+# Этап 3 — Конкурентность и рантайм
+ФУНД-4.1.1	Системный вызов / system call	https://pkg.go.dev/syscall
+ФУНД-4.1.2	Поток выполнения / thread (computing)
+ФУНД-4.1.3	Общая память потоков / shared memory between threads
+ФУНД-4.1.4	Стек потока / thread stack
+ФУНД-4.1.5	Планировщик ОС / OS scheduler
+ФУНД-4.1.6	Переключение контекста / context switch
+ФУНД-4.1.7	Блокирующий ввод-вывод / blocking I/O
+ФУНД-4.2.1	Конкурентность и параллелизм / concurrency vs parallelism
+ФУНД-4.2.2	Многоядерные процессоры / multi-core processors
+ФУНД-4.2.3	CPU-bound и I/O-bound задачи / CPU-bound vs I/O-bound
+ФУНД-4.3.1	Состояние гонки / race condition
+ФУНД-4.3.2	Гонка данных / data race
+ФУНД-4.3.3	Read-modify-write / read-modify-write
+ФУНД-4.3.4	Атомарные операции / atomic operations
+ФУНД-4.3.5	Критическая секция / critical section
+ФУНД-4.3.6	Мьютекс / mutex (mutual exclusion)
+ФУНД-4.3.7	Взаимная блокировка / deadlock
+ФУНД-4.3.8	Голодание / starvation
+GO-15.1.1	Горутины / goroutines
+GO-15.1.2	Горутины / goroutines (go statement)
+GO-15.1.3	Завершение программы и горутины / program exit and goroutines
+GO-15.1.4	Переменная цикла в горутине / loop variable capture in goroutines
+GO-15.1.5	Горутины и потоки ОС / goroutines vs OS threads
+GO-15.1.6	Стек горутины / goroutine stack growth
+GO-15.1.7	Паника в горутине / panic in goroutine
+GO-15.2.1	sync.WaitGroup / sync.WaitGroup	https://pkg.go.dev/sync#WaitGroup
+GO-15.2.2	sync.WaitGroup / sync.WaitGroup (Add, Done, Wait)	https://pkg.go.dev/sync#WaitGroup.Add
+GO-15.2.3	Копирование WaitGroup / copying sync.WaitGroup	https://pkg.go.dev/sync#WaitGroup
+GO-15.2.4	WaitGroup.Go / WaitGroup.Go	https://pkg.go.dev/sync#WaitGroup.Go
+GO-16.1.1	Планировщик Go / Go scheduler
+GO-16.1.2	Модель GMP / GMP model
+GO-16.1.3	Очереди выполнения планировщика / run queues (local and global)
+GO-16.1.4	Кража работы / work stealing
+GO-16.1.5	Блокирующие системные вызовы в Go / syscalls and handoff
+GO-16.1.6	Сетевой поллер / netpoller (epoll, kqueue)
+GO-16.1.7	Состояния горутины / goroutine states
+GO-16.2.1	Кооперативная многозадачность / cooperative preemption
+GO-16.2.2	Асинхронное вытеснение / asynchronous preemption
+GO-16.2.3	GOMAXPROCS / GOMAXPROCS	https://pkg.go.dev/runtime#GOMAXPROCS
+GO-16.2.4	Пакет runtime / runtime package	https://pkg.go.dev/runtime#Gosched https://pkg.go.dev/runtime#NumGoroutine
+GO-17.1.1	Каналы в Go / Go channels
+GO-17.1.2	Каналы в Go / channel send and receive
+GO-17.1.3	Небуферизованный канал / unbuffered channel
+GO-17.1.4	Буферизованный канал / buffered channel
+GO-17.1.5	len и cap канала / channel len and cap	https://pkg.go.dev/builtin#len https://pkg.go.dev/builtin#cap
+GO-17.1.6	Направленные каналы / directional channels
+GO-17.2.1	Закрытие канала / closing channels	https://pkg.go.dev/builtin#close
+GO-17.2.2	Чтение из закрытого канала / receive from closed channel (comma ok)
+GO-17.2.3	Отправка в закрытый канал / send on closed channel panic
+GO-17.2.4	Повторное закрытие канала / close of closed channel panic	https://pkg.go.dev/builtin#close
+GO-17.2.5	Владение каналом / channel ownership (who closes)
+GO-17.2.6	range по каналу / range over channel
+GO-17.2.7	nil-канал / nil channel
+GO-17.2.8	Аксиомы каналов / channel axioms (nil, open, closed)
+GO-17.3.1	Устройство канала / channel internals (hchan)
+GO-17.3.2	Блокировка отправки / blocking send (sendq)
+GO-17.3.3	Прямая передача между горутинами / direct send to waiting receiver
+GO-17.4.1	Оператор select / select statement
+GO-17.4.2	select с несколькими готовыми ветками / select random choice
+GO-17.4.3	select с default / non-blocking channel operations
+GO-17.4.4	Таймауты / timeouts with time.After	https://pkg.go.dev/time#After
+GO-17.4.5	nil-канал в select / nil channel in select
+GO-17.4.6	Пустой select / empty select (select{})
+GO-17.4.7	for-select / for-select loop
+GO-17.5.1	Взаимная блокировка / deadlock (all goroutines are asleep)
+GO-17.5.2	Взаимные блокировки на каналах / channel deadlocks
+GO-17.5.3	Утечка горутин / goroutine leak
+GO-18.1.1	sync.Mutex / sync.Mutex	https://pkg.go.dev/sync#Mutex
+GO-18.1.2	Освобождение мьютекса через defer / defer mu.Unlock()	https://pkg.go.dev/sync#Mutex.Unlock
+GO-18.1.3	Копирование мьютекса / copying a mutex (go vet copylocks)	https://pkg.go.dev/sync#Mutex
+GO-18.1.4	Мьютекс в структуре / mutex in struct
+GO-18.1.5	sync.RWMutex / sync.RWMutex	https://pkg.go.dev/sync#RWMutex
+GO-18.1.6	Режим голодания мьютекса / mutex starvation mode
+GO-18.1.7	Мьютекс или канал / mutex vs channel
+GO-18.2.1	sync.Once / sync.Once	https://pkg.go.dev/sync#Once
+GO-18.2.2	sync.Map / sync.Map	https://pkg.go.dev/sync#Map
+GO-18.2.3	sync.Pool / sync.Pool	https://pkg.go.dev/sync#Pool
+GO-18.2.4	sync.Cond / sync.Cond	https://pkg.go.dev/sync#Cond
+GO-18.2.4	Условная переменная / condition variable
+GO-18.3.1	Пакет sync/atomic / sync/atomic package	https://pkg.go.dev/sync/atomic
+GO-18.3.2	Атомарные типы / atomic types	https://pkg.go.dev/sync/atomic#Int64 https://pkg.go.dev/sync/atomic#Bool https://pkg.go.dev/sync/atomic#Pointer
+GO-18.3.3	Сравнение с обменом / compare-and-swap (CAS)	https://pkg.go.dev/sync/atomic#Int64.CompareAndSwap
+GO-18.3.4	Мьютекс или атомик / mutex vs atomic
+GO-18.4.1	Модель памяти Go / Go memory model
+GO-18.4.2	Отношение happens-before / happens-before
+GO-18.4.3	Синхронизация в Go / synchronization guarantees (channels, mutex, WaitGroup)
+GO-18.4.4	Гонка данных / data race (undefined behavior)
+GO-18.4.5	Детектор гонок / race detector (-race)
+GO-18.4.6	Конкурентная запись в map / concurrent map writes
+PG-1.1.1	Транзакции / database transactions
+PG-1.1.2	Управление транзакциями / BEGIN, COMMIT, ROLLBACK
+PG-1.1.3	ACID / ACID
+PG-1.1.4	Атомарность / atomicity
+PG-1.1.5	Согласованность / consistency
+PG-1.1.6	Изолированность / isolation
+PG-1.1.7	Долговечность / durability
+PG-1.1.7	Журнал WAL / write-ahead logging (WAL)
+PG-1.1.8	Автокоммит / autocommit
+PG-1.2.1	Грязное чтение / dirty read
+PG-1.2.2	Неповторяющееся чтение / non-repeatable read
+PG-1.2.3	Фантомное чтение / phantom read
+PG-1.2.4	Потерянное обновление / lost update
+PG-1.2.5	Аномалия сериализации / serialization anomaly
+PG-1.2.5	Write skew / write skew
+PG-1.3.1	Уровни изоляции транзакций / transaction isolation levels
+PG-1.3.2	Read Committed / Read Committed
+PG-1.3.3	Repeatable Read / Repeatable Read
+PG-1.3.3	Изоляция снимков / snapshot isolation
+PG-1.3.4	Serializable / Serializable
+PG-1.3.4	Сериализуемая изоляция снимков / serializable snapshot isolation (SSI)
+PG-1.3.5	Read Uncommitted / Read Uncommitted
+PG-1.3.6	Повтор транзакций / transaction retry (serialization failure)
+PG-1.4.1	MVCC / multiversion concurrency control (MVCC)
+PG-1.4.2	xmin и xmax / xmin and xmax (tuple visibility)
+PG-1.4.3	Снимок данных / snapshot
+PG-1.4.4	Читатели и писатели в MVCC / readers don't block writers
+PG-1.4.5	VACUUM / VACUUM
+PG-1.4.5	Мёртвые кортежи / dead tuples (bloat)
+PG-1.5.1	Блокировки строк / row-level locks
+PG-1.5.2	SELECT FOR UPDATE / SELECT FOR UPDATE
+PG-1.5.3	Условный UPDATE / conditional update (compare-and-set in SQL)
+PG-1.5.4	Оптимистическая блокировка / optimistic locking (version column)
+PG-1.5.5	Пессимистическая и оптимистическая блокировка / pessimistic vs optimistic locking
+PG-1.5.6	Взаимная блокировка в БД / database deadlock
+PG-1.5.7	SKIP LOCKED / SKIP LOCKED
+PG-1.5.7	Очередь задач в Postgres / job queue in PostgreSQL
+PG-1.5.8	Advisory-блокировки / advisory locks
+GO-19.1.1	Пакет context / context package	https://pkg.go.dev/context
+GO-19.1.2	context.Background / context.Background and context.TODO	https://pkg.go.dev/context#Background https://pkg.go.dev/context#TODO
+GO-19.1.3	Отмена контекста / context cancellation	https://pkg.go.dev/context#WithCancel
+GO-19.1.4	Done и Err / ctx.Done and ctx.Err	https://pkg.go.dev/context#Context
+GO-19.1.5	Таймауты контекста / context timeouts	https://pkg.go.dev/context#WithTimeout https://pkg.go.dev/context#WithDeadline
+GO-19.1.6	Дерево контекстов / context tree (propagation)
+GO-19.1.7	Функция cancel / CancelFunc	https://pkg.go.dev/context#CancelFunc
+GO-19.2.1	Значения в контексте / context values	https://pkg.go.dev/context#WithValue
+GO-19.2.2	Правила использования context / context best practices
+GO-19.2.3	Контекст в структуре / storing context in struct
+GO-19.2.4	WithoutCancel и AfterFunc / WithoutCancel and AfterFunc	https://pkg.go.dev/context#WithoutCancel https://pkg.go.dev/context#AfterFunc
+GO-20.1.1	Пул воркеров / worker pool
+GO-20.1.2	Конвейер / pipeline pattern
+GO-20.1.3	Fan-out и fan-in / fan-out fan-in
+GO-20.1.4	Семафор / semaphore (buffered channel)	https://pkg.go.dev/golang.org/x/sync/semaphore
+GO-20.1.5	errgroup / errgroup	https://pkg.go.dev/golang.org/x/sync/errgroup
+GO-20.1.6	Широковещательный сигнал через закрытие канала / broadcast by closing a channel
+GO-20.1.7	Плавная остановка / graceful shutdown
+GO-20.1.8	Сохранение порядка результатов / ordered results from concurrent workers
+GO-20.2.1	time.Timer / time.Timer	https://pkg.go.dev/time#Timer
+GO-20.2.2	time.Ticker / time.Ticker	https://pkg.go.dev/time#Ticker
+GO-20.2.2	Ограничение частоты / rate limiting	https://pkg.go.dev/golang.org/x/time/rate
+GO-20.2.3	time.After в цикле / time.After in loop	https://pkg.go.dev/time#After
+GO-20.3.1	Гонка данных / data race (shared counter)
+GO-20.3.2	sync.WaitGroup / WaitGroup misuse (Add inside goroutine)	https://pkg.go.dev/sync#WaitGroup.Add
+GO-20.3.3	Переменная цикла в Go 1.22 / Go 1.22 loop variable semantics
+GO-20.3.4	Взаимная блокировка на канале / channel deadlock
+GO-20.3.5	Утечка горутин / goroutine leak
+GO-20.3.6	Повторный захват мьютекса / recursive locking (Go mutex is not reentrant)
+GO-20.3.7	Конкурентная запись в map / concurrent map writes
+GO-20.3.8	Утечка контекста / context leak (forgotten cancel)
+GO-20.3.9	Поиск утечек горутин / goroutine leak detection (goleak, pprof)	https://pkg.go.dev/go.uber.org/goleak https://pkg.go.dev/net/http/pprof
+GO-21.1.1	Стек и куча в Go / stack vs heap in Go
+GO-21.1.2	Анализ побега / escape analysis
+GO-21.1.3	Анализ побега / escape analysis (common causes)
+GO-21.1.4	Флаги компилятора / -gcflags=-m	https://pkg.go.dev/cmd/compile
+GO-21.1.5	Стоимость аллокаций / heap allocation cost
+GO-21.2.1	Аллокатор памяти Go / Go memory allocator
+GO-21.2.1	TCMalloc / TCMalloc
+GO-21.2.2	Размерные классы / size classes
+GO-21.2.3	mcache / mcache (per-P cache)
+GO-21.3.1	Достижимость объектов / reachability (GC roots)
+GO-21.3.2	Пометка и очистка / mark and sweep
+GO-21.3.3	Трёхцветная маркировка / tri-color marking
+GO-21.3.4	Конкурентная сборка мусора / concurrent garbage collection
+GO-21.3.4	Stop-the-world / stop-the-world pauses
+GO-21.3.5	Барьер записи / write barrier
+GO-21.3.6	GOGC / GOGC	https://pkg.go.dev/runtime/debug#SetGCPercent
+GO-21.3.7	GOMEMLIMIT / GOMEMLIMIT	https://pkg.go.dev/runtime/debug#SetMemoryLimit
+GO-21.3.8	Green Tea GC / Green Tea garbage collector
+GO-21.3.9	Снижение нагрузки на GC / reducing GC pressure
+GO-21.3.10	Утечки памяти в Go / memory leaks in Go
+GO-21.4.1	Рантайм Go / Go runtime	https://pkg.go.dev/runtime
+ПРОГОН-3	?

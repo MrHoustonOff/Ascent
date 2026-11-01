@@ -15,6 +15,7 @@ import (
 	"ascent/internal/plan"
 	"ascent/internal/stats"
 	"ascent/internal/store"
+	"ascent/internal/topics"
 )
 
 // Host — то, что умеет только оболочка (Wails или dev-сервер).
@@ -30,6 +31,7 @@ type App struct {
 	plan     *plan.Plan
 	planFS   fs.FS
 	ksp      map[string]*konspekt.Lesson
+	topics   map[string][]topics.Topic // общие темы уроков
 	host     Host
 	Now      func() time.Time
 	Loc      *time.Location

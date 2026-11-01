@@ -53,12 +53,30 @@ export function konspektPanel(id, { onCount, fixedTab } = {}) {
       class: 'as-btn as-btn--ghost as-btn--sm as-kx__copy', title: tab === 'qs' ? 'Скопировать вопросы' : tab === 'google' ? 'Скопировать все запросы' : 'Скопировать конспект целиком',
       onclick: () => (tab === 'qs' ? copy('konspekt_qs', id) : tab === 'google' ? copy('text', allQueries(k).join('\n')) : copy('konspekt', id)),
     }, icon('copy'), tab === 'know' ? 'Весь конспект' : 'Копировать');
+    if (k.topics && k.topics.length) box.append(topicsBlock(k.topics));
     box.append(h('div', { class: 'as-kx__head' }, seg, copyBtn),
       tab === 'qs' ? questions(id, k, draw, onCount) : tab === 'google' ? google(k) : know(k));
   };
   draw();
   api.Konspekt(id).then((x) => { k = x; cache.set(id, x); draw(); onCount && onCount(x.done, x.qs.length); }).catch(() => { if (!k) { clear(box); box.append(h('div', { class: 'caption as-subtle' }, 'Для этого урока конспекта нет.')); } });
   return box;
+}
+
+// Общие темы: как тему урока называют в документации и статьях — ориентир, с чего начать.
+// Щелчок по значку у названия копирует «Русское / English»; ниже — ссылки на официальную документацию.
+function topicsBlock(list) {
+  return h('div', { class: 'as-topics' },
+    h('div', { class: 'as-ksec' }, 'Общие темы'),
+    h('div', { class: 'as-topics__grid' + (list.length === 1 ? ' is-one' : '') }, list.map((t) => h('div', { class: 'as-topic' },
+      h('div', null,
+        h('div', { class: 'as-topic__ru' }, h('span', null, t.ru),
+          h('button', { class: 'as-iconbtn as-topic__copy', title: 'Скопировать название', 'aria-label': 'Скопировать: ' + t.ru, onclick: () => copy('text', `${t.ru} / ${t.en}`) }, icon('copy'))),
+        h('div', { class: 'as-topic__en' }, t.en)),
+      h('div', { class: 'as-topic__sep' }),
+      h('div', { class: 'as-topic__lab' }, 'Документация'),
+      t.links.length
+        ? t.links.map((u) => h('a', { class: 'as-topic__doc', href: u, title: u, onclick: (e) => { e.preventDefault(); win.openURL(u); } }, h('b', null, '↗'), h('span', null, u.replace(/^https:\/\//, ''))))
+        : h('span', { class: 'as-topic__none' }, 'официальной страницы нет')))));
 }
 
 const allQueries = (k) => [...k.qs.map((q) => q.query).filter(Boolean), ...k.google];

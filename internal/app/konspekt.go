@@ -7,6 +7,7 @@ import (
 
 	"ascent/internal/konspekt"
 	"ascent/internal/plan"
+	"ascent/internal/topics"
 )
 
 // ---------- конспекты уроков ----------
@@ -48,10 +49,32 @@ type KonspektDTO struct {
 	Border string      `json:"border"`
 	BLinks []LinkDTO   `json:"borderLinks"`
 	Later  []KLaterDTO `json:"later"`
+	Topics []TopicDTO  `json:"topics"` // общие темы: с чего начать
 }
 
-// loadKonspekt: папка konspekty рядом с планом, иначе встроенные.
+type TopicDTO struct {
+	RU    string   `json:"ru"`
+	EN    string   `json:"en"`
+	Links []string `json:"links"`
+}
+
+// loadKonspekt: папка konspekty рядом с планом, иначе встроенные. Заодно — общие темы (папка obshie-temy или встроенные).
 func (a *App) loadKonspekt(planFS fs.FS) {
+	a.topics = nil
+	if planFS != nil {
+		if sub, err := fs.Sub(planFS, "obshie-temy"); err == nil {
+			if t, err := topics.Parse(sub); err == nil && len(t) > 0 {
+				a.topics = t
+			}
+		}
+	}
+	if a.topics == nil {
+		t, err := topics.Parse(topics.Embedded())
+		if err != nil {
+			a.log("topics: %v", err)
+		}
+		a.topics = t
+	}
 	if planFS != nil {
 		if sub, err := fs.Sub(planFS, "konspekty"); err == nil {
 			if k, err := konspekt.Parse(sub); err == nil && len(k) > 0 {
@@ -79,7 +102,10 @@ func (a *App) Konspekt(id string) (KonspektDTO, error) {
 	if k == nil || a.plan.Lessons[id] == nil {
 		return KonspektDTO{}, errNotFound(id)
 	}
-	d := KonspektDTO{ID: id, Qs: []KQDTO{}, Google: nonNil(k.Google), Know: nonNil(k.Know), Terms: []KTermDTO{}, Border: k.Border, BLinks: []LinkDTO{}, Later: []KLaterDTO{}}
+	d := KonspektDTO{ID: id, Qs: []KQDTO{}, Google: nonNil(k.Google), Know: nonNil(k.Know), Terms: []KTermDTO{}, Border: k.Border, BLinks: []LinkDTO{}, Later: []KLaterDTO{}, Topics: []TopicDTO{}}
+	for _, t := range a.topics[id] {
+		d.Topics = append(d.Topics, TopicDTO{RU: t.RU, EN: t.EN, Links: append([]string{}, t.Links...)})
+	}
 	for i, q := range k.Qs {
 		_, done := s.kq[q.Key]
 		if done {

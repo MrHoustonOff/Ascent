@@ -1,0 +1,60 @@
+# Этап 7 — Системный дизайн и сборка
+СИСД-1.1.1	Интервью по системному дизайну / system design interview
+СИСД-1.1.2	Функциональные требования / functional requirements
+СИСД-1.1.3	Нефункциональные требования / non-functional requirements (scalability, latency, availability)
+СИСД-1.1.4	Оценка нагрузки / back-of-the-envelope estimation (QPS, storage)
+СИСД-1.1.5	Проектирование API / API design and data model
+СИСД-1.1.6	Высокоуровневая архитектура / high-level design
+СИСД-1.1.7	Узкие места и компромиссы / bottlenecks and trade-offs
+СИСД-2.1.1	Вертикальное и горизонтальное масштабирование / vertical vs horizontal scaling
+СИСД-2.1.2	Сервис без состояния / stateless service
+СИСД-2.1.3	Балансировка нагрузки / load balancing
+СИСД-2.1.4	Алгоритмы балансировки / load balancing algorithms (round robin, least connections)
+СИСД-2.1.5	Балансировка L4 и L7 / layer 4 vs layer 7 load balancing
+СИСД-2.1.6	Обратный прокси / reverse proxy (nginx)	https://pkg.go.dev/net/http/httputil#ReverseProxy
+СИСД-2.1.6	API-шлюз / API gateway
+СИСД-2.1.7	CDN / content delivery network (CDN)
+СИСД-2.1.8	Объектное хранилище / object storage (Amazon S3)
+СИСД-2.2.1	Репликация базы данных / database replication (primary and read replicas)
+СИСД-2.2.2	Синхронная и асинхронная репликация / synchronous vs asynchronous replication
+СИСД-2.2.3	Задержка репликации / replication lag
+СИСД-2.2.3	Чтение своих записей / read-your-writes consistency
+СИСД-2.2.4	Отказоустойчивость базы / database failover
+СИСД-2.2.5	Пулер соединений / connection pooler (PgBouncer)
+СИСД-2.3.1	Партиционирование таблиц / table partitioning
+СИСД-2.3.2	Шардирование / database sharding
+СИСД-2.3.3	Ключ шардирования / shard key (partition key)
+СИСД-2.3.4	Проблемы шардирования / sharding challenges (cross-shard joins, resharding)
+СИСД-2.3.5	Консистентное хеширование / consistent hashing
+СИСД-2.3.6	Распределённые идентификаторы / distributed unique ID generation (Snowflake, UUID)	https://pkg.go.dev/github.com/google/uuid
+СИСД-3.1.1	Теорема CAP / CAP theorem
+СИСД-3.1.2	Согласованность в конечном счёте / eventual consistency
+СИСД-3.1.3	Распределённые транзакции / distributed transactions (two-phase commit)
+СИСД-3.1.4	Сага / saga pattern
+СИСД-3.1.5	Идемпотентность / idempotency in distributed systems
+СИСД-3.2.1	Каскадный отказ / cascading failure
+СИСД-3.2.2	Распространение дедлайнов / deadline propagation (timeout budget)
+СИСД-3.2.3	Шторм повторов / retry storm
+СИСД-3.2.4	Circuit breaker / circuit breaker pattern	https://pkg.go.dev/github.com/sony/gobreaker
+СИСД-3.2.5	Token bucket / token bucket (rate limiting)	https://pkg.go.dev/golang.org/x/time/rate
+СИСД-3.2.6	Bulkhead / bulkhead pattern
+СИСД-3.2.7	Плавная деградация / graceful degradation
+СИСД-4.1.1	Сокращатель ссылок / URL shortener system design
+СИСД-4.1.2	Счётчик просмотров / distributed counter (view and like counter)
+СИСД-4.1.3	Сервис уведомлений / notification system design
+СИСД-4.1.4	Ограничитель частоты / rate limiter system design
+СИСД-4.1.5	Продажа ограниченного товара / flash sale system design (inventory oversell)
+СИСД-4.1.6	Доставка вебхуков / webhook delivery system
+СИСД-4.1.7	Лента новостей / news feed system design (fan-out on write vs read)
+СБОР-1.1.1	Go и Python / Go vs Python
+СБОР-1.1.2	Плюсы и минусы Go / Go pros and cons
+СБОР-1.1.3	Философия дизайна Go / Go design philosophy
+СБОР-1.2.1	?
+СБОР-1.3.1	Рассказ о проекте на собеседовании / project walkthrough (technical interview)
+СБОР-1.3.2	Рассказ о проекте на собеседовании / project walkthrough (technical interview)
+СБОР-1.3.3	Ретроспектива проекта / project retrospective (what would you do differently)
+СБОР-1.4.1	Поведенческое интервью / behavioral interview
+СБОР-1.4.1	Метод STAR / STAR method
+СБОР-1.4.2	Ответ «я не знаю» на собеседовании / answering "I don't know" in an interview
+СБОР-1.4.3	Вопросы работодателю / questions to ask the interviewer
+ПРОГОН-7	Мок-собеседование / mock interview
