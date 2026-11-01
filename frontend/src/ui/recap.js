@@ -47,6 +47,7 @@ export function openRecap() {
   const seed = Math.floor(Math.random() * 2 ** 31);
   const rnd = rngFrom(seed);
   const randStyle = pick(rnd, STYLE_KEYS);
+  let todayStudy = '';
   let kind = 'day', date = '', data = null, list = [], canvases = [], buildNo = 0;
   // правки готовых страниц: id → { hidden, style }; сбрасываются при смене периода, формата или режима
   let over = {};
@@ -150,10 +151,18 @@ export function openRecap() {
     clear(preview);
     preview.append(h('div', { class: 'as-recap__loading' }, 'Собираю…'));
     try {
+      // свои карточки и списки живут один учебный день: с началом нового дня (час из настроек, обычно 4:00) — с чистого листа
+      if (!todayStudy) todayStudy = (await api.Recap('day', '')).date;
+      if (p.customDay !== todayStudy) {
+        if (p.custom.length) { p.custom = []; reset(); }
+        p.customDay = todayStudy; savePrefs(p);
+      }
       data = await api.Recap(kind, query());
       if (my !== buildNo) return;
       data.notes = await api.ThemeComments().catch(() => ({})); // комментарии тем: id → тексты
       data.anki = loadAnki();
+      // Anki — только если его период пересекается с периодом итогов (вчерашний JSON в сегодняшних итогах не нужен)
+      if (data.anki && (data.anki.period_to < data.from || data.anki.period_from > data.date)) data.anki = null;
       if (kind === 'range') { fromInp.value = data.from; toInp.value = data.date; rFrom = data.from; rTo = data.date; }
       else if (!dateInp.value && kind !== 'all') dateInp.value = data.date;
       const all = planCards(data, { mode: p.mode, toggles: p.toggles, seed, format: p.format, tasks: !!p.tasks });
