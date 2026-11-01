@@ -174,7 +174,7 @@ func TestChecksAndSettings(t *testing.T) {
 func TestMigrationsAndAchievements(t *testing.T) {
 	s := open(t)
 	var v int
-	if err := s.db.QueryRow(`SELECT version FROM schema_version`).Scan(&v); err != nil || v != 3 {
+	if err := s.db.QueryRow(`SELECT version FROM schema_version`).Scan(&v); err != nil || v != 4 {
 		t.Fatalf("версия схемы %d %v", v, err)
 	}
 	if err := s.UnlockAchievement("t1", time.Date(2026, 10, 1, 9, 0, 0, 0, time.UTC), false); err != nil {

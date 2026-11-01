@@ -1,45 +1,29 @@
-// Комментарии к пройденным темам для итогов: добавить, изменить, удалить. Мини-markdown: `код`, **жирный**, *курсив*.
-// Комментарий хранится по id темы (настройка theme_notes) и рисуется под темой на карточке «Пройдено».
-import { h, clear } from './dom.js';
+// Комментарии к пройденным темам для итогов: у каждой темы — несколько комментариев с датами и отметкой «сделано».
+// Изменения сохраняются сразу; на картинке «Пройдено» комментарии темы — бабблы под ней.
+import { h } from './dom.js';
+import { commentList } from './comments.js';
 
-export function openNotes({ themes, notes }) {
+export function openNotes({ themes }) {
   return new Promise((resolve) => {
-    const n = { ...notes };
-    const list = h('div', { class: 'as-notes__list' });
+    const list = h('div', { class: 'as-notes__list' }, themes.map((t) => h('div', { class: 'as-notes__row' },
+      h('div', { class: 'as-notes__theme' }, h('span', { class: 'as-notes__id' }, t.id), h('span', null, String(t.title).replace(/`/g, ''))),
+      commentList(t.id))));
     const root = h('div', { class: 'as-notes', role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Комментарии к темам' },
       h('div', { class: 'as-notes__head' }, h('h2', { class: 'as-notes__title' }, 'Комментарии к темам'),
-        h('div', { class: 'caption as-subtle' }, 'Комментарий встанет под темой на картинке «Пройдено». В тексте: `код`, **жирный**, *курсив*.')),
+        h('div', { class: 'caption as-subtle' }, 'Несколько комментариев к теме, у каждого — дата. Галочка — «сделано». Все комментарии видны и на странице «Комментарии». В тексте: `код`, **жирный**, *курсив*.')),
       list,
-      h('div', { class: 'as-editor__actions' },
-        h('button', { class: 'as-btn as-btn--ghost', onclick: () => done(null) }, 'Отмена'),
-        h('button', { class: 'as-btn as-btn--primary', onclick: () => { for (const k in n) if (!String(n[k]).trim()) delete n[k]; done(n); } }, 'Готово')));
+      h('div', { class: 'as-editor__actions' }, h('button', { class: 'as-btn as-btn--primary', onclick: () => done(true) }, 'Готово')));
     const scrim = h('div', { class: 'as-scrim as-editor__scrim' }, root);
     (document.querySelector('.as-window') || document.body).append(scrim);
-
-    function draw(focusId) {
-      clear(list); let focus = null;
-      for (const t of themes) {
-        const row = h('div', { class: 'as-notes__row' },
-          h('div', { class: 'as-notes__theme' }, h('span', { class: 'as-notes__id' }, t.id), h('span', null, String(t.title).replace(/`/g, ''))));
-        if (n[t.id] != null) {
-          const ta = h('textarea', { class: 'as-textarea as-notes__ta', rows: 2, placeholder: 'Что понравилось, что запомнилось…', 'aria-label': 'Комментарий к теме ' + t.id });
-          ta.value = n[t.id];
-          ta.addEventListener('input', () => { n[t.id] = ta.value; });
-          row.append(ta, h('button', { class: 'as-btn as-btn--ghost as-btn--sm as-notes__del', onclick: () => { delete n[t.id]; draw(); } }, 'Удалить комментарий'));
-          if (focusId === t.id) focus = ta;
-        } else {
-          row.append(h('button', { class: 'as-btn as-btn--secondary as-btn--sm as-notes__add', onclick: () => { n[t.id] = ''; draw(t.id); } }, '＋ Комментарий'));
-        }
-        list.append(row);
-      }
-      if (focus) focus.focus();
-    }
+    // Esc закрывает окно (если не правится комментарий); клавиши внутри окна доходят до полей,
+    // но не всплывают к горячим клавишам приложения и окна итогов
     const onKey = (e) => {
-      if (e.key === 'Escape') { e.preventDefault(); done(null); }
-      e.stopImmediatePropagation(); // горячие клавиши приложения и окна итогов не срабатывают
+      if (root.contains(e.target) && e.target.closest('.as-cm.is-edit')) return; // Esc в правке — отмена правки
+      if (e.key === 'Escape') { e.preventDefault(); e.stopImmediatePropagation(); done(true); return; }
+      if (!root.contains(e.target)) e.stopImmediatePropagation();
     };
+    root.addEventListener('keydown', (e) => e.stopPropagation());
     window.addEventListener('keydown', onKey, true);
     function done(v) { window.removeEventListener('keydown', onKey, true); scrim.remove(); resolve(v); }
-    draw();
   });
 }

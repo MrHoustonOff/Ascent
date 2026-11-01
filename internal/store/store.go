@@ -242,7 +242,7 @@ func (s *Store) Reset() error {
 		return err
 	}
 	defer tx.Rollback()
-	for _, t := range []string{"lesson_progress", "check_progress", "marker_progress", "rest_days", "events", "orphans", "achievements", "kq_progress"} {
+	for _, t := range []string{"lesson_progress", "check_progress", "marker_progress", "rest_days", "events", "orphans", "achievements", "kq_progress", "comments"} {
 		if _, err := tx.Exec(`DELETE FROM ` + t); err != nil {
 			return err
 		}

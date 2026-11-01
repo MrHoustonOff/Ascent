@@ -115,6 +115,7 @@ type snap struct {
 	in    *stats.Input
 	set   map[string]string
 	kq    map[string]time.Time
+	cm    map[string][2]int // цель → [всего комментариев, открытых]
 	now   time.Time
 	today time.Time
 }
@@ -163,7 +164,18 @@ func (a *App) snap() (*snap, error) {
 			MilestoneDate:  set["milestone_target"],
 		},
 	}
-	return &snap{a: a, in: in, set: set, kq: kq, now: now, today: in.Today()}, nil
+	cm := map[string][2]int{}
+	if all, err := a.st.Comments(); err == nil {
+		for _, c := range all {
+			v := cm[c.Target]
+			v[0]++
+			if !c.Done {
+				v[1]++
+			}
+			cm[c.Target] = v
+		}
+	}
+	return &snap{a: a, in: in, set: set, kq: kq, cm: cm, now: now, today: in.Today()}, nil
 }
 
 func (s *snap) status(id string) string { return s.in.Lessons[id].Status }

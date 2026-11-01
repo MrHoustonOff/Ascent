@@ -381,7 +381,23 @@ func (a *App) ExportJSON() (string, error) {
 		rest = append(rest, d)
 	}
 	sort.Strings(rest)
-	b, _ := json.MarshalIndent(map[string]any{"planVersion": a.plan.Version, "settings": s.set, "lessons": ls, "checks": chk, "markers": mk, "konspektQuestions": kq, "restDays": rest}, "", "  ")
+	type crow struct {
+		Target  string `json:"target"`
+		Text    string `json:"text"`
+		Done    bool   `json:"done,omitempty"`
+		Created string `json:"createdAt,omitempty"`
+	}
+	cms := []crow{}
+	if all, err := a.st.Comments(); err == nil {
+		for _, c := range all {
+			r := crow{Target: c.Target, Text: c.Text, Done: c.Done}
+			if !c.Created.IsZero() {
+				r.Created = c.Created.Format(time.RFC3339)
+			}
+			cms = append(cms, r)
+		}
+	}
+	b, _ := json.MarshalIndent(map[string]any{"planVersion": a.plan.Version, "settings": s.set, "lessons": ls, "checks": chk, "markers": mk, "konspektQuestions": kq, "restDays": rest, "comments": cms}, "", "  ")
 	p := filepath.Join(dir, "ascent-"+a.Now().Format("2006-01-02")+".json")
 	return p, os.WriteFile(p, b, 0o644)
 }

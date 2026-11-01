@@ -28,6 +28,7 @@ type LessonDTO struct {
 	Kind   string     `json:"kind"`
 	Status string     `json:"status"`
 	Note   string     `json:"note"`
+	Notes  [2]int     `json:"notes"` // комментарии урока: всего, открытых
 	DoneAt string     `json:"doneAt"`
 	Arrows []ArrowDTO `json:"arrows"`
 	Theme  string     `json:"theme"`
@@ -176,7 +177,7 @@ type SearchHit struct {
 
 func (s *snap) lessonDTO(l *plan.Lesson) LessonDTO {
 	r := s.in.Lessons[l.ID]
-	d := LessonDTO{ID: l.ID, Title: l.Title, Stars: l.Stars, Kind: l.Kind, Status: r.Status, Note: r.Note,
+	d := LessonDTO{ID: l.ID, Title: l.Title, Stars: l.Stars, Kind: l.Kind, Status: r.Status, Note: r.Note, Notes: s.cm[l.ID],
 		Theme: l.Theme, Block: l.Block, Stage: l.Stage, Arrows: []ArrowDTO{}}
 	if d.Status == "" {
 		d.Status = "todo"

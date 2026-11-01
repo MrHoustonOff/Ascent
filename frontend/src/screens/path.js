@@ -47,7 +47,7 @@ function lessonRow(l, cur, onNote) {
       idTag(l.id, 'as-lesson__id'),
       h('span', { class: 'as-lesson__title' }, rich(l.title)),
       starChip(l.stars),
-      l.note ? h('span', { class: 'as-note-dot', title: 'Есть заметка' }) : null,
+      l.notes && l.notes[0] ? h('span', { class: 'as-note-dot' + (l.notes[1] ? '' : ' is-done'), title: `Комментарии: ${l.notes[0]}, открытых ${l.notes[1]}` }) : null,
       l.doneAt ? h('span', { class: 'as-when' }, l.doneAt) : null,
       bar);
   // щелчок по заголовку раскрывает конспект, но не мешает выделять текст
@@ -58,7 +58,7 @@ function lessonRow(l, cur, onNote) {
     h('div', { class: 'as-lesson__actions' },
       tbtn,
       h('button', { class: 'as-iconbtn', title: 'Скопировать для Гермеса (C)', 'aria-label': 'Скопировать для Гермеса', onclick: () => copy('lesson', l.id) }, icon('copy')),
-      h('button', { class: 'as-iconbtn', title: 'Заметка', 'aria-label': 'Заметка', onclick: () => onNote(l) }, icon('note')),
+      h('button', { class: 'as-iconbtn', title: 'Комментарии к уроку', 'aria-label': 'Комментарии к уроку', onclick: () => onNote(l) }, icon('note')),
       !done ? h('button', { class: 'as-btn as-btn--ghost as-btn--sm', title: 'Начать и скопировать', onclick: () => startLesson(l.id) }, l.status === 'doing' ? 'Продолжить' : 'Начать') : null),
     l.arrows.length ? h('div', { class: 'as-lesson__arrows' }, l.arrows.map((a) => h('div', { class: 'as-lesson__arrow' },
       h('b', null, a.kind + ': '),

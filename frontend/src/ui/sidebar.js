@@ -11,6 +11,7 @@ const SCREENS = [
   { id: 'achievements', label: 'Достижения', icon: 'trophy', hash: '#/achievements', key: 'Ctrl+5', ach: true },
   { id: 'bank', label: 'Банк вопросов', icon: 'bank', hash: '#/bank', key: 'Ctrl+6' },
   { id: 'glossary', label: 'Словарь', icon: 'glossary', hash: '#/glossary', key: 'Ctrl+7' },
+  { id: 'comments', label: 'Комментарии', icon: 'note', hash: '#/comments' },
   { id: 'docs', label: 'Документы', icon: 'docs', hash: '#/docs/00', key: 'Ctrl+8' },
   { id: 'settings', label: 'Настройки', icon: 'settings', hash: '#/settings', key: 'Ctrl+,' },
 ];

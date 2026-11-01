@@ -21,13 +21,6 @@ function loadPrefs() {
   const def = { format: 'story', mode: 'carousel', style: 'random', toggles: {}, custom: [], dayX: true };
   try { return { ...def, ...JSON.parse(S.settings.recap_prefs || '{}') }; } catch { return def; }
 }
-// комментарии к пройденным темам: id темы → текст (общие для всех периодов)
-function loadNotes() { try { return JSON.parse(S.settings.theme_notes || '{}') || {}; } catch { return {}; } }
-function saveNotes(n) {
-  const v = JSON.stringify(n);
-  S.settings.theme_notes = v;
-  api.SetSetting('theme_notes', v).catch(() => {});
-}
 // итоги Anki: последний загруженный JSON (настройка anki_recap)
 function loadAnki() { const r = parseAnki(S.settings.anki_recap || ''); return r.ok ? r.data : null; }
 function saveAnki(a) {
@@ -148,9 +141,8 @@ export function openRecap() {
   }
 
   async function editNotes() {
-    const res = await openNotes({ themes: data.themes, notes: loadNotes() });
-    if (!res) return;
-    saveNotes(res); reset(); build(); // страниц с темами могло стать больше
+    await openNotes({ themes: data.themes });
+    reset(); build(); // страниц с темами могло стать больше
   }
 
   async function build() {
@@ -160,7 +152,7 @@ export function openRecap() {
     try {
       data = await api.Recap(kind, query());
       if (my !== buildNo) return;
-      data.notes = loadNotes();
+      data.notes = await api.ThemeComments().catch(() => ({})); // комментарии тем: id → тексты
       data.anki = loadAnki();
       if (kind === 'range') { fromInp.value = data.from; toInp.value = data.date; rFrom = data.from; rTo = data.date; }
       else if (!dateInp.value && kind !== 'all') dateInp.value = data.date;

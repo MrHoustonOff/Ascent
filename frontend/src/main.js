@@ -13,6 +13,7 @@ import * as path from './screens/path.js';
 import * as stats from './screens/stats.js';
 import * as bank from './screens/bank.js';
 import * as glossary from './screens/glossary.js';
+import * as comments from './screens/comments.js';
 import * as docs from './screens/docs.js';
 import * as achievements from './screens/achievements.js';
 import * as speed from './screens/speed.js';
@@ -21,7 +22,7 @@ import { runOnboarding } from './screens/onboarding.js';
 import { openDoc } from './screens/docs.js';
 document.addEventListener('as-open-doc', (e) => openDoc(e.detail));
 
-const SCREENS = { today, path, speed, stats, achievements, bank, glossary, docs, settings };
+const SCREENS = { today, path, speed, stats, achievements, bank, glossary, comments, docs, settings };
 let prevName = '';
 document.addEventListener('as-rerender', () => emit());
 const app = document.getElementById('app');

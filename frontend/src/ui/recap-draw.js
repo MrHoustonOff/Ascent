@@ -341,8 +341,7 @@ async function cardThemes(g, W, H, c, list, first, more) {
     g.fillText(l[0] + (l.length > 1 ? '…' : ''), 180 * u, y + rowH * 0.78);
     y += rowH + 16 * u;
     if (c.tasks) y += themeTasks(g, S, acc, u, sq, W, y - 6 * u, t, false, sg.from, sg.to, sg.end) + 4 * u; // задачи темы — лесенкой
-    const note = sg.end ? noteOf(d, t) : '';
-    if (note) y += bubbleNote(g, S, acc, u, 80 * u + IND * u, W - 160 * u - IND * u, y - 6 * u, note, (sq ? 30 : 34) * u, false) + 10 * u;
+    for (const note of sg.end ? noteOf(d, t) : []) y += bubbleNote(g, S, acc, u, 80 * u + IND * u, W - 160 * u - IND * u, y - 6 * u, note, (sq ? 30 : 34) * u, false) + 10 * u;
   }
   if (more) { g.fillStyle = S.muted; g.font = `500 ${32 * u}px ${S.font}`; g.fillText(`и ещё ${more} ${W_(more, 'тема', 'темы', 'тем')}`, 80 * u, y + 40 * u); }
   const flip = !more && rng() < 0.5; // строку «и ещё N» слева не закрываем
@@ -1064,8 +1063,9 @@ async function cardAnki(g, W, H, c, page, total) {
   }
 }
 
-// комментарий к пройденной теме (настройка theme_notes)
-function noteOf(d, t) { const n = d.notes && d.notes[t.id]; return n && String(n).trim() ? String(n) : ''; }
+// комментарии к пройденной теме (таблица comments, через api.ThemeComments)
+// комментарии темы для картинки: массив текстов (старый формат — строка)
+function noteOf(d, t) { const n = d.notes && d.notes[t.id]; return (Array.isArray(n) ? n : n ? [n] : []).map(String).filter((x) => x.trim()); }
 
 // ---------- набор карточек ----------
 export const EXTRA_CARDS = [
@@ -1095,13 +1095,14 @@ export function planCards(d, opts) {
   // темы: до четырёх картинок, по высоте (комментарии занимают место); на первой место занимают закрытые блоки
   const sq = opts.format === 'square', rowH = sq ? 104 : 128, avail = opts.tasks ? (sq ? 380 : 1060) : sq ? 3 * 120 : 6 * 144;
   const mg = document.createElement('canvas').getContext('2d');
-  const cost = (t) => { const n = noteOf(d, t); return rowH + 16 + (n ? bubbleNote(mg, STYLES.terminal, '#888888', 1, 136, 864, 0, n, sq ? 30 : 34, true) + 4 : 0)
+  const notesH = (t) => noteOf(d, t).reduce((a, n) => a + bubbleNote(mg, STYLES.terminal, '#888888', 1, 136, 864, 0, n, sq ? 30 : 34, true) + 10, 0);
+  const cost = (t) => { return rowH + 16 + notesH(t)
     + (opts.tasks ? themeTasks(mg, STYLES.terminal, '#888888', 1, sq, 1080, 0, t, true) - 2 : 0); };
   let i = 0;
   if (opts.tasks) { // с задачами: тема может делиться между страницами; куски — задачи и хвост (вопросы, комментарий)
     const lim = sq ? 540 : 1360;
     const unitH = (t, k) => k < (t.lessons || []).length ? themeTasks(mg, STYLES.terminal, '#888888', 1, sq, 1080, 0, t, true, k, k + 1, false)
-      : (t.checksN ? themeTasks(mg, STYLES.terminal, '#888888', 1, sq, 1080, 0, t, true, 0, 0, true) : 0) + (noteOf(d, t) ? bubbleNote(mg, STYLES.terminal, '#888888', 1, 136, 864, 0, noteOf(d, t), sq ? 30 : 34, true) + 10 : 0);
+      : (t.checksN ? themeTasks(mg, STYLES.terminal, '#888888', 1, sq, 1080, 0, t, true, 0, 0, true) : 0) + notesH(t);
     let segs = [], room = lim - Math.min(d.blocks.length, sq ? 1 : 2) * (rowH + 18);
     const flush = () => { out.push({ key: 'themes', name: 'Темы', from: segs[0].ti, count: 0, segs, first: !out.some((x) => x.key === 'themes') }); segs = []; room = lim; };
     for (let ti = 0; ti < d.themes.length; ti++) {
