@@ -4,109 +4,109 @@
 СЕТЬ-1.1.2	Модель OSI / OSI model
 СЕТЬ-1.1.2	Стек TCP/IP / TCP/IP model
 СЕТЬ-1.1.3	Инкапсуляция данных / encapsulation (network packet, headers)
-СЕТЬ-1.2.1	IP-адрес / IP address	https://pkg.go.dev/net/netip
-СЕТЬ-1.2.2	IPv4 и IPv6 / IPv4 vs IPv6
-СЕТЬ-1.2.3	Частные IP-адреса / private IP addresses
+СЕТЬ-1.2.1	IP-адрес / IP address	https://pkg.go.dev/net/netip https://www.rfc-editor.org/rfc/rfc791
+СЕТЬ-1.2.2	IPv4 и IPv6 / IPv4 vs IPv6	https://www.rfc-editor.org/rfc/rfc8200
+СЕТЬ-1.2.3	Частные IP-адреса / private IP addresses	https://www.rfc-editor.org/rfc/rfc1918
 СЕТЬ-1.2.3	NAT / network address translation (NAT)
 СЕТЬ-1.2.4	Сетевой порт / port (computer networking)
-СЕТЬ-1.2.5	Сетевой сокет / network socket
+СЕТЬ-1.2.5	Сетевой сокет / network socket	https://man7.org/linux/man-pages/man7/socket.7.html https://pkg.go.dev/net
 СЕТЬ-1.2.6	localhost / localhost and loopback (127.0.0.1)
 СЕТЬ-1.2.6	Адрес 0.0.0.0 / 0.0.0.0 (bind to all interfaces)
 СЕТЬ-1.3.1	Доменное имя / domain name
-СЕТЬ-1.3.2	DNS / Domain Name System (DNS)	https://pkg.go.dev/net#LookupHost
+СЕТЬ-1.3.2	DNS / Domain Name System (DNS)	https://pkg.go.dev/net#LookupHost https://www.rfc-editor.org/rfc/rfc1034
 СЕТЬ-1.3.3	Разрешение DNS-имён / DNS resolution (recursive resolver)
-СЕТЬ-1.3.4	Записи DNS / DNS records (A, AAAA, CNAME)
+СЕТЬ-1.3.4	Записи DNS / DNS records (A, AAAA, CNAME)	https://www.rfc-editor.org/rfc/rfc1035
 СЕТЬ-1.3.5	TTL в DNS / DNS TTL
-СЕТЬ-1.3.6	Файл hosts / hosts file
-СЕТЬ-1.4.1	UDP / User Datagram Protocol (UDP)
-СЕТЬ-1.4.2	TCP / Transmission Control Protocol (TCP)
-СЕТЬ-1.4.3	Трёхстороннее рукопожатие TCP / TCP three-way handshake
-СЕТЬ-1.4.4	Надёжная доставка в TCP / TCP reliability (ACK, retransmission)
-СЕТЬ-1.4.4	Управление потоком и перегрузкой / TCP flow and congestion control
-СЕТЬ-1.4.5	Закрытие TCP-соединения / TCP connection termination
+СЕТЬ-1.3.6	Файл hosts / hosts file	https://man7.org/linux/man-pages/man5/hosts.5.html
+СЕТЬ-1.4.1	UDP / User Datagram Protocol (UDP)	https://www.rfc-editor.org/rfc/rfc768 https://man7.org/linux/man-pages/man7/udp.7.html
+СЕТЬ-1.4.2	TCP / Transmission Control Protocol (TCP)	https://www.rfc-editor.org/rfc/rfc9293 https://man7.org/linux/man-pages/man7/tcp.7.html
+СЕТЬ-1.4.3	Трёхстороннее рукопожатие TCP / TCP three-way handshake	https://www.rfc-editor.org/rfc/rfc9293
+СЕТЬ-1.4.4	Надёжная доставка в TCP / TCP reliability (ACK, retransmission)	https://www.rfc-editor.org/rfc/rfc9293
+СЕТЬ-1.4.4	Управление потоком и перегрузкой / TCP flow and congestion control	https://www.rfc-editor.org/rfc/rfc5681
+СЕТЬ-1.4.5	Закрытие TCP-соединения / TCP connection termination	https://www.rfc-editor.org/rfc/rfc9293
 СЕТЬ-1.4.5	TIME_WAIT / TIME_WAIT
 СЕТЬ-1.4.6	TCP и UDP / TCP vs UDP
-СЕТЬ-2.1.1	HTTP / HTTP	https://pkg.go.dev/net/http
-СЕТЬ-2.1.2	HTTP-запрос / HTTP request	https://pkg.go.dev/net/http#Request
-СЕТЬ-2.1.3	HTTP-ответ / HTTP response	https://pkg.go.dev/net/http#Response
-СЕТЬ-2.1.4	Методы HTTP / HTTP methods
-СЕТЬ-2.1.5	Безопасные и идемпотентные методы / safe and idempotent HTTP methods
-СЕТЬ-2.1.6	Коды состояния HTTP / HTTP status codes	https://pkg.go.dev/net/http#pkg-constants
-СЕТЬ-2.1.7	Коды состояния HTTP / HTTP status codes	https://pkg.go.dev/net/http#pkg-constants
-СЕТЬ-2.1.8	Заголовки HTTP / HTTP headers	https://pkg.go.dev/net/http#Header
-СЕТЬ-2.1.9	HTTP cookie / HTTP cookies	https://pkg.go.dev/net/http#Cookie
-СЕТЬ-2.1.10	Постоянные соединения / HTTP keep-alive (persistent connection)
-СЕТЬ-2.1.11	Версии HTTP / HTTP/1.1 vs HTTP/2 vs HTTP/3
-СЕТЬ-2.1.12	Кэширование HTTP / HTTP caching (Cache-Control, ETag)
-СЕТЬ-2.1.13	CORS / Cross-Origin Resource Sharing (CORS)
-СЕТЬ-2.1.14	WebSocket / WebSocket
+СЕТЬ-2.1.1	HTTP / HTTP	https://pkg.go.dev/net/http https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Overview https://www.rfc-editor.org/rfc/rfc9110
+СЕТЬ-2.1.2	HTTP-запрос / HTTP request	https://pkg.go.dev/net/http#Request https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Messages
+СЕТЬ-2.1.3	HTTP-ответ / HTTP response	https://pkg.go.dev/net/http#Response https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Messages
+СЕТЬ-2.1.4	Методы HTTP / HTTP methods	https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Methods
+СЕТЬ-2.1.5	Безопасные и идемпотентные методы / safe and idempotent HTTP methods	https://developer.mozilla.org/en-US/docs/Glossary/Idempotent https://developer.mozilla.org/en-US/docs/Glossary/Safe/HTTP
+СЕТЬ-2.1.6	Коды состояния HTTP / HTTP status codes	https://pkg.go.dev/net/http#pkg-constants https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status
+СЕТЬ-2.1.7	Коды состояния HTTP / HTTP status codes	https://pkg.go.dev/net/http#pkg-constants https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status
+СЕТЬ-2.1.8	Заголовки HTTP / HTTP headers	https://pkg.go.dev/net/http#Header https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers
+СЕТЬ-2.1.9	HTTP cookie / HTTP cookies	https://pkg.go.dev/net/http#Cookie https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Cookies
+СЕТЬ-2.1.10	Постоянные соединения / HTTP keep-alive (persistent connection)	https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Keep-Alive
+СЕТЬ-2.1.11	Версии HTTP / HTTP/1.1 vs HTTP/2 vs HTTP/3	https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Evolution_of_HTTP
+СЕТЬ-2.1.12	Кэширование HTTP / HTTP caching (Cache-Control, ETag)	https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Caching
+СЕТЬ-2.1.13	CORS / Cross-Origin Resource Sharing (CORS)	https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS
+СЕТЬ-2.1.14	WebSocket / WebSocket	https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API https://www.rfc-editor.org/rfc/rfc6455
 СЕТЬ-2.2.1	Симметричное шифрование / symmetric encryption	https://pkg.go.dev/crypto/aes
 СЕТЬ-2.2.1	Асимметричное шифрование / public-key cryptography
 СЕТЬ-2.2.2	Сертификат X.509 / X.509 certificate	https://pkg.go.dev/crypto/x509
 СЕТЬ-2.2.2	Центр сертификации / certificate authority (CA)
-СЕТЬ-2.2.3	Рукопожатие TLS / TLS handshake	https://pkg.go.dev/crypto/tls
-СЕТЬ-2.2.4	HTTPS / HTTPS
+СЕТЬ-2.2.3	Рукопожатие TLS / TLS handshake	https://pkg.go.dev/crypto/tls https://www.rfc-editor.org/rfc/rfc8446
+СЕТЬ-2.2.4	HTTPS / HTTPS	https://developer.mozilla.org/en-US/docs/Glossary/HTTPS
 СЕТЬ-2.3.1	Что происходит, когда вводишь URL / what happens when you type a URL in the browser
 СЕТЬ-3.1.1	REST / REST (Representational State Transfer)
 СЕТЬ-3.1.2	Проектирование REST API / REST API design (resources and endpoints)
 СЕТЬ-3.1.3	Коды ответа в REST API / REST API status codes
-СЕТЬ-3.1.4	Пагинация / pagination (offset vs cursor)
+СЕТЬ-3.1.4	Пагинация / pagination (offset vs cursor)	https://www.postgresql.org/docs/current/queries-limit.html
 СЕТЬ-3.1.5	Версионирование API / API versioning
-СЕТЬ-3.1.6	OpenAPI / OpenAPI Specification (Swagger)
+СЕТЬ-3.1.6	OpenAPI / OpenAPI Specification (Swagger)	https://spec.openapis.org/oas/latest.html
 СЕТЬ-3.1.7	Ключ идемпотентности / idempotency key
 СЕТЬ-3.2.1	Аутентификация и авторизация / authentication vs authorization
 СЕТЬ-3.2.2	Хеширование паролей / password hashing (bcrypt, argon2)	https://pkg.go.dev/golang.org/x/crypto/bcrypt https://pkg.go.dev/golang.org/x/crypto/argon2
 СЕТЬ-3.2.3	Сессии / session-based authentication (cookies)
-СЕТЬ-3.2.4	JWT / JSON Web Token (JWT)
+СЕТЬ-3.2.4	JWT / JSON Web Token (JWT)	https://datatracker.ietf.org/doc/html/rfc7519
 СЕТЬ-3.2.5	Access и refresh токены / access and refresh tokens
 СЕТЬ-3.2.6	Сессии или JWT / session vs JWT
-СЕТЬ-3.2.7	OAuth 2.0 / OAuth 2.0	https://pkg.go.dev/golang.org/x/oauth2
+СЕТЬ-3.2.7	OAuth 2.0 / OAuth 2.0	https://pkg.go.dev/golang.org/x/oauth2 https://oauth.net/2/ https://datatracker.ietf.org/doc/html/rfc6749
 ОС-1.1.1	Командная строка / command-line interface (shell)
 ОС-1.1.1	Bash / Bash
 ОС-1.1.2	Файловая система Linux / Linux filesystem hierarchy
 ОС-1.1.2	Абсолютные и относительные пути / absolute vs relative paths	https://pkg.go.dev/path/filepath
-ОС-1.1.3	Права доступа в Linux / Linux file permissions (chmod)	https://pkg.go.dev/io/fs#FileMode
-ОС-1.1.4	Стандартные потоки / standard streams (stdin, stdout, stderr)	https://pkg.go.dev/os#pkg-variables
+ОС-1.1.3	Права доступа в Linux / Linux file permissions (chmod)	https://pkg.go.dev/io/fs#FileMode https://man7.org/linux/man-pages/man1/chmod.1.html
+ОС-1.1.4	Стандартные потоки / standard streams (stdin, stdout, stderr)	https://pkg.go.dev/os#pkg-variables https://man7.org/linux/man-pages/man3/stdin.3.html
 ОС-1.1.4	Перенаправление ввода-вывода / I/O redirection
 ОС-1.1.5	Конвейеры в Unix / Unix pipeline
-ОС-1.1.5	grep / grep
+ОС-1.1.5	grep / grep	https://man7.org/linux/man-pages/man1/grep.1.html
 ОС-1.1.6	Скрипты на Bash / Bash scripting
-ОС-1.2.1	ps и top / ps and top
-ОС-1.2.2	Сигналы Unix / Unix signals	https://pkg.go.dev/os/signal
-ОС-1.2.3	SIGTERM и SIGKILL / SIGTERM vs SIGKILL	https://pkg.go.dev/syscall#SIGTERM
-ОС-1.2.4	Переменные окружения / environment variables	https://pkg.go.dev/os#Getenv
-ОС-1.2.5	Файловый дескриптор / file descriptor
-ОС-1.3.1	curl / curl
-ОС-1.3.2	ss / ss (socket statistics)
-ОС-1.3.3	Просмотр логов / tail -f and journalctl
-PG-2.1.1	Последовательное сканирование / sequential scan (full table scan)
-PG-2.1.2	Индексы в базах данных / database index
-PG-2.1.3	B-дерево / B-tree (B+ tree index)
+ОС-1.2.1	ps и top / ps and top	https://man7.org/linux/man-pages/man1/ps.1.html https://man7.org/linux/man-pages/man1/top.1.html
+ОС-1.2.2	Сигналы Unix / Unix signals	https://pkg.go.dev/os/signal https://man7.org/linux/man-pages/man7/signal.7.html
+ОС-1.2.3	SIGTERM и SIGKILL / SIGTERM vs SIGKILL	https://pkg.go.dev/syscall#SIGTERM https://man7.org/linux/man-pages/man7/signal.7.html
+ОС-1.2.4	Переменные окружения / environment variables	https://pkg.go.dev/os#Getenv https://man7.org/linux/man-pages/man7/environ.7.html
+ОС-1.2.5	Файловый дескриптор / file descriptor	https://man7.org/linux/man-pages/man2/open.2.html
+ОС-1.3.1	curl / curl	https://curl.se/docs/manpage.html
+ОС-1.3.2	ss / ss (socket statistics)	https://man7.org/linux/man-pages/man8/ss.8.html
+ОС-1.3.3	Просмотр логов / tail -f and journalctl	https://man7.org/linux/man-pages/man1/journalctl.1.html https://man7.org/linux/man-pages/man1/tail.1.html
+PG-2.1.1	Последовательное сканирование / sequential scan (full table scan)	https://www.postgresql.org/docs/current/using-explain.html
+PG-2.1.2	Индексы в базах данных / database index	https://www.postgresql.org/docs/current/indexes-intro.html
+PG-2.1.3	B-дерево / B-tree (B+ tree index)	https://www.postgresql.org/docs/current/btree.html
 PG-2.1.4	Стоимость индексов / index overhead (write amplification)
-PG-2.1.5	Составной индекс / composite index (column order)
-PG-2.1.6	Покрывающий индекс / covering index (Index Only Scan)
-PG-2.1.7	Уникальный индекс / unique index
-PG-2.1.8	Частичный индекс / partial index
-PG-2.1.8	Индекс по выражению / expression index
-PG-2.1.9	Типы индексов PostgreSQL / PostgreSQL index types (Hash, GIN, GiST, BRIN)
+PG-2.1.5	Составной индекс / composite index (column order)	https://www.postgresql.org/docs/current/indexes-multicolumn.html
+PG-2.1.6	Покрывающий индекс / covering index (Index Only Scan)	https://www.postgresql.org/docs/current/indexes-index-only-scans.html
+PG-2.1.7	Уникальный индекс / unique index	https://www.postgresql.org/docs/current/indexes-unique.html
+PG-2.1.8	Частичный индекс / partial index	https://www.postgresql.org/docs/current/indexes-partial.html
+PG-2.1.8	Индекс по выражению / expression index	https://www.postgresql.org/docs/current/indexes-expressional.html
+PG-2.1.9	Типы индексов PostgreSQL / PostgreSQL index types (Hash, GIN, GiST, BRIN)	https://www.postgresql.org/docs/current/indexes-types.html
 PG-2.1.10	Селективность индекса / index selectivity (cardinality)
-PG-2.1.11	Когда индекс не используется / why index is not used
-PG-2.2.1	EXPLAIN / EXPLAIN (query plan)
-PG-2.2.2	Методы сканирования / Seq Scan, Index Scan, Bitmap Scan
-PG-2.2.3	EXPLAIN ANALYZE / EXPLAIN ANALYZE
-PG-2.2.4	Алгоритмы соединения / join algorithms (nested loop, hash join, merge join)
-PG-2.2.5	Статистика планировщика / planner statistics (ANALYZE)
+PG-2.1.11	Когда индекс не используется / why index is not used	https://www.postgresql.org/docs/current/indexes-examine.html
+PG-2.2.1	EXPLAIN / EXPLAIN (query plan)	https://www.postgresql.org/docs/current/using-explain.html https://www.postgresql.org/docs/current/sql-explain.html
+PG-2.2.2	Методы сканирования / Seq Scan, Index Scan, Bitmap Scan	https://www.postgresql.org/docs/current/using-explain.html
+PG-2.2.3	EXPLAIN ANALYZE / EXPLAIN ANALYZE	https://www.postgresql.org/docs/current/using-explain.html#USING-EXPLAIN-ANALYZE
+PG-2.2.4	Алгоритмы соединения / join algorithms (nested loop, hash join, merge join)	https://www.postgresql.org/docs/current/planner-optimizer.html
+PG-2.2.5	Статистика планировщика / planner statistics (ANALYZE)	https://www.postgresql.org/docs/current/planner-stats.html https://www.postgresql.org/docs/current/sql-analyze.html
 PG-2.3.1	Пагинация через OFFSET / OFFSET pagination performance
 PG-2.3.1	Keyset-пагинация / keyset pagination
 PG-2.3.2	Проблема N+1 / N+1 query problem
 PG-2.3.3	Индекс на внешнем ключе / foreign key index
 PG-2.4.1	OLTP и OLAP / OLTP vs OLAP
 PG-2.4.2	Колоночные базы данных / column-oriented database
-PG-2.4.2	ClickHouse / ClickHouse
-PG-2.4.3	Документные базы данных / document-oriented database (MongoDB)
-GO-22.1.1	http.Handler / http.Handler	https://pkg.go.dev/net/http#Handler
+PG-2.4.2	ClickHouse / ClickHouse	https://clickhouse.com/docs
+PG-2.4.3	Документные базы данных / document-oriented database (MongoDB)	https://www.mongodb.com/docs/manual/core/document/
+GO-22.1.1	http.Handler / http.Handler	https://pkg.go.dev/net/http#Handler https://go.dev/doc/articles/wiki/
 GO-22.1.2	http.HandlerFunc / http.HandlerFunc	https://pkg.go.dev/net/http#HandlerFunc
-GO-22.1.3	ServeMux / http.ServeMux (routing patterns)	https://pkg.go.dev/net/http#ServeMux
+GO-22.1.3	ServeMux / http.ServeMux (routing patterns)	https://pkg.go.dev/net/http#ServeMux https://go.dev/blog/routing-enhancements
 GO-22.1.4	ListenAndServe / http.ListenAndServe	https://pkg.go.dev/net/http#ListenAndServe
 GO-22.1.5	Модель конкурентности net/http / net/http goroutine per connection
 GO-22.1.6	Разбор HTTP-запроса / parsing HTTP request	https://pkg.go.dev/net/http#Request.PathValue https://pkg.go.dev/net/url#URL.Query
@@ -130,15 +130,15 @@ GO-23.2.1	Идемпотентность и повторы / idempotency and ret
 GO-23.2.2	Экспоненциальная задержка / exponential backoff
 GO-23.2.3	Джиттер / jitter (backoff with jitter)
 GO-23.2.4	Политика повторов / retry policy (max retries, deadline)
-GO-24.1.1	Protocol Buffers / Protocol Buffers (protobuf)	https://pkg.go.dev/google.golang.org/protobuf
-GO-24.1.2	Язык .proto / proto3 language (messages and fields)
-GO-24.1.3	Генерация кода protoc / protoc code generation (protoc-gen-go)	https://pkg.go.dev/google.golang.org/protobuf/cmd/protoc-gen-go
-GO-24.1.4	Эволюция схемы protobuf / protobuf schema evolution (field numbers, backward compatibility)
-GO-24.2.1	gRPC / gRPC	https://pkg.go.dev/google.golang.org/grpc
-GO-24.2.2	Определение сервиса gRPC / gRPC service definition
-GO-24.2.3	Стриминг в gRPC / gRPC streaming (unary, server, client, bidirectional)
-GO-24.2.4	Коды состояния gRPC / gRPC status codes	https://pkg.go.dev/google.golang.org/grpc/codes
-GO-24.2.4	Дедлайны gRPC / gRPC deadlines
-GO-24.2.5	Интерсепторы gRPC / gRPC interceptors	https://pkg.go.dev/google.golang.org/grpc#UnaryServerInterceptor
+GO-24.1.1	Protocol Buffers / Protocol Buffers (protobuf)	https://pkg.go.dev/google.golang.org/protobuf https://protobuf.dev/overview/
+GO-24.1.2	Язык .proto / proto3 language (messages and fields)	https://protobuf.dev/programming-guides/proto3/
+GO-24.1.3	Генерация кода protoc / protoc code generation (protoc-gen-go)	https://pkg.go.dev/google.golang.org/protobuf/cmd/protoc-gen-go https://protobuf.dev/getting-started/gotutorial/
+GO-24.1.4	Эволюция схемы protobuf / protobuf schema evolution (field numbers, backward compatibility)	https://protobuf.dev/programming-guides/dos-donts/
+GO-24.2.1	gRPC / gRPC	https://pkg.go.dev/google.golang.org/grpc https://grpc.io/docs/what-is-grpc/introduction/ https://grpc.io/docs/languages/go/quickstart/
+GO-24.2.2	Определение сервиса gRPC / gRPC service definition	https://grpc.io/docs/what-is-grpc/core-concepts/
+GO-24.2.3	Стриминг в gRPC / gRPC streaming (unary, server, client, bidirectional)	https://grpc.io/docs/what-is-grpc/core-concepts/
+GO-24.2.4	Коды состояния gRPC / gRPC status codes	https://pkg.go.dev/google.golang.org/grpc/codes https://grpc.io/docs/guides/status-codes/
+GO-24.2.4	Дедлайны gRPC / gRPC deadlines	https://grpc.io/docs/guides/deadlines/
+GO-24.2.5	Интерсепторы gRPC / gRPC interceptors	https://pkg.go.dev/google.golang.org/grpc#UnaryServerInterceptor https://grpc.io/docs/guides/interceptors/
 GO-24.2.6	gRPC и REST / gRPC vs REST
 ПРОГОН-4	?

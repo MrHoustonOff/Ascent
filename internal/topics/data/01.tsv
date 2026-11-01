@@ -10,44 +10,44 @@
 ФУНД-1.3.1	Исполняемый файл / executable file
 ФУНД-1.3.2	Изоляция процессов / process isolation
 ФУНД-1.3.2	Виртуальное адресное пространство / virtual address space
-GO-1.1.1	Установка Go / installing Go
-GO-1.1.1	Настройка редактора для Go (gopls) / Go editor setup (gopls)
-GO-1.1.2	Модули Go / Go modules	https://pkg.go.dev/cmd/go#hdr-Modules__module_versions__and_more
-GO-1.1.2	Файл go.mod / go.mod file
-GO-1.2.1	Пакеты в Go / Go packages
-GO-1.2.1	Пакет main / package main
-GO-1.2.2	Импорт пакетов / import declarations
+GO-1.1.1	Установка Go / installing Go	https://go.dev/doc/install
+GO-1.1.1	Настройка редактора для Go (gopls) / Go editor setup (gopls)	https://go.dev/gopls/
+GO-1.1.2	Модули Go / Go modules	https://pkg.go.dev/cmd/go#hdr-Modules__module_versions__and_more https://go.dev/ref/mod https://go.dev/doc/tutorial/create-module
+GO-1.1.2	Файл go.mod / go.mod file	https://go.dev/doc/modules/gomod-ref
+GO-1.2.1	Пакеты в Go / Go packages	https://go.dev/ref/spec#Packages
+GO-1.2.1	Пакет main / package main	https://go.dev/ref/spec#Program_execution
+GO-1.2.2	Импорт пакетов / import declarations	https://go.dev/ref/spec#Import_declarations
 GO-1.2.2	Стандартная библиотека Go / Go standard library	https://pkg.go.dev/std
-GO-1.2.3	Функция main / main function (program entry point)
+GO-1.2.3	Функция main / main function (program entry point)	https://go.dev/ref/spec#Program_execution
 GO-1.2.4	Пакет fmt / fmt package	https://pkg.go.dev/fmt https://pkg.go.dev/fmt#Printf
 GO-1.2.4	Форматированный вывод / formatted I/O
-GO-1.2.5	Комментарии в Go / Go comments
-GO-1.2.5	Комментарии документации / Go doc comments
+GO-1.2.5	Комментарии в Go / Go comments	https://go.dev/ref/spec#Comments
+GO-1.2.5	Комментарии документации / Go doc comments	https://go.dev/doc/comment
 GO-1.3.1	Команда go run / go run	https://pkg.go.dev/cmd/go#hdr-Compile_and_run_Go_program
 GO-1.3.2	Команда go build / go build	https://pkg.go.dev/cmd/go#hdr-Compile_packages_and_dependencies
 GO-1.3.3	Рантайм Go / Go runtime	https://pkg.go.dev/runtime
-GO-1.4.1	Неиспользуемые переменные и импорты / unused variables and imports
+GO-1.4.1	Неиспользуемые переменные и импорты / unused variables and imports	https://go.dev/doc/faq#unused_variables_and_imports
 GO-1.4.2	Ошибки компиляции / compile errors
 GO-1.3.4	Кросс-компиляция в Go / Go cross-compilation
 GO-1.3.4	GOOS и GOARCH / GOOS and GOARCH	https://pkg.go.dev/cmd/go#hdr-Environment_variables
-GO-1.4.3	Автоматическая расстановка точек с запятой / automatic semicolon insertion
-GO-1.4.4	gofmt / gofmt	https://pkg.go.dev/cmd/gofmt
+GO-1.4.3	Автоматическая расстановка точек с запятой / automatic semicolon insertion	https://go.dev/ref/spec#Semicolons https://go.dev/doc/effective_go#semicolons
+GO-1.4.4	gofmt / gofmt	https://pkg.go.dev/cmd/gofmt https://go.dev/doc/effective_go#formatting
 GO-1.4.4	go vet / go vet	https://pkg.go.dev/cmd/vet
 ФУНД-2.1.1	Бит и байт / bit and byte
 ФУНД-2.1.2	Двоичная система счисления / binary number system
 ФУНД-2.1.3	Шестнадцатеричная система счисления / hexadecimal
 ФУНД-2.2.1	Беззнаковые целые числа / unsigned integers
 ФУНД-2.2.2	Дополнительный код / two's complement
-ФУНД-2.2.3	Переполнение целых чисел / integer overflow
-ФУНД-2.3.1	Числа с плавающей точкой / floating-point numbers
+ФУНД-2.2.3	Переполнение целых чисел / integer overflow	https://go.dev/ref/spec#Integer_overflow
+ФУНД-2.3.1	Числа с плавающей точкой / floating-point numbers	https://go.dev/ref/spec#Numeric_types
 ФУНД-2.3.1	Стандарт IEEE 754 / IEEE 754
 ФУНД-2.3.2	Погрешность чисел с плавающей точкой / floating-point precision (0.1 + 0.2)
 ФУНД-2.3.3	Бесконечность и NaN / infinity and NaN	https://pkg.go.dev/math#NaN https://pkg.go.dev/math#Inf
 ФУНД-2.3.4	Хранение денег в программах / representing money (decimal vs float)
 ФУНД-2.4.1	ASCII / ASCII
-ФУНД-2.4.2	Unicode / Unicode
+ФУНД-2.4.2	Unicode / Unicode	https://go.dev/ref/spec#Characters https://pkg.go.dev/unicode
 ФУНД-2.4.2	Кодовая точка / code point
-ФУНД-2.4.3	UTF-8 / UTF-8	https://pkg.go.dev/unicode/utf8
+ФУНД-2.4.3	UTF-8 / UTF-8	https://pkg.go.dev/unicode/utf8 https://go.dev/blog/strings
 ФУНД-3.1.1	Адрес памяти / memory address
 ФУНД-3.1.2	Порядок байтов / endianness	https://pkg.go.dev/encoding/binary
 ФУНД-3.2.1	Виртуальная память / virtual memory
@@ -61,151 +61,151 @@ GO-1.4.4	go vet / go vet	https://pkg.go.dev/cmd/vet
 ФУНД-3.4.1	Куча / heap (dynamic memory allocation)
 ФУНД-3.4.2	Управление памятью / memory management
 ФУНД-3.4.2	Подсчёт ссылок / reference counting
-ФУНД-3.4.2	Сборка мусора / garbage collection
-GO-2.1.1	Переменные в Go / Go variables
-GO-2.1.2	Объявление переменных / variable declarations (var)
-GO-2.1.3	Короткое объявление переменных / short variable declaration (:=)
-GO-2.1.4	Нулевые значения / zero values
-GO-2.1.5	Присваивание и семантика значений / assignment and value semantics
-GO-2.1.6	Множественное присваивание / multiple assignment (tuple assignment)
-GO-2.1.7	Пустой идентификатор / blank identifier
-GO-2.2.1	Целочисленные типы Go / Go integer types
-GO-2.2.2	Целочисленные типы Go / Go integer types
+ФУНД-3.4.2	Сборка мусора / garbage collection	https://go.dev/doc/gc-guide
+GO-2.1.1	Переменные в Go / Go variables	https://go.dev/ref/spec#Variables
+GO-2.1.2	Объявление переменных / variable declarations (var)	https://go.dev/ref/spec#Variable_declarations
+GO-2.1.3	Короткое объявление переменных / short variable declaration (:=)	https://go.dev/ref/spec#Short_variable_declarations
+GO-2.1.4	Нулевые значения / zero values	https://go.dev/ref/spec#The_zero_value
+GO-2.1.5	Присваивание и семантика значений / assignment and value semantics	https://go.dev/ref/spec#Assignment_statements
+GO-2.1.6	Множественное присваивание / multiple assignment (tuple assignment)	https://go.dev/ref/spec#Assignment_statements
+GO-2.1.7	Пустой идентификатор / blank identifier	https://go.dev/ref/spec#Blank_identifier https://go.dev/doc/effective_go#blank
+GO-2.2.1	Целочисленные типы Go / Go integer types	https://go.dev/ref/spec#Numeric_types
+GO-2.2.2	Целочисленные типы Go / Go integer types	https://go.dev/ref/spec#Numeric_types
 GO-2.2.2	Размер int / int size (32 vs 64 bit)	https://pkg.go.dev/math/bits#UintSize
 GO-2.2.3	byte и rune / byte and rune	https://pkg.go.dev/builtin#byte https://pkg.go.dev/builtin#rune
-GO-2.2.4	Арифметические операторы / arithmetic operators
-GO-2.2.4	Целочисленное деление / integer division
+GO-2.2.4	Арифметические операторы / arithmetic operators	https://go.dev/ref/spec#Arithmetic_operators
+GO-2.2.4	Целочисленное деление / integer division	https://go.dev/ref/spec#Integer_operators
 GO-2.2.5	Деление на ноль / division by zero
-GO-2.2.5	Паника времени выполнения / runtime panic
-GO-2.2.6	Переполнение целых чисел / integer overflow
-GO-2.2.7	Инкремент и декремент / increment and decrement (++, --)
-GO-2.2.7	Составное присваивание / compound assignment operators
-GO-2.3.1	Типы float32 и float64 / float32 and float64	https://pkg.go.dev/builtin#float64
+GO-2.2.5	Паника времени выполнения / runtime panic	https://go.dev/ref/spec#Run_time_panics
+GO-2.2.6	Переполнение целых чисел / integer overflow	https://go.dev/ref/spec#Integer_overflow
+GO-2.2.7	Инкремент и декремент / increment and decrement (++, --)	https://go.dev/ref/spec#IncDec_statements
+GO-2.2.7	Составное присваивание / compound assignment operators	https://go.dev/ref/spec#Assignment_statements
+GO-2.3.1	Типы float32 и float64 / float32 and float64	https://pkg.go.dev/builtin#float64 https://go.dev/ref/spec#Numeric_types
 GO-2.3.2	Сравнение чисел с плавающей точкой / comparing floating-point numbers (epsilon)
 GO-2.4.1	Логический тип / boolean type	https://pkg.go.dev/builtin#bool
-GO-2.4.1	Логические операторы / logical operators
-GO-2.4.2	Ленивые вычисления логических выражений / short-circuit evaluation
-GO-2.5.1	Побитовые операции / bitwise operations
+GO-2.4.1	Логические операторы / logical operators	https://go.dev/ref/spec#Logical_operators
+GO-2.4.2	Ленивые вычисления логических выражений / short-circuit evaluation	https://go.dev/ref/spec#Logical_operators
+GO-2.5.1	Побитовые операции / bitwise operations	https://go.dev/ref/spec#Arithmetic_operators
 GO-2.5.1	Битовые маски / bit masks
-GO-2.5.2	Битовые сдвиги / bit shifts
+GO-2.5.2	Битовые сдвиги / bit shifts	https://go.dev/ref/spec#Arithmetic_operators
 GO-2.5.3	Побитовые операции / bitwise operations
 GO-2.5.3	Проверка степени двойки / power of two check
-GO-2.6.1	Строгая типизация / strong static typing
-GO-2.6.2	Преобразование типов / type conversion
-GO-2.7.1	Строковые литералы / string literals
-GO-2.7.1	Экранирование символов / escape sequences
-GO-2.7.2	Строки в Go / Go strings
-GO-2.7.2	Конкатенация строк / string concatenation	https://pkg.go.dev/builtin#len
+GO-2.6.1	Строгая типизация / strong static typing	https://go.dev/ref/spec#Assignability
+GO-2.6.2	Преобразование типов / type conversion	https://go.dev/ref/spec#Conversions
+GO-2.7.1	Строковые литералы / string literals	https://go.dev/ref/spec#String_literals
+GO-2.7.1	Экранирование символов / escape sequences	https://go.dev/ref/spec#Rune_literals
+GO-2.7.2	Строки в Go / Go strings	https://go.dev/ref/spec#String_types https://go.dev/blog/strings
+GO-2.7.2	Конкатенация строк / string concatenation	https://pkg.go.dev/builtin#len https://go.dev/ref/spec#String_concatenation
 GO-2.7.3	Форматирование строк / string formatting	https://pkg.go.dev/fmt#Sprintf
-GO-2.8.1	Константы / constants
-GO-2.8.2	Нетипизированные константы / untyped constants
-GO-2.8.3	iota / iota	https://pkg.go.dev/builtin#iota
+GO-2.8.1	Константы / constants	https://go.dev/ref/spec#Constants https://go.dev/ref/spec#Constant_declarations
+GO-2.8.2	Нетипизированные константы / untyped constants	https://go.dev/blog/constants
+GO-2.8.3	iota / iota	https://pkg.go.dev/builtin#iota https://go.dev/ref/spec#Iota
 GO-2.8.3	Перечисления в Go / enums in Go
-GO-2.9.1	Определение типов / type definitions
-GO-2.9.2	Псевдонимы типов / type aliases
-GO-3.1.1	Условный оператор / if statement
-GO-3.1.2	if с инициализацией / if with short statement
-GO-3.1.3	Оператор switch / switch statement
-GO-3.1.4	switch без выражения / expressionless switch
-GO-3.1.5	fallthrough / fallthrough
-GO-3.2.1	Цикл for / for loop
-GO-3.2.2	Цикл for как while / for as while
+GO-2.9.1	Определение типов / type definitions	https://go.dev/ref/spec#Type_definitions
+GO-2.9.2	Псевдонимы типов / type aliases	https://go.dev/ref/spec#Alias_declarations
+GO-3.1.1	Условный оператор / if statement	https://go.dev/ref/spec#If_statements
+GO-3.1.2	if с инициализацией / if with short statement	https://go.dev/ref/spec#If_statements https://go.dev/doc/effective_go#if
+GO-3.1.3	Оператор switch / switch statement	https://go.dev/ref/spec#Switch_statements
+GO-3.1.4	switch без выражения / expressionless switch	https://go.dev/ref/spec#Expression_switches https://go.dev/doc/effective_go#switch
+GO-3.1.5	fallthrough / fallthrough	https://go.dev/ref/spec#Fallthrough_statements
+GO-3.2.1	Цикл for / for loop	https://go.dev/ref/spec#For_statements
+GO-3.2.2	Цикл for как while / for as while	https://go.dev/ref/spec#For_condition
 GO-3.2.3	Бесконечный цикл / infinite loop
-GO-3.2.3	Оператор break / break statement
-GO-3.2.4	Оператор continue / continue statement
-GO-3.2.5	range по целому числу / range over int
-GO-3.2.6	Метки / labeled break and continue
-GO-3.2.7	break в switch и select / break inside switch
-GO-3.3.1	Область видимости / scope
-GO-3.3.1	Блоки / blocks
-GO-3.3.2	Затенение переменных / variable shadowing
-GO-3.3.3	Переменные уровня пакета / package-level variables
+GO-3.2.3	Оператор break / break statement	https://go.dev/ref/spec#Break_statements
+GO-3.2.4	Оператор continue / continue statement	https://go.dev/ref/spec#Continue_statements
+GO-3.2.5	range по целому числу / range over int	https://go.dev/ref/spec#For_range
+GO-3.2.6	Метки / labeled break and continue	https://go.dev/ref/spec#Labeled_statements https://go.dev/ref/spec#Break_statements
+GO-3.2.7	break в switch и select / break inside switch	https://go.dev/ref/spec#Break_statements
+GO-3.3.1	Область видимости / scope	https://go.dev/ref/spec#Declarations_and_scope
+GO-3.3.1	Блоки / blocks	https://go.dev/ref/spec#Blocks
+GO-3.3.2	Затенение переменных / variable shadowing	https://go.dev/doc/effective_go#redeclaration
+GO-3.3.3	Переменные уровня пакета / package-level variables	https://go.dev/ref/spec#Declarations_and_scope
 SQL-1.1.1	Базы данных / databases
-SQL-1.1.2	СУБД / database management system (DBMS)
+SQL-1.1.2	СУБД / database management system (DBMS)	https://www.postgresql.org/docs/current/intro-whatis.html
 SQL-1.1.3	Реляционные и нереляционные базы данных / relational vs NoSQL databases
-SQL-1.1.4	Установка PostgreSQL / installing PostgreSQL
-SQL-1.1.4	Клиент psql / psql
+SQL-1.1.4	Установка PostgreSQL / installing PostgreSQL	https://www.postgresql.org/download/
+SQL-1.1.4	Клиент psql / psql	https://www.postgresql.org/docs/current/app-psql.html
 SQL-1.2.1	Реляционная модель / relational model
-SQL-1.2.1	Таблицы / tables
-SQL-1.2.2	Типы данных PostgreSQL / PostgreSQL data types
-SQL-1.2.3	CREATE TABLE / CREATE TABLE
-SQL-1.2.4	Первичный ключ / primary key
-SQL-1.2.5	Столбцы IDENTITY / identity columns
-SQL-1.2.6	ALTER TABLE / ALTER TABLE
-SQL-1.2.6	DROP TABLE / DROP TABLE
-SQL-1.3.1	INSERT / INSERT
-SQL-1.3.2	SELECT / SELECT
-SQL-1.3.3	WHERE / WHERE clause
-SQL-1.3.4	Операторы IN, BETWEEN и LIKE / IN, BETWEEN, LIKE
-SQL-1.3.5	ORDER BY / ORDER BY
-SQL-1.3.5	LIMIT и OFFSET / LIMIT and OFFSET
-SQL-1.3.6	DISTINCT / SELECT DISTINCT
-SQL-1.3.7	UPDATE / UPDATE
-SQL-1.3.8	DELETE / DELETE
-SQL-1.4.1	NULL в SQL / SQL NULL
+SQL-1.2.1	Таблицы / tables	https://www.postgresql.org/docs/current/ddl-basics.html
+SQL-1.2.2	Типы данных PostgreSQL / PostgreSQL data types	https://www.postgresql.org/docs/current/datatype.html
+SQL-1.2.3	CREATE TABLE / CREATE TABLE	https://www.postgresql.org/docs/current/sql-createtable.html
+SQL-1.2.4	Первичный ключ / primary key	https://www.postgresql.org/docs/current/ddl-constraints.html#DDL-CONSTRAINTS-PRIMARY-KEYS
+SQL-1.2.5	Столбцы IDENTITY / identity columns	https://www.postgresql.org/docs/current/ddl-identity-columns.html
+SQL-1.2.6	ALTER TABLE / ALTER TABLE	https://www.postgresql.org/docs/current/sql-altertable.html
+SQL-1.2.6	DROP TABLE / DROP TABLE	https://www.postgresql.org/docs/current/sql-droptable.html
+SQL-1.3.1	INSERT / INSERT	https://www.postgresql.org/docs/current/sql-insert.html
+SQL-1.3.2	SELECT / SELECT	https://www.postgresql.org/docs/current/sql-select.html
+SQL-1.3.3	WHERE / WHERE clause	https://www.postgresql.org/docs/current/queries-table-expressions.html#QUERIES-WHERE
+SQL-1.3.4	Операторы IN, BETWEEN и LIKE / IN, BETWEEN, LIKE	https://www.postgresql.org/docs/current/functions-comparison.html https://www.postgresql.org/docs/current/functions-matching.html https://www.postgresql.org/docs/current/functions-comparisons.html
+SQL-1.3.5	ORDER BY / ORDER BY	https://www.postgresql.org/docs/current/queries-order.html
+SQL-1.3.5	LIMIT и OFFSET / LIMIT and OFFSET	https://www.postgresql.org/docs/current/queries-limit.html
+SQL-1.3.6	DISTINCT / SELECT DISTINCT	https://www.postgresql.org/docs/current/queries-select-lists.html#QUERIES-DISTINCT
+SQL-1.3.7	UPDATE / UPDATE	https://www.postgresql.org/docs/current/sql-update.html
+SQL-1.3.8	DELETE / DELETE	https://www.postgresql.org/docs/current/sql-delete.html
+SQL-1.4.1	NULL в SQL / SQL NULL	https://www.postgresql.org/docs/current/functions-comparison.html
 SQL-1.4.2	Трёхзначная логика / three-valued logic
-SQL-1.4.3	IS NULL / IS NULL
-SQL-1.4.3	COALESCE / COALESCE
-SQL-1.5.1	Псевдонимы столбцов / column aliases (AS)
-SQL-1.5.2	Строковые функции SQL / SQL string functions
-SQL-1.5.2	Функции даты и времени / date and time functions
-SQL-1.5.3	Выражение CASE / CASE expression
-GO-4.1.1	Функции в Go / Go functions
-GO-4.1.2	Параметры функции / function parameters
-GO-4.1.3	Несколько возвращаемых значений / multiple return values
-GO-4.1.4	Пустой идентификатор / blank identifier
-GO-4.1.5	Именованные результаты / named return values
-GO-4.1.5	Голый return / naked return
+SQL-1.4.3	IS NULL / IS NULL	https://www.postgresql.org/docs/current/functions-comparison.html
+SQL-1.4.3	COALESCE / COALESCE	https://www.postgresql.org/docs/current/functions-conditional.html#FUNCTIONS-COALESCE-NVL-IFNULL
+SQL-1.5.1	Псевдонимы столбцов / column aliases (AS)	https://www.postgresql.org/docs/current/queries-select-lists.html#QUERIES-COLUMN-LABELS
+SQL-1.5.2	Строковые функции SQL / SQL string functions	https://www.postgresql.org/docs/current/functions-string.html
+SQL-1.5.2	Функции даты и времени / date and time functions	https://www.postgresql.org/docs/current/functions-datetime.html
+SQL-1.5.3	Выражение CASE / CASE expression	https://www.postgresql.org/docs/current/functions-conditional.html#FUNCTIONS-CASE
+GO-4.1.1	Функции в Go / Go functions	https://go.dev/ref/spec#Function_declarations
+GO-4.1.2	Параметры функции / function parameters	https://go.dev/ref/spec#Function_types
+GO-4.1.3	Несколько возвращаемых значений / multiple return values	https://go.dev/doc/effective_go#multiple-returns
+GO-4.1.4	Пустой идентификатор / blank identifier	https://go.dev/doc/effective_go#blank_assign
+GO-4.1.5	Именованные результаты / named return values	https://go.dev/doc/effective_go#named-results
+GO-4.1.5	Голый return / naked return	https://go.dev/ref/spec#Return_statements
 GO-4.1.6	Пакет strconv / strconv package	https://pkg.go.dev/strconv https://pkg.go.dev/strconv#Atoi https://pkg.go.dev/strconv#Itoa
-GO-4.1.7	Преобразование числа в строку / int to string conversion	https://pkg.go.dev/strconv#Itoa
-GO-4.2.1	Передача по значению / pass by value
+GO-4.1.7	Преобразование числа в строку / int to string conversion	https://pkg.go.dev/strconv#Itoa https://go.dev/ref/spec#Conversions_to_and_from_a_string_type
+GO-4.2.1	Передача по значению / pass by value	https://go.dev/doc/faq#pass_by_value
 GO-4.2.1	Кадр стека / stack frame
-GO-4.2.2	Передача по значению / pass by value
+GO-4.2.2	Передача по значению / pass by value	https://go.dev/doc/faq#pass_by_value
 GO-4.2.3	Рекурсия / recursion
-GO-4.3.1	Функциональные типы / function types
+GO-4.3.1	Функциональные типы / function types	https://go.dev/ref/spec#Function_types
 GO-4.3.1	Функции первого класса / first-class functions
 GO-4.3.2	Функции высшего порядка / higher-order functions
-GO-4.3.3	Анонимные функции / anonymous functions (function literals)
-GO-4.4.1	Замыкания / closures
+GO-4.3.3	Анонимные функции / anonymous functions (function literals)	https://go.dev/ref/spec#Function_literals
+GO-4.4.1	Замыкания / closures	https://go.dev/ref/spec#Function_literals
 GO-4.4.2	Замыкания / closures
 GO-4.4.3	Замыкания / closures
 GO-4.4.3	Анализ побега / escape analysis
-GO-4.4.4	Переменная цикла в Go 1.22 / Go 1.22 loop variable semantics
-GO-4.5.1	defer / defer statement
-GO-4.5.2	defer / defer statement
-GO-4.5.3	defer / defer statement
-GO-4.5.4	defer и именованные результаты / defer with named return values
+GO-4.4.4	Переменная цикла в Go 1.22 / Go 1.22 loop variable semantics	https://go.dev/blog/loopvar-preview
+GO-4.5.1	defer / defer statement	https://go.dev/ref/spec#Defer_statements https://go.dev/blog/defer-panic-and-recover
+GO-4.5.2	defer / defer statement	https://go.dev/ref/spec#Defer_statements
+GO-4.5.3	defer / defer statement	https://go.dev/ref/spec#Defer_statements
+GO-4.5.4	defer и именованные результаты / defer with named return values	https://go.dev/ref/spec#Defer_statements
 GO-4.5.5	defer в цикле / defer in loop
-GO-4.6.1	panic / panic	https://pkg.go.dev/builtin#panic
+GO-4.6.1	panic / panic	https://pkg.go.dev/builtin#panic https://go.dev/ref/spec#Handling_panics https://go.dev/blog/defer-panic-and-recover
 GO-4.6.1	Раскрутка стека / stack unwinding
 GO-4.6.2	panic / panic	https://pkg.go.dev/builtin#panic
-GO-4.6.3	recover / recover	https://pkg.go.dev/builtin#recover
-GO-4.6.4	Ошибки и паники в Go / errors vs panics
+GO-4.6.3	recover / recover	https://pkg.go.dev/builtin#recover https://go.dev/ref/spec#Handling_panics
+GO-4.6.4	Ошибки и паники в Go / errors vs panics	https://go.dev/doc/effective_go#panic
 GO-4.6.5	os.Exit / os.Exit	https://pkg.go.dev/os#Exit
-GO-5.1.1	Пакеты в Go / Go packages
-GO-5.1.2	Структура проекта Go / Go project layout
-GO-5.1.3	Экспортируемые имена / exported names
+GO-5.1.1	Пакеты в Go / Go packages	https://go.dev/doc/code
+GO-5.1.2	Структура проекта Go / Go project layout	https://go.dev/doc/modules/layout
+GO-5.1.3	Экспортируемые имена / exported names	https://go.dev/ref/spec#Exported_identifiers
 GO-5.1.3	Инкапсуляция / encapsulation
-GO-5.1.4	Импорт пакетов / import declarations
-GO-5.1.4	Пустой импорт / blank import
-GO-5.2.1	Инициализация пакета / package initialization
-GO-5.2.2	Функция init / init function
-GO-5.2.3	Функция init / init function
+GO-5.1.4	Импорт пакетов / import declarations	https://go.dev/ref/spec#Import_declarations
+GO-5.1.4	Пустой импорт / blank import	https://go.dev/doc/effective_go#blank_import
+GO-5.2.1	Инициализация пакета / package initialization	https://go.dev/ref/spec#Package_initialization
+GO-5.2.2	Функция init / init function	https://go.dev/doc/effective_go#init
+GO-5.2.3	Функция init / init function	https://go.dev/doc/effective_go#init
 GO-5.3.1	Команда go get / go get	https://pkg.go.dev/cmd/go#hdr-Add_dependencies_to_current_module_and_install_them
-GO-5.3.1	Модули Go / Go modules
-GO-5.3.2	Файл go.sum / go.sum
+GO-5.3.1	Модули Go / Go modules	https://go.dev/ref/mod
+GO-5.3.2	Файл go.sum / go.sum	https://go.dev/ref/mod#go-sum-files
 GO-5.3.3	go mod tidy / go mod tidy	https://pkg.go.dev/cmd/go#hdr-Add_missing_and_remove_unused_modules
 GO-5.3.4	go doc / go doc	https://pkg.go.dev/cmd/go#hdr-Show_documentation_for_package_or_symbol
 GO-5.3.4	pkg.go.dev / pkg.go.dev	https://pkg.go.dev/about
-GO-6.1.1	Указатели в Go / pointers in Go
+GO-6.1.1	Указатели в Go / pointers in Go	https://go.dev/ref/spec#Pointer_types
 GO-6.1.2	Указатели в Go / pointers in Go
-GO-6.1.2	Оператор взятия адреса / address operator (&)
-GO-6.1.3	Разыменование указателя / pointer dereference
+GO-6.1.2	Оператор взятия адреса / address operator (&)	https://go.dev/ref/spec#Address_operators
+GO-6.1.3	Разыменование указателя / pointer dereference	https://go.dev/ref/spec#Address_operators
 GO-6.1.4	Нулевой указатель / nil pointer
 GO-6.1.4	Разыменование nil-указателя / nil pointer dereference
-GO-6.1.5	Арифметика указателей / pointer arithmetic
+GO-6.1.5	Арифметика указателей / pointer arithmetic	https://go.dev/doc/faq#no_pointer_arithmetic
 GO-6.2.1	Передача по указателю / pass by pointer
-GO-6.2.2	Функция new / new	https://pkg.go.dev/builtin#new
-GO-6.2.3	Анализ побега / escape analysis
+GO-6.2.2	Функция new / new	https://pkg.go.dev/builtin#new https://go.dev/doc/effective_go#allocation_new
+GO-6.2.3	Анализ побега / escape analysis	https://go.dev/doc/faq#stack_or_heap
 GO-6.2.4	Чтение ввода / reading user input	https://pkg.go.dev/fmt#Scan
 ПРОГОН-1	?
