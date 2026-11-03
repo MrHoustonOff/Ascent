@@ -22,7 +22,7 @@ let shown = 0;
 // карточка окна: фон, лента группы, значок с ореолом (редкие — лучи и плашка, обычные — искры),
 // тёмная стеклянная карточка (название, описание, дата), гофер поверх, внизу подпись «Ascent · учу Go».
 // Длинный текст — компактнее: значок меньше, гофер подвигается и уменьшается, чтобы не закрывать текст.
-const isRare = (a) => a.tier === 'success';
+const isRare = (a) => a.tier === 'success' || a.group === 'topic'; // крупные вехи и все тематические
 const LOGO_URL = new URL('../ds/logo.svg', import.meta.url).href;
 function buildCard(a, { btns } = {}) {
   const rng = rngOf(a.id);
