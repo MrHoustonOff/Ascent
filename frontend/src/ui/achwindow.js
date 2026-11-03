@@ -5,6 +5,7 @@ import { h, clear } from './dom.js';
 import { achBadge } from './achicons.js';
 import { gopherSVG, POSES } from './gopher.js';
 import { go } from '../actions.js';
+import { badgeImage } from './recap-draw.js';
 
 const queue = [];
 let open = null;
@@ -18,29 +19,37 @@ const GROUP = { themes: 'Темы', day: 'За один день', week: 'За �
 const POSE = { themes: ['cheer', 'proud', 'wave'], day: ['jump', 'dance'], week: ['dance', 'cheer'], month: ['proud', 'cheer'], streak: ['run', 'jump'], blocks: ['proud', 'point'], stages: ['cheer', 'jump'], tracks: ['think', 'proud'], topic: ['proud', 'wave', 'derp', 'dance'], special: ['derp', 'wave', 'sit', 'dance'] };
 
 let shown = 0;
+// карточка окна: фон, лента группы, значок с бликом, тёмная стеклянная карточка (название, описание, дата), гофер
+function buildCard(a, { foot } = {}) {
+  const rng = rngOf(a.id);
+  const pose = pickR(rng, POSE[a.group] || ['cheer']);
+  const bg = h('canvas', { class: 'as-achwin__bg', 'aria-hidden': 'true' });
+  const card = h('div', { class: 'as-achwin', role: 'dialog', 'aria-modal': 'true', 'aria-label': (a.replay ? '' : 'Новое достижение: ') + a.name },
+    bg,
+    foot ? h('div', { class: 'as-achwin__burst', 'aria-hidden': 'true' }, confetti(rng)) : null,
+    h('div', { class: 'as-achwin__body' },
+      h('div', { class: 'as-achwin__kicker' }, a.replay ? (GROUP[a.group] || 'Достижение') : 'Новое · ' + (GROUP[a.group] || 'достижение')),
+      h('div', { class: 'as-achwin__badge' }, achBadge({ ...a, unlocked: true }, 168)),
+      h('div', { class: 'as-achwin__glass' },
+        h('h2', { class: 'as-achwin__name' }, a.name),
+        h('p', { class: 'as-achwin__desc' }, a.desc),
+        a.when ? h('div', { class: 'as-achwin__when' }, 'Открыто ' + a.when) : null)),
+    h('div', { class: 'as-achwin__gopher', html: gopherSVG({ ...(POSES[pose] || POSES.cheer).opts, width: 132 }) }),
+    foot || null);
+  return { card, bg, pose };
+}
+
 function next() {
   const a = queue.shift();
   if (!a) { close(); return; }
   shown++;
   const total = shown + queue.length;
-  const rng = rngOf(a.id);
-  const bg = h('canvas', { class: 'as-achwin__bg', 'aria-hidden': 'true' });
-  const pose = pickR(rng, POSE[a.group] || ['cheer']);
-  const card = h('div', { class: 'as-achwin', role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Новое достижение: ' + a.name },
-    bg,
-    h('div', { class: 'as-achwin__burst', 'aria-hidden': 'true' }, confetti(rng)),
-    h('div', { class: 'as-achwin__body' },
-      h('div', { class: 'as-achwin__kicker' }, a.replay ? (GROUP[a.group] || 'Достижение') : 'Новое достижение · ' + (GROUP[a.group] || '')),
-      h('div', { class: 'as-achwin__badge' }, achBadge({ ...a, unlocked: true }, 168)),
-      h('h2', { class: 'as-achwin__name' }, a.name),
-      h('p', { class: 'as-achwin__desc' }, a.desc),
-      a.when ? h('div', { class: 'as-achwin__when' }, 'Открыто ' + a.when) : null),
-    h('div', { class: 'as-achwin__gopher', html: gopherSVG({ ...(POSES[pose] || POSES.cheer).opts, width: 132 }) }),
-    total > 1 ? h('span', { class: 'as-achwin__count' }, `${shown} из ${total}`) : null,
-    h('div', { class: 'as-achwin__foot' },
-      h('div', { class: 'as-achwin__btns' },
-        a.replay ? null : h('button', { class: 'as-btn as-btn--ghost as-btn--sm', onclick: () => { queue.length = 0; close(); go('#/achievements'); } }, 'Все достижения'),
-        h('button', { class: 'as-btn as-btn--primary', autofocus: true, onclick: next }, queue.length ? 'Дальше' : 'Отлично'))));
+  const foot = h('div', { class: 'as-achwin__foot' },
+    h('div', { class: 'as-achwin__btns' },
+      a.replay ? null : h('button', { class: 'as-btn as-btn--ghost as-btn--sm', onclick: () => { queue.length = 0; close(); go('#/achievements'); } }, 'Все достижения'),
+      h('button', { class: 'as-btn as-btn--primary', autofocus: true, onclick: next }, queue.length ? 'Дальше' : 'Отлично')));
+  const { card, bg } = buildCard(a, { foot });
+  if (total > 1) card.append(h('span', { class: 'as-achwin__count' }, `${shown} из ${total}`));
   if (!open) {
     const scrim = h('div', { class: 'as-scrim as-achwin__scrim' });
     (document.querySelector('.as-window') || document.body).append(scrim);
@@ -55,6 +64,102 @@ function next() {
     drawBackdrop(bg.getContext('2d'), bg.width, bg.height, a, rngOf(a.id));
     card.querySelector('.as-btn--primary')?.focus();
   });
+}
+
+// ---------- картинка окна для экспорта ----------
+// Окно собирается вне экрана, с него снимается раскладка, и всё рисуется на холсте в k раз крупнее:
+// фон, рамка, лента, значок с бликом, стеклянная карточка, гофер. Без кнопки, конфетти и счётчика.
+export async function achCardPNG(a, k = 3) {
+  const { card } = buildCard({ ...a, replay: true });
+  card.classList.add('is-static');
+  Object.assign(card.style, { width: '440px', height: '600px' });
+  const holder = h('div', { style: { position: 'fixed', left: '-10000px', top: '0', width: '440px', height: '600px' } }, card);
+  (document.querySelector('.as-window') || document.body).append(holder);
+  await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+  if (document.fonts) await document.fonts.ready;
+  const R = card.getBoundingClientRect();
+  const rel = (el) => { if (!el) return null; const r = el.getBoundingClientRect(); return { x: (r.left - R.left) * k, y: (r.top - R.top) * k, w: r.width * k, h: r.height * k }; };
+  const q = (s) => card.querySelector(s);
+  const L = { kick: rel(q('.as-achwin__kicker')), badge: rel(q('.as-achwin__badge')), glass: rel(q('.as-achwin__glass')), name: rel(q('.as-achwin__name')), desc: rel(q('.as-achwin__desc')), when: rel(q('.as-achwin__when')), gopher: rel(q('.as-achwin__gopher svg')) };
+  const family = getComputedStyle(q('.as-achwin__name')).fontFamily;
+  // строки — как их перенёс браузер в окне: слова группируются по вертикали
+  const domLines = (el) => {
+    const out = []; if (!el) return out;
+    const tn = [...el.childNodes].find((n) => n.nodeType === 3); if (!tn) return out;
+    const re = /\S+/g; let m, top = null;
+    while ((m = re.exec(tn.data))) {
+      const r = document.createRange(); r.setStart(tn, m.index); r.setEnd(tn, m.index + m[0].length);
+      const t = Math.round(r.getBoundingClientRect().top);
+      if (top === null || Math.abs(t - top) > 4) { out.push(m[0]); top = t; } else out[out.length - 1] += ' ' + m[0];
+    }
+    return out;
+  };
+  const nameLines = domLines(q('.as-achwin__name')), descLines = domLines(q('.as-achwin__desc'));
+  const theme = document.querySelector('[data-theme]')?.getAttribute('data-theme') || 'dark';
+  const kickText = q('.as-achwin__kicker').textContent.toUpperCase(), whenText = q('.as-achwin__when')?.textContent.toUpperCase() || '';
+  const gsvg = q('.as-achwin__gopher svg').outerHTML;
+  holder.remove();
+
+  const W = 440 * k, H = 600 * k;
+  const bgc = document.createElement('canvas'); bgc.width = W; bgc.height = H;
+  drawBackdrop(bgc.getContext('2d'), W, H, a, rngOf(a.id));
+  const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+  const g = cv.getContext('2d');
+  const rr = (x, y, w, hh, r) => { g.beginPath(); g.roundRect(x, y, w, hh, r); };
+  rr(0, 0, W, H, 28 * k); g.clip();
+  g.drawImage(bgc, 0, 0);
+  // низ чуть темнее, как под кнопками в окне
+  const fg = g.createLinearGradient(0, H - 90 * k, 0, H); fg.addColorStop(0, 'rgba(0,0,0,0)'); fg.addColorStop(1, 'rgba(0,0,0,.35)');
+  g.fillStyle = fg; g.fillRect(0, H - 90 * k, W, 90 * k);
+  // рамка: светлая линия, тёмная полоса, тонкая линия
+  g.lineWidth = 3 * k; g.strokeStyle = 'rgba(127,212,234,.65)'; rr(1.5 * k, 1.5 * k, W - 3 * k, H - 3 * k, 27 * k); g.stroke();
+  g.lineWidth = 6 * k; g.strokeStyle = 'rgba(0,0,0,.25)'; rr(6 * k, 6 * k, W - 12 * k, H - 12 * k, 23 * k); g.stroke();
+  g.lineWidth = 1 * k; g.strokeStyle = 'rgba(127,212,234,.25)'; rr(9.5 * k, 9.5 * k, W - 19 * k, H - 19 * k, 19 * k); g.stroke();
+  // лента группы
+  const K = L.kick;
+  g.save(); g.shadowColor = 'rgba(0,0,0,.35)'; g.shadowBlur = 18 * k; g.shadowOffsetY = 6 * k;
+  const kg = g.createLinearGradient(K.x, 0, K.x + K.w, 0); kg.addColorStop(0, '#1e7f95'); kg.addColorStop(1, '#4cc9ea');
+  g.fillStyle = kg; g.beginPath(); g.roundRect(K.x, K.y, K.w, K.h, [0, 0, 14 * k, 14 * k]); g.fill(); g.restore();
+  g.fillStyle = '#fff'; g.font = `700 ${11.5 * k}px ${family}`; g.textAlign = 'center'; g.textBaseline = 'middle';
+  if ('letterSpacing' in g) g.letterSpacing = `${1.6 * k}px`;
+  g.fillText(kickText, K.x + K.w / 2, K.y + K.h / 2 + 0.5 * k);
+  if ('letterSpacing' in g) g.letterSpacing = '0px';
+  // значок: свечение, сам значок, голографический блик
+  const B = L.badge, img = await badgeImage(a, theme);
+  g.save(); g.shadowColor = 'rgba(127,212,234,.45)'; g.shadowBlur = 26 * k;
+  try { g.drawImage(img, B.x, B.y, B.w, B.h); } catch { /* без значка картинка всё равно нужна */ }
+  g.restore();
+  g.save(); rr(B.x, B.y, B.w, B.h, B.w * 0.3); g.clip(); g.globalCompositeOperation = 'screen';
+  const hg = g.createLinearGradient(B.x, B.y, B.x + B.w, B.y + B.h * 0.55);
+  hg.addColorStop(0.35, 'rgba(255,255,255,0)'); hg.addColorStop(0.48, 'rgba(255,255,255,.45)'); hg.addColorStop(0.52, 'rgba(160,240,255,.25)'); hg.addColorStop(0.65, 'rgba(255,255,255,0)');
+  g.fillStyle = hg; g.fillRect(B.x, B.y, B.w, B.h); g.restore();
+  // гофер — под стеклянной карточкой, как в окне
+  const gi = new Image(); gi.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(gsvg.includes('xmlns=') ? gsvg : gsvg.replace('<svg', '<svg xmlns="http://www.w3.org/2000/svg"'));
+  await gi.decode().catch(() => {});
+  try { g.drawImage(gi, L.gopher.x, L.gopher.y + 44 * k, L.gopher.w, L.gopher.h); } catch { /* без гофера */ } // кнопки нет — гофер ниже, на её место
+  // стеклянная карточка: размытый фон + тёмная заливка
+  const G = L.glass;
+  g.save(); g.shadowColor = 'rgba(0,0,0,.35)'; g.shadowBlur = 30 * k; g.shadowOffsetY = 10 * k; g.fillStyle = 'rgba(8,14,20,.01)'; rr(G.x, G.y, G.w, G.h, 20 * k); g.fill(); g.restore();
+  g.save(); rr(G.x, G.y, G.w, G.h, 20 * k); g.clip();
+  g.filter = `blur(${10 * k}px) saturate(1.2)`; g.drawImage(bgc, 0, 0); g.filter = 'none';
+  g.fillStyle = 'rgba(8,14,20,.62)'; g.fillRect(G.x, G.y, G.w, G.h); g.restore();
+  g.lineWidth = 1 * k; g.strokeStyle = 'rgba(255,255,255,.14)'; rr(G.x + 0.5 * k, G.y + 0.5 * k, G.w - k, G.h - k, 20 * k); g.stroke();
+  // текст по ширине своих блоков
+  const cx = G.x + G.w / 2;
+  g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = '#fff';
+  const nf = `850 ${32 * k}px ${family}`, nl = nameLines.length ? nameLines : [a.name];
+  g.font = nf; nl.forEach((t, i) => g.fillText(t, cx, L.name.y + (i + 0.5) * 38 * k));
+  const df = `500 ${15.5 * k}px ${family}`, dl = descLines.length ? descLines : [a.desc];
+  g.globalAlpha = 0.95; g.font = df; dl.forEach((t, i) => g.fillText(t, cx, L.desc.y + (i + 0.5) * 22 * k));
+  if (L.when) {
+    g.globalAlpha = 1; g.fillStyle = 'rgba(255,255,255,.12)'; g.fillRect(L.when.x, L.when.y, L.when.w, 1 * k);
+    g.globalAlpha = 0.75; g.fillStyle = '#fff'; g.font = `600 ${12 * k}px ${family}`;
+    if ('letterSpacing' in g) g.letterSpacing = `${0.72 * k}px`;
+    g.fillText(whenText, cx, L.when.y + 4 * k + 4 * k + 8 * k);
+    if ('letterSpacing' in g) g.letterSpacing = '0px';
+  }
+  g.globalAlpha = 1;
+  return cv.toDataURL('image/png');
 }
 
 function close() {

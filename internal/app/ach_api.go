@@ -39,6 +39,7 @@ type AchRef struct {
 	Sub   string `json:"sub"`
 	Name  string `json:"name"`
 	Desc  string `json:"desc"`
+	When  string `json:"when,omitempty"` // «2 ноября» — когда открыто (в итогах)
 }
 
 // syncAch записывает в БД все выполненные достижения; возвращает только что открытые.

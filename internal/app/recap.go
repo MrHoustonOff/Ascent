@@ -247,7 +247,7 @@ func (a *App) Recap(kind, date string) (RecapDTO, error) {
 		r.AchOpen = len(have)
 		for _, d := range ach.Defs {
 			if row, ok := have[d.ID]; ok && !row.At.IsZero() && inRange(row.At) {
-				r.Achievements = append(r.Achievements, AchRef{ID: d.ID, Icon: d.Icon, Tier: d.Tier, Group: d.Group, Mark: d.Mark, Sub: d.Sub, Name: d.Name, Desc: d.Desc})
+				r.Achievements = append(r.Achievements, AchRef{ID: d.ID, Icon: d.Icon, Tier: d.Tier, Group: d.Group, Mark: d.Mark, Sub: d.Sub, Name: d.Name, Desc: d.Desc, When: dateGen(stats.ParseDay(in.DayLabel(row.At)))})
 			}
 		}
 	}
