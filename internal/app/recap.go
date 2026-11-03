@@ -516,6 +516,24 @@ func (a *App) SaveImages(kind, date string, names, images []string) (string, err
 	return dir, writeImages(dir, names, images)
 }
 
+// SaveAchBadges сохраняет значки достижений (PNG) в подпапку «Достижения» папки экспорта dir,
+// которую только что вернул SaveImages. Писать можно только внутрь папки экспорта.
+func (a *App) SaveAchBadges(dir string, names, images []string) (string, error) {
+	a.mu.Lock()
+	set, _ := a.st.Settings()
+	a.mu.Unlock()
+	root := filepath.Clean(set["export_dir"])
+	dir = filepath.Clean(dir)
+	if rel, err := filepath.Rel(root, dir); root == "." || err != nil || rel == "." || strings.HasPrefix(rel, "..") || filepath.IsAbs(rel) {
+		return "", fmt.Errorf("папка вне папки экспорта: %s", dir)
+	}
+	sub := filepath.Join(dir, "Достижения")
+	if err := os.MkdirAll(sub, 0o755); err != nil {
+		return "", err
+	}
+	return sub, writeImages(sub, names, images)
+}
+
 // ChangeExportDir — выбрать другую папку для экспорта.
 func (a *App) ChangeExportDir() (string, error) { return a.pickExportDir() }
 

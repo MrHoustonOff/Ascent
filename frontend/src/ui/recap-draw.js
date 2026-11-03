@@ -351,6 +351,13 @@ async function cardThemes(g, W, H, c, list, first, more) {
   await drawGopher(g, poseFor('themes', d, rng), flip ? 170 * u : W - 170 * u, H - 112 * u, (sq ? 200 : 300) * u, flip ? 0.08 : -0.08, flip);
 }
 
+// значок достижения отдельной картинкой: тот же, что на странице «Достижения», на прозрачном фоне
+export async function achBadgePNG(a, size = 512) {
+  const img = await badgeImage(a);
+  const cv = document.createElement('canvas'); cv.width = size; cv.height = size;
+  try { cv.getContext('2d').drawImage(img, 0, 0, size, size); } catch { /* пустая картинка лучше, чем сбой экспорта */ }
+  return cv.toDataURL('image/png');
+}
 async function badgeImage(a) {
   const probe = document.createElement('div');
   probe.setAttribute('data-theme', 'dark'); probe.className = 'as-root'; probe.style.position = 'absolute'; probe.style.left = '-9999px';

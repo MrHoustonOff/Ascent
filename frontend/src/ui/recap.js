@@ -6,7 +6,7 @@ import { S } from '../state.js';
 import { h, clear, pluralRu } from './dom.js';
 import { openDialog } from './dialog.js';
 import { toast } from './toast.js';
-import { FORMATS, STYLES, STYLE_KEYS, EXTRA_CARDS, planCards, drawCard, listPages, rngFrom, pick } from './recap-draw.js';
+import { FORMATS, STYLES, STYLE_KEYS, EXTRA_CARDS, planCards, drawCard, listPages, achBadgePNG, rngFrom, pick } from './recap-draw.js';
 import { openEditor } from './recap-editor.js';
 import { openListEditor } from './recap-list.js';
 import { openNotes } from './recap-notes.js';
@@ -88,6 +88,11 @@ export function openRecap() {
       class: 'as-recap__chip is-' + (p.dayX ? 'on' : 'off'), title: 'Надпись «учу Go · день X» на первой карточке',
       onclick: () => { p.dayX = !p.dayX; savePrefs(p); drawToggles(); build(); },
     }, 'День X', h('span', { class: 'as-recap__chipst' }, p.dayX ? 'есть' : 'нет')));
+    // значки достижений периода отдельными PNG в подпапку «Достижения» при сохранении
+    toggles.append(h('button', {
+      class: 'as-recap__chip is-' + (p.achPng ? 'on' : 'off'), title: 'При сохранении: значки достижений периода отдельными картинками в подпапку «Достижения»',
+      onclick: () => { p.achPng = !p.achPng; savePrefs(p); drawToggles(); },
+    }, 'Значки достижений', h('span', { class: 'as-recap__chipst' }, p.achPng ? 'сохранять' : 'нет')));
   };
   drawToggles();
 
@@ -239,11 +244,16 @@ export function openRecap() {
     const names = list.map((c) => c.name);
     try {
       const dir = await api.SaveImages(kind, kind === 'range' ? `${data.from}..${data.date}` : data.date, names, urls);
-      if (dir) toast({ title: 'Картинки сохранены', body: dir });
+      if (dir && p.achPng && data.achievements.length) { // значки достижений периода — в подпапку «Достижения»
+        const pngs = []; for (const a of data.achievements) pngs.push(await achBadgePNG(a));
+        await api.SaveAchBadges(dir, data.achievements.map((a) => a.name), pngs);
+      }
+      if (dir) toast({ title: 'Картинки сохранены', body: dir + (p.achPng && data.achievements.length ? ` · значков: ${data.achievements.length}` : '') });
     } catch (e) {
       if (window.go && window.go.app) { toast({ title: 'Не удалось сохранить', body: String(e.message || e), kind: 'streak' }); return; }
       // в браузере (веб-версия, разработка) — обычная загрузка файлов
       urls.forEach((u, i) => { const a = document.createElement('a'); a.href = u; a.download = `${data.title} ${data.date} ${String(i + 1).padStart(2, '0')} ${names[i]}.png`; a.click(); });
+      if (p.achPng) for (const [i, ac] of data.achievements.entries()) { const a = document.createElement('a'); a.href = await achBadgePNG(ac); a.download = `Достижение ${String(i + 1).padStart(2, '0')} ${ac.name}.png`; a.click(); }
       toast({ title: 'Картинки скачаны' });
     }
   }
