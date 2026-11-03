@@ -687,15 +687,14 @@ html,body{margin:0;height:100%;overflow:hidden;background:var(--surface-window)}
 .as-achwin__bg{position:absolute;inset:0;width:100%;height:100%}
 .as-achwin__body{position:relative;display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;padding:30px 30px 0;flex:1}
 .as-achwin__kicker{max-width:70%;margin-top:-30px;padding:8px 22px;border-radius:0 0 14px 14px;background:linear-gradient(90deg,#1e7f95,#4cc9ea);box-shadow:0 6px 18px rgba(0,0,0,.35);font:700 11.5px/16px var(--font-sans);letter-spacing:.14em;text-transform:uppercase;position:relative;z-index:2}
-.as-achwin__badge{position:relative;overflow:hidden;border-radius:30%;margin:14px 0 6px;filter:drop-shadow(0 0 26px rgba(127,212,234,.45)) drop-shadow(0 12px 26px rgba(0,0,0,.5));animation:as-achwin-badge .9s .15s cubic-bezier(.2,1.5,.4,1) both}
+.as-achwin__badge{position:relative;overflow:hidden;border-radius:30%;filter:drop-shadow(0 12px 26px rgba(0,0,0,.5));animation:as-achwin-badge .9s .15s cubic-bezier(.2,1.5,.4,1) both}
 .as-achwin__badge svg{display:block}
-.as-achwin__badge::after{content:"";position:absolute;inset:0;background:linear-gradient(115deg,transparent 35%,rgba(255,255,255,.45) 48%,rgba(160,240,255,.25) 52%,transparent 65%);mix-blend-mode:screen;pointer-events:none}
 .as-achwin__glass{display:flex;flex-direction:column;align-items:center;gap:6px;max-width:340px;padding:16px 20px 14px;border-radius:20px;background:rgba(8,14,20,.62);border:1px solid rgba(255,255,255,.14);backdrop-filter:blur(10px) saturate(1.2);box-shadow:0 10px 30px rgba(0,0,0,.35);animation:as-rise .5s .3s both}
 .as-achwin__name{margin:0;font:850 32px/38px var(--font-sans);letter-spacing:-.015em;text-wrap:balance}
 .as-achwin__desc{margin:0;max-width:300px;font:500 15.5px/22px var(--font-sans);opacity:.95;text-wrap:pretty}
 .as-achwin__when{margin-top:4px;padding-top:8px;border-top:1px solid rgba(255,255,255,.12);width:100%;font:600 12px/16px var(--font-sans);opacity:.75;letter-spacing:.06em;text-transform:uppercase}
 .as-achwin.is-static,.as-achwin.is-static *{animation:none!important;transition:none!important}
-.as-achwin__gopher{position:absolute;left:14px;bottom:58px;transform-origin:50% 100%;animation:as-achwin-gopher .7s .35s cubic-bezier(.2,1.4,.4,1) both;pointer-events:none}
+.as-achwin__gopher{position:absolute;z-index:3;left:14px;bottom:58px;transform-origin:50% 100%;animation:as-achwin-gopher .7s .35s cubic-bezier(.2,1.4,.4,1) both;pointer-events:none}
 .as-achwin__foot{position:relative;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 18px 18px;background:linear-gradient(transparent,rgba(0,0,0,.35))}
 .as-achwin__count{position:absolute;top:14px;right:16px;padding:3px 10px;border-radius:999px;background:rgba(0,0,0,.28);font:600 12px/16px var(--font-sans);white-space:nowrap}
 .as-achwin__btns{display:flex;gap:8px;margin-left:auto}
@@ -706,7 +705,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:var(--surface-window)}
 @keyframes as-achwin-badge{0%{opacity:0;transform:scale(.3) rotate(-25deg)}70%{opacity:1;transform:scale(1.08) rotate(4deg)}100%{transform:none}}
 @keyframes as-achwin-gopher{0%{opacity:0;transform:translateY(60px) scale(.8)}100%{opacity:1;transform:none}}
 @keyframes as-confetti{0%{opacity:1;transform:translate(0,0) rotate(0)}80%{opacity:1}100%{opacity:0;transform:translate(var(--x),calc(var(--y) * -1.6)) rotate(var(--r))}}
-@media (prefers-reduced-motion:reduce){.as-achwin,.as-achwin__badge,.as-achwin__gopher,.as-achwin__name,.as-achwin__desc,.as-achwin__when{animation:none}.as-achwin__burst{display:none}}
+@media (prefers-reduced-motion:reduce){.as-achwin__shine,.as-achwin__aura,.as-achwin__spark,.as-achwin,.as-achwin__badge,.as-achwin__gopher,.as-achwin__name,.as-achwin__desc,.as-achwin__when{animation:none}.as-achwin__burst{display:none}}
 .as-editor__field--col{grid-template-columns:1fr}
 .as-editor__sws{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
 .as-editor__sw{width:24px;height:24px;border-radius:50%;border:2px solid var(--surface-overlay);box-shadow:0 0 0 1px var(--line-strong);padding:0;cursor:default}
@@ -806,4 +805,21 @@ html,body{margin:0;height:100%;overflow:hidden;background:var(--surface-window)}
 .as-panel textarea.as-cm__new{flex:1 1 100%;min-height:36px}
 .as-panel textarea.as-cm__ta{flex:none;min-height:64px}
 .as-panel .as-cmlist{overflow:auto;min-height:0}
-.as-achwin__glass{position:relative;z-index:2}
+
+/* окно достижения: значок, блеск по редкости, подпись, раскладка без наездов */
+.as-achwin__badgewrap{position:relative;margin:14px 0 6px;display:grid;place-items:center}
+.as-achwin.is-compact .as-achwin__badgewrap{margin:8px 0 2px}
+.as-achwin__aura{position:absolute;left:50%;top:50%;width:420px;height:420px;margin:-210px 0 0 -210px;border-radius:50%;pointer-events:none}
+.as-achwin__aura.is-rare{background:radial-gradient(circle,rgba(245,197,66,.42),rgba(245,197,66,0) 46%),repeating-conic-gradient(from 0deg,rgba(255,236,170,.16) 0 6deg,transparent 6deg 20deg);-webkit-mask:radial-gradient(circle,#000 18%,transparent 68%);mask:radial-gradient(circle,#000 18%,transparent 68%);animation:as-achwin-rays 24s linear infinite}
+.as-achwin__aura.is-common{background:radial-gradient(circle,rgba(127,212,234,.38),rgba(127,212,234,0) 42%)}
+@keyframes as-achwin-rays{to{transform:rotate(360deg)}}
+.as-achwin__shine{position:absolute;inset:0;pointer-events:none;background:linear-gradient(115deg,transparent 38%,rgba(255,255,255,.55) 50%,transparent 62%);transform:translateX(-120%);animation:as-achwin-shine 1.1s 1s cubic-bezier(.4,0,.2,1) both}
+@keyframes as-achwin-shine{to{transform:translateX(120%)}}
+.as-achwin__rare{display:inline-flex;gap:6px;align-items:center;padding:4px 12px;border-radius:999px;background:rgba(245,197,66,.16);border:1px solid rgba(245,197,66,.55);color:#F5C542;font:700 11px/16px var(--font-sans);letter-spacing:.1em;text-transform:uppercase;margin-top:4px}
+.as-achwin__spark{position:absolute;z-index:0;color:#F5C542;text-shadow:0 0 10px rgba(245,197,66,.85);line-height:1;pointer-events:none;animation:as-achwin-twinkle 2.4s var(--d,0s) ease-in-out infinite}
+@keyframes as-achwin-twinkle{0%,100%{opacity:.35;transform:scale(.7) rotate(0)}50%{opacity:1;transform:scale(1.1) rotate(20deg)}}
+.as-achwin__brand{display:flex;gap:8px;align-items:center;font:700 13px/16px var(--font-sans);opacity:.9;position:relative;z-index:4}
+.as-achwin__brand img{width:22px;height:22px;border-radius:6px}
+.as-achwin.is-compact .as-achwin__name{font-size:28px;line-height:33px}
+.as-achwin.is-compact .as-achwin__desc{font-size:14.5px;line-height:20px}
+.as-achwin__body{z-index:1}.as-achwin__glass{position:relative}

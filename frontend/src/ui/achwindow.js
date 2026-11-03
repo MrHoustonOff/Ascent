@@ -19,24 +19,54 @@ const GROUP = { themes: 'Темы', day: 'За один день', week: 'За �
 const POSE = { themes: ['cheer', 'proud', 'wave'], day: ['jump', 'dance'], week: ['dance', 'cheer'], month: ['proud', 'cheer'], streak: ['run', 'jump'], blocks: ['proud', 'point'], stages: ['cheer', 'jump'], tracks: ['think', 'proud'], topic: ['proud', 'wave', 'derp', 'dance'], special: ['derp', 'wave', 'sit', 'dance'] };
 
 let shown = 0;
-// карточка окна: фон, лента группы, значок с бликом, тёмная стеклянная карточка (название, описание, дата), гофер
-function buildCard(a, { foot } = {}) {
+// карточка окна: фон, лента группы, значок с ореолом (редкие — лучи и плашка, обычные — искры),
+// тёмная стеклянная карточка (название, описание, дата), гофер поверх, внизу подпись «Ascent · учу Go».
+// Длинный текст — компактнее: значок меньше, гофер подвигается и уменьшается, чтобы не закрывать текст.
+const isRare = (a) => a.tier === 'success';
+const LOGO_URL = new URL('../ds/logo.svg', import.meta.url).href;
+function buildCard(a, { btns } = {}) {
   const rng = rngOf(a.id);
   const pose = pickR(rng, POSE[a.group] || ['cheer']);
+  const rare = isRare(a), compact = String(a.desc).length > 72 || String(a.name).length > 18;
   const bg = h('canvas', { class: 'as-achwin__bg', 'aria-hidden': 'true' });
-  const card = h('div', { class: 'as-achwin', role: 'dialog', 'aria-modal': 'true', 'aria-label': (a.replay ? '' : 'Новое достижение: ') + a.name },
+  const card = h('div', { class: 'as-achwin' + (compact ? ' is-compact' : '') + (rare ? ' is-rare' : ''), role: 'dialog', 'aria-modal': 'true', 'aria-label': (a.replay ? '' : 'Новое достижение: ') + a.name },
     bg,
-    foot ? h('div', { class: 'as-achwin__burst', 'aria-hidden': 'true' }, confetti(rng)) : null,
+    btns ? h('div', { class: 'as-achwin__burst', 'aria-hidden': 'true' }, confetti(rng)) : null,
     h('div', { class: 'as-achwin__body' },
       h('div', { class: 'as-achwin__kicker' }, a.replay ? (GROUP[a.group] || 'Достижение') : 'Новое · ' + (GROUP[a.group] || 'достижение')),
-      h('div', { class: 'as-achwin__badge' }, achBadge({ ...a, unlocked: true }, 168)),
+      rare ? h('div', { class: 'as-achwin__rare' }, '★ Редкое') : null,
+      h('div', { class: 'as-achwin__badgewrap' },
+        h('div', { class: 'as-achwin__aura ' + (rare ? 'is-rare' : 'is-common'), 'aria-hidden': 'true' }),
+        h('div', { class: 'as-achwin__badge' }, achBadge({ ...a, unlocked: true }, compact ? 124 : 168), btns ? h('span', { class: 'as-achwin__shine', 'aria-hidden': 'true' }) : null)),
       h('div', { class: 'as-achwin__glass' },
         h('h2', { class: 'as-achwin__name' }, a.name),
         h('p', { class: 'as-achwin__desc' }, a.desc),
         a.when ? h('div', { class: 'as-achwin__when' }, 'Открыто ' + a.when) : null)),
     h('div', { class: 'as-achwin__gopher', html: gopherSVG({ ...(POSES[pose] || POSES.cheer).opts, width: 132 }) }),
-    foot || null);
+    h('div', { class: 'as-achwin__foot' },
+      h('div', { class: 'as-achwin__brand' }, h('img', { src: LOGO_URL, alt: '' }), 'Ascent · учу Go'),
+      btns || null));
+  if (!rare) for (let i = 0; i < 6; i++) { // искры обычных достижений: вокруг значка, у каждого свои
+    const ang = (i / 6) * Math.PI * 2 + rng() * 0.6, rad = (compact ? 92 : 112) + rng() * 40;
+    card.append(h('span', { class: 'as-achwin__spark', 'aria-hidden': 'true', style: {
+      left: `${220 + Math.cos(ang) * rad * 1.35 - 9}px`, top: `${(compact ? 150 : 172) + Math.sin(ang) * rad * 0.8 - 9}px`, fontSize: `${12 + Math.round(rng() * 12)}px`, '--d': `${(rng() * 2).toFixed(2)}s` } }, '✦'));
+  }
   return { card, bg, pose };
+}
+// гофер поверх стекла, но не на тексте: опустить, затем уменьшить, пока не перестанет пересекаться
+function fitGopher(card) {
+  const gw = card.querySelector('.as-achwin__gopher'), svg = gw?.querySelector('svg'), glass = card.querySelector('.as-achwin__glass');
+  if (!svg || !glass) return;
+  // координаты по раскладке (offset*), без анимаций: окно ещё «въезжает», а считать надо конечное положение
+  const off = (el) => { let x = 0, y = 0; for (let e = el; e && e !== card; e = e.offsetParent) { x += e.offsetLeft; y += e.offsetTop; } return { x, y, w: el.offsetWidth, h: el.offsetHeight }; };
+  const G = off(glass), H = card.offsetHeight;
+  let cur = null;
+  const hit = () => { const gx = cur[2], gy = H - cur[0] - cur[1] * 1.2, gww = cur[1], ghh = cur[1] * 1.2; return gx + gww > G.x + 6 && gx < G.x + G.w - 6 && gy + ghh > G.y + 6 && gy < G.y + G.h - 6; };
+  for (const [bottom, w, left] of [[58, 132, 14], [50, 116, 10], [48, 100, 8], [46, 88, 6], [44, 76, 4]]) {
+    gw.style.bottom = bottom + 'px'; gw.style.left = left + 'px'; svg.style.width = w + 'px'; svg.style.height = 'auto';
+    cur = [bottom, w, left];
+    if (!hit()) return;
+  }
 }
 
 function next() {
@@ -44,11 +74,10 @@ function next() {
   if (!a) { close(); return; }
   shown++;
   const total = shown + queue.length;
-  const foot = h('div', { class: 'as-achwin__foot' },
-    h('div', { class: 'as-achwin__btns' },
-      a.replay ? null : h('button', { class: 'as-btn as-btn--ghost as-btn--sm', onclick: () => { queue.length = 0; close(); go('#/achievements'); } }, 'Все достижения'),
-      h('button', { class: 'as-btn as-btn--primary', autofocus: true, onclick: next }, queue.length ? 'Дальше' : 'Отлично')));
-  const { card, bg } = buildCard(a, { foot });
+  const btns = h('div', { class: 'as-achwin__btns' },
+    a.replay ? null : h('button', { class: 'as-btn as-btn--ghost as-btn--sm', onclick: () => { queue.length = 0; close(); go('#/achievements'); } }, 'Все'),
+    h('button', { class: 'as-btn as-btn--primary', autofocus: true, onclick: next }, queue.length ? 'Дальше' : 'Отлично'));
+  const { card, bg } = buildCard(a, { btns });
   if (total > 1) card.append(h('span', { class: 'as-achwin__count' }, `${shown} из ${total}`));
   if (!open) {
     const scrim = h('div', { class: 'as-scrim as-achwin__scrim' });
@@ -62,6 +91,7 @@ function next() {
     const r = card.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
     bg.width = Math.round(r.width * dpr); bg.height = Math.round(r.height * dpr);
     drawBackdrop(bg.getContext('2d'), bg.width, bg.height, a, rngOf(a.id));
+    fitGopher(card);
     card.querySelector('.as-btn--primary')?.focus();
   });
 }
@@ -77,11 +107,10 @@ export async function achCardPNG(a, k = 3) {
   (document.querySelector('.as-window') || document.body).append(holder);
   await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
   if (document.fonts) await document.fonts.ready;
+  fitGopher(card);
   const R = card.getBoundingClientRect();
   const rel = (el) => { if (!el) return null; const r = el.getBoundingClientRect(); return { x: (r.left - R.left) * k, y: (r.top - R.top) * k, w: r.width * k, h: r.height * k }; };
-  const q = (s) => card.querySelector(s);
-  const L = { kick: rel(q('.as-achwin__kicker')), badge: rel(q('.as-achwin__badge')), glass: rel(q('.as-achwin__glass')), name: rel(q('.as-achwin__name')), desc: rel(q('.as-achwin__desc')), when: rel(q('.as-achwin__when')), gopher: rel(q('.as-achwin__gopher svg')) };
-  const family = getComputedStyle(q('.as-achwin__name')).fontFamily;
+  const q = (sel) => card.querySelector(sel);
   // строки — как их перенёс браузер в окне: слова группируются по вертикали
   const domLines = (el) => {
     const out = []; if (!el) return out;
@@ -94,10 +123,18 @@ export async function achCardPNG(a, k = 3) {
     }
     return out;
   };
-  const nameLines = domLines(q('.as-achwin__name')), descLines = domLines(q('.as-achwin__desc'));
-  const theme = document.querySelector('[data-theme]')?.getAttribute('data-theme') || 'dark';
+  const cs = (el) => getComputedStyle(el);
+  const nameEl = q('.as-achwin__name'), descEl = q('.as-achwin__desc');
+  const L = { kick: rel(q('.as-achwin__kicker')), rare: rel(q('.as-achwin__rare')), badge: rel(q('.as-achwin__badge')), glass: rel(q('.as-achwin__glass')),
+    name: rel(nameEl), desc: rel(descEl), when: rel(q('.as-achwin__when')), gopher: rel(q('.as-achwin__gopher svg')), brand: rel(q('.as-achwin__brand')), logo: rel(q('.as-achwin__brand img')),
+    sparks: [...card.querySelectorAll('.as-achwin__spark')].map((el) => ({ ...rel(el), size: parseFloat(el.style.fontSize) })) };
+  const family = cs(nameEl).fontFamily;
+  const nameSize = parseFloat(cs(nameEl).fontSize), nameLH = parseFloat(cs(nameEl).lineHeight), descSize = parseFloat(cs(descEl).fontSize), descLH = parseFloat(cs(descEl).lineHeight);
+  const nameLines = domLines(nameEl), descLines = domLines(descEl);
   const kickText = q('.as-achwin__kicker').textContent.toUpperCase(), whenText = q('.as-achwin__when')?.textContent.toUpperCase() || '';
   const gsvg = q('.as-achwin__gopher svg').outerHTML;
+  const theme = document.querySelector('[data-theme]')?.getAttribute('data-theme') || 'dark';
+  const rare = isRare(a);
   holder.remove();
 
   const W = 440 * k, H = 600 * k;
@@ -106,12 +143,25 @@ export async function achCardPNG(a, k = 3) {
   const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
   const g = cv.getContext('2d');
   const rr = (x, y, w, hh, r) => { g.beginPath(); g.roundRect(x, y, w, hh, r); };
+  const spaced = (px) => { if ('letterSpacing' in g) g.letterSpacing = px; };
   rr(0, 0, W, H, 28 * k); g.clip();
   g.drawImage(bgc, 0, 0);
-  // низ чуть темнее, как под кнопками в окне
   const fg = g.createLinearGradient(0, H - 90 * k, 0, H); fg.addColorStop(0, 'rgba(0,0,0,0)'); fg.addColorStop(1, 'rgba(0,0,0,.35)');
   g.fillStyle = fg; g.fillRect(0, H - 90 * k, W, 90 * k);
-  // рамка: светлая линия, тёмная полоса, тонкая линия
+  // ореол за значком: редкие — золотой с лучами, обычные — голубой
+  const B = L.badge, bx = B.x + B.w / 2, by = B.y + B.h / 2;
+  const glow = (col, rad) => { const gr = g.createRadialGradient(bx, by, 0, bx, by, rad); gr.addColorStop(0, col); gr.addColorStop(1, col.replace(/[\d.]+\)$/, '0)')); g.fillStyle = gr; g.fillRect(bx - rad, by - rad, rad * 2, rad * 2); };
+  if (rare) {
+    const rc = document.createElement('canvas'); rc.width = W; rc.height = H; const r2 = rc.getContext('2d');
+    r2.fillStyle = 'rgba(255,236,170,.16)'; const R0 = 210 * k;
+    for (let d = 0; d < 360; d += 20) { const a0 = d * Math.PI / 180, a1 = (d + 6) * Math.PI / 180; r2.beginPath(); r2.moveTo(bx, by); r2.arc(bx, by, R0, a0, a1); r2.closePath(); r2.fill(); }
+    r2.globalCompositeOperation = 'destination-in';
+    const m = r2.createRadialGradient(bx, by, R0 * 0.18 * 2, bx, by, R0 * 0.68 * 2); m.addColorStop(0, '#000'); m.addColorStop(1, 'rgba(0,0,0,0)');
+    r2.fillStyle = m; r2.fillRect(0, 0, W, H);
+    g.drawImage(rc, 0, 0);
+    glow('rgba(245,197,66,.42)', 210 * k * 0.92);
+  } else glow('rgba(127,212,234,.38)', 210 * k * 0.84);
+  // рамка
   g.lineWidth = 3 * k; g.strokeStyle = 'rgba(127,212,234,.65)'; rr(1.5 * k, 1.5 * k, W - 3 * k, H - 3 * k, 27 * k); g.stroke();
   g.lineWidth = 6 * k; g.strokeStyle = 'rgba(0,0,0,.25)'; rr(6 * k, 6 * k, W - 12 * k, H - 12 * k, 23 * k); g.stroke();
   g.lineWidth = 1 * k; g.strokeStyle = 'rgba(127,212,234,.25)'; rr(9.5 * k, 9.5 * k, W - 19 * k, H - 19 * k, 19 * k); g.stroke();
@@ -121,22 +171,22 @@ export async function achCardPNG(a, k = 3) {
   const kg = g.createLinearGradient(K.x, 0, K.x + K.w, 0); kg.addColorStop(0, '#1e7f95'); kg.addColorStop(1, '#4cc9ea');
   g.fillStyle = kg; g.beginPath(); g.roundRect(K.x, K.y, K.w, K.h, [0, 0, 14 * k, 14 * k]); g.fill(); g.restore();
   g.fillStyle = '#fff'; g.font = `700 ${11.5 * k}px ${family}`; g.textAlign = 'center'; g.textBaseline = 'middle';
-  if ('letterSpacing' in g) g.letterSpacing = `${1.6 * k}px`;
-  g.fillText(kickText, K.x + K.w / 2, K.y + K.h / 2 + 0.5 * k);
-  if ('letterSpacing' in g) g.letterSpacing = '0px';
-  // значок: свечение, сам значок, голографический блик
-  const B = L.badge, img = await badgeImage(a, theme);
-  g.save(); g.shadowColor = 'rgba(127,212,234,.45)'; g.shadowBlur = 26 * k;
+  spaced(`${1.6 * k}px`); g.fillText(kickText, K.x + K.w / 2, K.y + K.h / 2 + 0.5 * k); spaced('0px');
+  // плашка «Редкое»
+  if (L.rare) {
+    const P = L.rare; g.fillStyle = 'rgba(245,197,66,.16)'; rr(P.x, P.y, P.w, P.h, P.h / 2); g.fill();
+    g.lineWidth = 1 * k; g.strokeStyle = 'rgba(245,197,66,.55)'; rr(P.x + 0.5 * k, P.y + 0.5 * k, P.w - k, P.h - k, P.h / 2); g.stroke();
+    g.fillStyle = '#F5C542'; g.font = `700 ${11 * k}px ${family}`; spaced(`${1.1 * k}px`); g.fillText('★ РЕДКОЕ', P.x + P.w / 2, P.y + P.h / 2 + 0.5 * k); spaced('0px');
+  }
+  // значок
+  const img = await badgeImage(a, theme);
+  g.save(); g.shadowColor = 'rgba(0,0,0,.5)'; g.shadowBlur = 26 * k; g.shadowOffsetY = 12 * k;
   try { g.drawImage(img, B.x, B.y, B.w, B.h); } catch { /* без значка картинка всё равно нужна */ }
   g.restore();
-  g.save(); rr(B.x, B.y, B.w, B.h, B.w * 0.3); g.clip(); g.globalCompositeOperation = 'screen';
-  const hg = g.createLinearGradient(B.x, B.y, B.x + B.w, B.y + B.h * 0.55);
-  hg.addColorStop(0.35, 'rgba(255,255,255,0)'); hg.addColorStop(0.48, 'rgba(255,255,255,.45)'); hg.addColorStop(0.52, 'rgba(160,240,255,.25)'); hg.addColorStop(0.65, 'rgba(255,255,255,0)');
-  g.fillStyle = hg; g.fillRect(B.x, B.y, B.w, B.h); g.restore();
-  // гофер — под стеклянной карточкой, как в окне
-  const gi = new Image(); gi.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(gsvg.includes('xmlns=') ? gsvg : gsvg.replace('<svg', '<svg xmlns="http://www.w3.org/2000/svg"'));
-  await gi.decode().catch(() => {});
-  try { g.drawImage(gi, L.gopher.x, L.gopher.y + 44 * k, L.gopher.w, L.gopher.h); } catch { /* без гофера */ } // кнопки нет — гофер ниже, на её место
+  // искры обычных достижений — под стеклом
+  g.save(); g.fillStyle = '#F5C542'; g.shadowColor = 'rgba(245,197,66,.85)'; g.shadowBlur = 10 * k;
+  for (const sp of L.sparks) { g.font = `${sp.size * k}px ${family}`; g.fillText('✦', sp.x + sp.w / 2, sp.y + sp.h / 2); }
+  g.restore();
   // стеклянная карточка: размытый фон + тёмная заливка
   const G = L.glass;
   g.save(); g.shadowColor = 'rgba(0,0,0,.35)'; g.shadowBlur = 30 * k; g.shadowOffsetY = 10 * k; g.fillStyle = 'rgba(8,14,20,.01)'; rr(G.x, G.y, G.w, G.h, 20 * k); g.fill(); g.restore();
@@ -144,21 +194,27 @@ export async function achCardPNG(a, k = 3) {
   g.filter = `blur(${10 * k}px) saturate(1.2)`; g.drawImage(bgc, 0, 0); g.filter = 'none';
   g.fillStyle = 'rgba(8,14,20,.62)'; g.fillRect(G.x, G.y, G.w, G.h); g.restore();
   g.lineWidth = 1 * k; g.strokeStyle = 'rgba(255,255,255,.14)'; rr(G.x + 0.5 * k, G.y + 0.5 * k, G.w - k, G.h - k, 20 * k); g.stroke();
-  // текст по ширине своих блоков
   const cx = G.x + G.w / 2;
   g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = '#fff';
-  const nf = `850 ${32 * k}px ${family}`, nl = nameLines.length ? nameLines : [a.name];
-  g.font = nf; nl.forEach((t, i) => g.fillText(t, cx, L.name.y + (i + 0.5) * 38 * k));
-  const df = `500 ${15.5 * k}px ${family}`, dl = descLines.length ? descLines : [a.desc];
-  g.globalAlpha = 0.95; g.font = df; dl.forEach((t, i) => g.fillText(t, cx, L.desc.y + (i + 0.5) * 22 * k));
+  g.font = `850 ${nameSize * k}px ${family}`; (nameLines.length ? nameLines : [a.name]).forEach((t, i) => g.fillText(t, cx, L.name.y + (i + 0.5) * nameLH * k));
+  g.globalAlpha = 0.95; g.font = `500 ${descSize * k}px ${family}`; (descLines.length ? descLines : [a.desc]).forEach((t, i) => g.fillText(t, cx, L.desc.y + (i + 0.5) * descLH * k));
   if (L.when) {
     g.globalAlpha = 1; g.fillStyle = 'rgba(255,255,255,.12)'; g.fillRect(L.when.x, L.when.y, L.when.w, 1 * k);
     g.globalAlpha = 0.75; g.fillStyle = '#fff'; g.font = `600 ${12 * k}px ${family}`;
-    if ('letterSpacing' in g) g.letterSpacing = `${0.72 * k}px`;
-    g.fillText(whenText, cx, L.when.y + 4 * k + 4 * k + 8 * k);
-    if ('letterSpacing' in g) g.letterSpacing = '0px';
+    spaced(`${0.72 * k}px`); g.fillText(whenText, cx, L.when.y + 16 * k); spaced('0px');
   }
   g.globalAlpha = 1;
+  // подпись «Ascent · учу Go»
+  if (L.brand) {
+    const lg = new Image(); lg.src = LOGO_URL; await lg.decode().catch(() => {});
+    try { g.drawImage(lg, L.logo.x, L.logo.y, L.logo.w, L.logo.h); } catch { /* без логотипа */ }
+    g.globalAlpha = 0.9; g.fillStyle = '#fff'; g.textAlign = 'left'; g.font = `700 ${13 * k}px ${family}`;
+    g.fillText('Ascent · учу Go', L.logo.x + L.logo.w + 8 * k, L.brand.y + L.brand.h / 2); g.globalAlpha = 1;
+  }
+  // гофер — поверх, как в окне
+  const gi = new Image(); gi.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(gsvg.includes('xmlns=') ? gsvg : gsvg.replace('<svg', '<svg xmlns="http://www.w3.org/2000/svg"'));
+  await gi.decode().catch(() => {});
+  try { g.drawImage(gi, L.gopher.x, L.gopher.y, L.gopher.w, L.gopher.h); } catch { /* без гофера */ }
   return cv.toDataURL('image/png');
 }
 
