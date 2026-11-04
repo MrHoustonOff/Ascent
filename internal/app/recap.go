@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"ascent/internal/ach"
+	"ascent/internal/plan"
 	"ascent/internal/stats"
 )
 
@@ -73,6 +74,25 @@ type RecapDTO struct {
 	Start      string           `json:"start"`      // «5 сентября» — день первой темы
 	BestStreak int              `json:"bestStreak"` // рекордная серия дней
 	Milestones []RecapMilestone `json:"milestones"` // вехи пути (для «всего пути»)
+
+	// этапы, закрытые в этом периоде: для карточки «Этап закрыт»
+	StageDone []RecapStageDone `json:"stageDone"`
+}
+
+// RecapStageDone — закрытый этап: сроки и объём.
+type RecapStageDone struct {
+	Num        int    `json:"num"`
+	Title      string `json:"title"`
+	From       string `json:"from"`       // «5 сентября» — первый урок этапа
+	To         string `json:"to"`         // «18 октября» — день закрытия
+	FromISO    string `json:"fromIso"`
+	ToISO      string `json:"toIso"`
+	Days       int    `json:"days"`       // календарных дней от первого урока до закрытия, включительно
+	ActiveDays int    `json:"activeDays"` // из них учебных
+	Lessons    int    `json:"lessons"`
+	Themes     int    `json:"themes"`
+	Blocks     int    `json:"blocks"`
+	Checks     int    `json:"checks"` // вопросов самопроверки
 }
 
 type RecapMilestone struct {
@@ -160,7 +180,7 @@ func (a *App) Recap(kind, date string) (RecapDTO, error) {
 	}
 	from, to := day, day
 	r := RecapDTO{Date: day.Format("2006-01-02"), Kind: kind, Themes: []RecapItem{}, Blocks: []RecapItem{}, Achievements: []AchRef{}, Days: []RecapDay{},
-		Tracks: []RecapTrack{}, Stages: []RecapStage{}, Forecast: []RecapForecast{}, Milestones: []RecapMilestone{}, Prev: -1, Nick: s.set["nick"]}
+		Tracks: []RecapTrack{}, Stages: []RecapStage{}, StageDone: []RecapStageDone{}, Forecast: []RecapForecast{}, Milestones: []RecapMilestone{}, Prev: -1, Nick: s.set["nick"]}
 	switch kind {
 	case "week":
 		from = stats.WeekStart(day)
@@ -268,6 +288,7 @@ func (a *App) Recap(kind, date string) (RecapDTO, error) {
 	}
 	r.Empty = len(r.Themes) == 0 && r.Lessons == 0 && r.Checks == 0
 	a.recapExtras(s, &r, from, to)
+	r.StageDone = a.stagesClosedIn(in, agg, inRange)
 	r.Streak = stats.CurrentStreak(in.ActiveDays(), in.Rest, s.today)
 	r.BestStreak = stats.BestStreak(in.ActiveDays(), in.Rest)
 	r.Done, r.Total = s.totalCounts()
@@ -548,4 +569,68 @@ func (a *App) pickExportDir() (string, error) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	return dir, a.st.SetSetting("export_dir", dir)
+}
+
+// stagesClosedIn — этапы, закрытые в периоде. Начало этапа — самый ранний урок этапа
+// (начат или пройден своими руками); если все уроки импортированы — день закрытия прошлого этапа.
+func (a *App) stagesClosedIn(in *stats.Input, agg map[string]*stats.Daily, inRange func(time.Time) bool) []RecapStageDone {
+	out := []RecapStageDone{}
+	var prevEnd time.Time
+	for _, st := range a.plan.Stages {
+		end, ok := in.StageClosedAt(st)
+		if !ok || end.IsZero() {
+			prevEnd = time.Time{}
+			continue
+		}
+		x := RecapStageDone{Num: st.Num, Title: st.Title, Blocks: len(st.Blocks)}
+		var start time.Time
+		early := func(t time.Time) {
+			if !t.IsZero() && (start.IsZero() || t.Before(start)) {
+				start = t
+			}
+		}
+		lesson := func(l *plan.Lesson) {
+			x.Lessons++
+			if r, ok := in.Lessons[l.ID]; ok && !r.Imported {
+				early(r.StartedAt)
+				early(r.DoneAt)
+			}
+		}
+		for _, b := range st.Blocks {
+			for _, th := range b.Themes {
+				x.Themes++
+				x.Checks += len(th.Checks)
+				for _, l := range th.Lessons {
+					lesson(l)
+				}
+			}
+			if b.Run != nil {
+				lesson(b.Run)
+			}
+		}
+		if start.IsZero() || start.After(end) {
+			start = prevEnd
+		}
+		if start.IsZero() {
+			start = end
+		}
+		prevEnd = end
+		if !inRange(end) {
+			continue
+		}
+		f, t := stats.ParseDay(in.DayLabel(start)), stats.ParseDay(in.DayLabel(end))
+		x.From, x.To, x.FromISO, x.ToISO = dateGen(f), dateGen(t), f.Format("2006-01-02"), t.Format("2006-01-02")
+		if f.Year() != t.Year() {
+			x.From = fmt.Sprintf("%s %d", dateGen(f), f.Year())
+			x.To = fmt.Sprintf("%s %d", dateGen(t), t.Year())
+		}
+		x.Days = stats.DaysBetween(f, t) + 1
+		for d := f; !d.After(t); d = d.AddDate(0, 0, 1) {
+			if v := agg[d.Format("2006-01-02")]; v != nil && v.Active {
+				x.ActiveDays++
+			}
+		}
+		out = append(out, x)
+	}
+	return out
 }

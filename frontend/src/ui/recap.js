@@ -49,6 +49,7 @@ export function openRecap() {
   const rnd = rngFrom(seed);
   const randStyle = pick(rnd, STYLE_KEYS);
   let todayStudy = '';
+  let job = false; // «Нашёл работу!» — разовая картина, не запоминается
   let kind = 'day', date = '', data = null, list = [], canvases = [], buildNo = 0;
   // правки готовых страниц: id → { hidden, style }; сбрасываются при смене периода, формата или режима
   let over = {};
@@ -86,6 +87,19 @@ export function openRecap() {
         onclick: () => { p.toggles[k] = TOGGLE_NEXT[st]; savePrefs(p); drawToggles(); build(); },
       }, l, h('span', { class: 'as-recap__chipst' }, TOGGLE_TEXT[st])));
     }
+    // закрытый этап — только если в периоде он есть
+    if (data?.stageDone?.length) {
+      const on = p.toggles.stage !== 'off';
+      toggles.append(h('button', {
+        class: 'as-recap__chip is-' + (on ? 'on' : 'off'), title: 'Карточка «Этап закрыт» — свой мир и костюм гофера на каждый этап',
+        onclick: () => { p.toggles.stage = on ? 'off' : 'on'; savePrefs(p); drawToggles(); build(); },
+      }, data.stageDone.length > 1 ? 'Этапы закрыты' : `Этап ${data.stageDone[0].num} закрыт`, h('span', { class: 'as-recap__chipst' }, on ? 'есть' : 'нет')));
+    }
+    // картина «Нашёл работу!»
+    toggles.append(h('button', {
+      class: 'as-recap__chip is-' + (job ? 'on' : 'off'), title: 'Картина «Нашёл работу!» первой карточкой (не запоминается между открытиями)',
+      onclick: () => { job = !job; drawToggles(); build(); },
+    }, 'Нашёл работу!', h('span', { class: 'as-recap__chipst' }, job ? 'есть' : 'нет')));
     // «учу Go · день X» на первой карточке: считается от первой закрытой темы
     toggles.append(h('button', {
       class: 'as-recap__chip is-' + (p.dayX ? 'on' : 'off'), title: 'Надпись «учу Go · день X» на первой карточке',
@@ -170,6 +184,7 @@ export function openRecap() {
         p.customDay = todayStudy; savePrefs(p);
       }
       data = await api.Recap(kind, query());
+      drawToggles();
       if (my !== buildNo) return;
       data.notes = await api.ThemeComments().catch(() => ({})); // комментарии тем: id → тексты
       data.anki = loadAnki();
@@ -177,7 +192,7 @@ export function openRecap() {
       if (data.anki && (data.anki.period_to < data.from || data.anki.period_from > data.date)) data.anki = null;
       if (kind === 'range') { fromInp.value = data.from; toInp.value = data.date; rFrom = data.from; rTo = data.date; }
       else if (!dateInp.value && kind !== 'all') dateInp.value = data.date;
-      const all = planCards(data, { mode: p.mode, toggles: p.toggles, seed, format: p.format, tasks: !!p.tasks });
+      const all = planCards(data, { mode: p.mode, toggles: p.toggles, job, seed, format: p.format, tasks: !!p.tasks });
       p.custom.forEach((c, i) => {
         if (!c.kind) { all.push({ key: 'custom', name: 'Своя карточка', card: c, ci: i }); return; }
         const n = listPages(c, p.format); // длинный список — несколько страниц
@@ -228,7 +243,7 @@ export function openRecap() {
           // «Показывать задачи» — темы раскрываются в свои задачи
           const tasksChk = c.key === 'themes' && data.themes.length ? h('label', { class: 'as-recap__chk', title: 'Показывать задачи каждой темы' },
             (() => { const i = h('input', { type: 'checkbox', checked: !!p.tasks }); i.addEventListener('change', () => { p.tasks = i.checked; savePrefs(p); reset(); build(); }); return i; })(), 'задачи') : null;
-          tools = h('div', { class: 'as-recap__customtools' }, arrows[0], tasksChk, notesBtn, bg,
+          tools = h('div', { class: 'as-recap__customtools' }, arrows[0], tasksChk, notesBtn, c.key === 'stage' || c.key === 'job' ? null : bg,
             h('button', { class: 'as-iconbtn as-recap__del', title: 'Удалить страницу', 'aria-label': 'Удалить страницу', onclick: () => { over[id] = { ...over[id], hidden: true }; build(); } }, '✕'), arrows[1]);
         }
         const page = h('div', { class: 'as-recap__custom', draggable: 'true', title: 'Перетащите, чтобы поменять порядок' }, img, tools);

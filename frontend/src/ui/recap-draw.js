@@ -4,6 +4,7 @@ import { gopherSVG, POSES } from './gopher.js';
 import { pluralRu } from './dom.js';
 import { achBadge } from './achicons.js';
 import { ankiInfo } from './anki.js';
+import { drawStage, drawJob } from './recap-stage.js';
 
 export const FONT = '-apple-system, "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif';
 export const MONO = 'ui-monospace, "Cascadia Code", Consolas, monospace';
@@ -1228,6 +1229,9 @@ export function planCards(d, opts) {
   const out = [];
   if (d.empty) out.push({ key: 'quiet', name: 'Отдых' });
   else out.push({ key: 'summary', name: 'Сводка' });
+  // «Нашёл работу!» — картина, включается чипом; «Этап закрыт» — сразу за сводкой, если этап закрыт в периоде
+  if (opts.job) out.unshift({ key: 'job', name: 'Нашёл работу!' });
+  if (opts.toggles.stage !== 'off') for (const x of d.stageDone || []) out.push({ key: 'stage', name: `Этап ${x.num}`, from: x.num, st: x });
   if (opts.mode === 'one') return out;
   // карточка периода: ритм недели, календарь месяца, весь путь
   // ритм недели: переключается как доп. карточки, по умолчанию «всегда»; случайность берётся только в «случайно»
@@ -1295,6 +1299,8 @@ export async function drawCard(card, d, { format, style, acc, seed, index, total
   const [W, H] = FORMATS[format];
   const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
   const g = cv.getContext('2d');
+  if (card.key === 'stage') { await drawStage(g, W, H, card.st); return cv; }
+  if (card.key === 'job') { await drawJob(g, W, H, d); return cv; }
   if (card.key === 'custom') { if (card.card.kind) await drawList(g, W, H, card.card, acc, card.page || 0); else await drawCustom(g, W, H, card.card, acc); return cv; }
   const S = STYLES[style];
   const rng = rngFrom(seed * 31 + index * 7 + 1);

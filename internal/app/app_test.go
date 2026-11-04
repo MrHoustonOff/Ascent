@@ -324,3 +324,41 @@ func TestRecapPeriodsAndExport(t *testing.T) {
 		t.Fatalf("неделя: %q", w)
 	}
 }
+
+func TestRecapStageDone(t *testing.T) {
+	a, _, now := newApp(t)
+	st := a.plan.Stages[0]
+	*now = time.Date(2026, 10, 1, 12, 0, 0, 0, msk)
+	first := st.Blocks[0].Themes[0].Lessons[0].ID
+	if _, err := a.CompleteLesson(first); err != nil {
+		t.Fatal(err)
+	}
+	*now = time.Date(2026, 10, 25, 21, 0, 0, 0, msk)
+	for _, b := range st.Blocks {
+		for _, th := range b.Themes {
+			for _, l := range th.Lessons {
+				if l.ID != first {
+					a.CompleteLesson(l.ID)
+				}
+			}
+			a.SetChecksAll(th.ID, true)
+		}
+		if b.Run != nil {
+			a.CompleteLesson(b.Run.ID)
+		}
+		for i := range a.plan.Markers(b.ID) {
+			a.SetMarker(b.ID, i+1, true)
+		}
+	}
+	r, err := a.Recap("day", "")
+	if err != nil || len(r.StageDone) != 1 {
+		t.Fatalf("%+v %v", r.StageDone, err)
+	}
+	x := r.StageDone[0]
+	if x.Num != 1 || x.FromISO != "2026-10-01" || x.ToISO != "2026-10-25" || x.Days != 25 || x.ActiveDays != 2 || x.Lessons < 100 || x.Blocks != len(st.Blocks) {
+		t.Fatalf("%+v", x)
+	}
+	if w, _ := a.Recap("day", "2026-10-24"); len(w.StageDone) != 0 {
+		t.Fatalf("накануне этап ещё не закрыт: %+v", w.StageDone)
+	}
+}
