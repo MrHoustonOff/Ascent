@@ -75,11 +75,11 @@ type RecapDTO struct {
 	BestStreak int              `json:"bestStreak"` // рекордная серия дней
 	Milestones []RecapMilestone `json:"milestones"` // вехи пути (для «всего пути»)
 
-	// этапы, закрытые в этом периоде: для карточки «Этап закрыт»
+	// вехи этапов в этом периоде (25/50/75 % и закрытие): для карточек этапа
 	StageDone []RecapStageDone `json:"stageDone"`
 }
 
-// RecapStageDone — закрытый этап: сроки и объём.
+// RecapStageDone — веха этапа (25/50/75 % или закрытие): сроки и объём.
 type RecapStageDone struct {
 	Num        int    `json:"num"`
 	Title      string `json:"title"`
@@ -93,6 +93,11 @@ type RecapStageDone struct {
 	Themes     int    `json:"themes"`
 	Blocks     int    `json:"blocks"`
 	Checks     int    `json:"checks"` // вопросов самопроверки
+
+	Pct         int `json:"pct"`         // 25, 50, 75 — веха пути по урокам; 100 — этап закрыт
+	LessonsDone int `json:"lessonsDone"` // к этому моменту
+	ThemesDone  int `json:"themesDone"`
+	BlocksDone  int `json:"blocksDone"`
 }
 
 type RecapMilestone struct {
@@ -571,35 +576,43 @@ func (a *App) pickExportDir() (string, error) {
 	return dir, a.st.SetSetting("export_dir", dir)
 }
 
-// stagesClosedIn — этапы, закрытые в периоде. Начало этапа — самый ранний урок этапа
-// (начат или пройден своими руками); если все уроки импортированы — день закрытия прошлого этапа.
+// stagesClosedIn — вехи этапов в периоде: 25, 50, 75 % уроков и закрытие (100).
+// Начало этапа — самый ранний урок этапа (начат или пройден своими руками);
+// если все уроки импортированы — день закрытия прошлого этапа. Веха, взятая импортом (без времени), не показывается.
 func (a *App) stagesClosedIn(in *stats.Input, agg map[string]*stats.Daily, inRange func(time.Time) bool) []RecapStageDone {
 	out := []RecapStageDone{}
 	var prevEnd time.Time
 	for _, st := range a.plan.Stages {
-		end, ok := in.StageClosedAt(st)
-		if !ok || end.IsZero() {
-			prevEnd = time.Time{}
-			continue
-		}
-		x := RecapStageDone{Num: st.Num, Title: st.Title, Blocks: len(st.Blocks)}
+		base := RecapStageDone{Num: st.Num, Title: st.Title, Blocks: len(st.Blocks)}
 		var start time.Time
+		var done []time.Time // моменты пройденных уроков; импорт — нулевое время
 		early := func(t time.Time) {
 			if !t.IsZero() && (start.IsZero() || t.Before(start)) {
 				start = t
 			}
 		}
 		lesson := func(l *plan.Lesson) {
-			x.Lessons++
-			if r, ok := in.Lessons[l.ID]; ok && !r.Imported {
+			base.Lessons++
+			r, ok := in.Lessons[l.ID]
+			if !ok {
+				return
+			}
+			if !r.Imported {
 				early(r.StartedAt)
 				early(r.DoneAt)
+			}
+			if r.Status == "done" {
+				if r.Imported || !r.HasDone() {
+					done = append(done, time.Time{})
+				} else {
+					done = append(done, r.DoneAt)
+				}
 			}
 		}
 		for _, b := range st.Blocks {
 			for _, th := range b.Themes {
-				x.Themes++
-				x.Checks += len(th.Checks)
+				base.Themes++
+				base.Checks += len(th.Checks)
 				for _, l := range th.Lessons {
 					lesson(l)
 				}
@@ -608,29 +621,66 @@ func (a *App) stagesClosedIn(in *stats.Input, agg map[string]*stats.Daily, inRan
 				lesson(b.Run)
 			}
 		}
-		if start.IsZero() || start.After(end) {
-			start = prevEnd
+		sort.Slice(done, func(i, j int) bool { return done[i].Before(done[j]) })
+		end, closed := in.StageClosedAt(st)
+		first := start
+		if first.IsZero() {
+			first = prevEnd
 		}
-		if start.IsZero() {
-			start = end
-		}
-		prevEnd = end
-		if !inRange(end) {
-			continue
-		}
-		f, t := stats.ParseDay(in.DayLabel(start)), stats.ParseDay(in.DayLabel(end))
-		x.From, x.To, x.FromISO, x.ToISO = dateGen(f), dateGen(t), f.Format("2006-01-02"), t.Format("2006-01-02")
-		if f.Year() != t.Year() {
-			x.From = fmt.Sprintf("%s %d", dateGen(f), f.Year())
-			x.To = fmt.Sprintf("%s %d", dateGen(t), t.Year())
-		}
-		x.Days = stats.DaysBetween(f, t) + 1
-		for d := f; !d.After(t); d = d.AddDate(0, 0, 1) {
-			if v := agg[d.Format("2006-01-02")]; v != nil && v.Active {
-				x.ActiveDays++
+		// сколько тем и блоков закрыто к моменту t (закрытые импортом — всегда)
+		upTo := func(x *RecapStageDone, t time.Time) {
+			for _, b := range st.Blocks {
+				for _, th := range b.Themes {
+					if in.ThemeClosed(th) {
+						if at, ok := in.ThemeClosedAt(th); !ok || !at.After(t) {
+							x.ThemesDone++
+						}
+					}
+				}
+				if at, ok := in.BlockClosedAt(b); ok && (at.IsZero() || !at.After(t)) {
+					x.BlocksDone++
+				}
 			}
 		}
-		out = append(out, x)
+		add := func(pct int, at time.Time, lessonsDone int) {
+			x := base
+			x.Pct, x.LessonsDone = pct, lessonsDone
+			from := first
+			if from.IsZero() || from.After(at) {
+				from = at
+			}
+			f, t := stats.ParseDay(in.DayLabel(from)), stats.ParseDay(in.DayLabel(at))
+			x.From, x.To, x.FromISO, x.ToISO = dateGen(f), dateGen(t), f.Format("2006-01-02"), t.Format("2006-01-02")
+			if f.Year() != t.Year() {
+				x.From = fmt.Sprintf("%s %d", dateGen(f), f.Year())
+				x.To = fmt.Sprintf("%s %d", dateGen(t), t.Year())
+			}
+			x.Days = stats.DaysBetween(f, t) + 1
+			for d := f; !d.After(t); d = d.AddDate(0, 0, 1) {
+				if v := agg[d.Format("2006-01-02")]; v != nil && v.Active {
+					x.ActiveDays++
+				}
+			}
+			upTo(&x, at)
+			out = append(out, x)
+		}
+		for _, pct := range []int{25, 50, 75} {
+			need := (base.Lessons*pct + 99) / 100
+			if need < 1 || len(done) < need {
+				continue
+			}
+			if at := done[need-1]; !at.IsZero() && inRange(at) {
+				add(pct, at, need)
+			}
+		}
+		if closed && !end.IsZero() && inRange(end) {
+			add(100, end, base.Lessons)
+		}
+		if closed {
+			prevEnd = end
+		} else {
+			prevEnd = time.Time{}
+		}
 	}
 	return out
 }

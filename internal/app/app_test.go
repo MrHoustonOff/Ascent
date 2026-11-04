@@ -328,37 +328,57 @@ func TestRecapPeriodsAndExport(t *testing.T) {
 func TestRecapStageDone(t *testing.T) {
 	a, _, now := newApp(t)
 	st := a.plan.Stages[0]
-	*now = time.Date(2026, 10, 1, 12, 0, 0, 0, msk)
-	first := st.Blocks[0].Themes[0].Lessons[0].ID
-	if _, err := a.CompleteLesson(first); err != nil {
-		t.Fatal(err)
-	}
-	*now = time.Date(2026, 10, 25, 21, 0, 0, 0, msk)
+	var ids []string
 	for _, b := range st.Blocks {
 		for _, th := range b.Themes {
 			for _, l := range th.Lessons {
-				if l.ID != first {
-					a.CompleteLesson(l.ID)
-				}
+				ids = append(ids, l.ID)
 			}
-			a.SetChecksAll(th.ID, true)
 		}
 		if b.Run != nil {
-			a.CompleteLesson(b.Run.ID)
+			ids = append(ids, b.Run.ID)
+		}
+	}
+	// 1 октября — треть уроков (веха 25 %), 25 октября — всё остальное с вопросами и ◆
+	*now = time.Date(2026, 10, 1, 12, 0, 0, 0, msk)
+	third := len(ids) / 3
+	for _, id := range ids[:third] {
+		if _, err := a.CompleteLesson(id); err != nil {
+			t.Fatal(err)
+		}
+	}
+	r, _ := a.Recap("day", "")
+	if len(r.StageDone) != 1 || r.StageDone[0].Pct != 25 || r.StageDone[0].Days != 1 || r.StageDone[0].LessonsDone != (len(ids)*25+99)/100 {
+		t.Fatalf("1 октября: %+v", r.StageDone)
+	}
+	*now = time.Date(2026, 10, 25, 21, 0, 0, 0, msk)
+	for _, id := range ids[third:] {
+		a.CompleteLesson(id)
+	}
+	for _, b := range st.Blocks {
+		for _, th := range b.Themes {
+			a.SetChecksAll(th.ID, true)
 		}
 		for i := range a.plan.Markers(b.ID) {
 			a.SetMarker(b.ID, i+1, true)
 		}
 	}
 	r, err := a.Recap("day", "")
-	if err != nil || len(r.StageDone) != 1 {
+	if err != nil || len(r.StageDone) != 3 {
 		t.Fatalf("%+v %v", r.StageDone, err)
 	}
-	x := r.StageDone[0]
-	if x.Num != 1 || x.FromISO != "2026-10-01" || x.ToISO != "2026-10-25" || x.Days != 25 || x.ActiveDays != 2 || x.Lessons < 100 || x.Blocks != len(st.Blocks) {
+	if r.StageDone[0].Pct != 50 || r.StageDone[1].Pct != 75 {
+		t.Fatalf("%+v", r.StageDone)
+	}
+	x := r.StageDone[2]
+	if x.Pct != 100 || x.Num != 1 || x.FromISO != "2026-10-01" || x.ToISO != "2026-10-25" || x.Days != 25 || x.ActiveDays != 2 ||
+		x.Lessons != len(ids) || x.LessonsDone != len(ids) || x.Blocks != len(st.Blocks) || x.BlocksDone != len(st.Blocks) || x.ThemesDone != x.Themes {
 		t.Fatalf("%+v", x)
 	}
 	if w, _ := a.Recap("day", "2026-10-24"); len(w.StageDone) != 0 {
-		t.Fatalf("накануне этап ещё не закрыт: %+v", w.StageDone)
+		t.Fatalf("в промежутке вех нет: %+v", w.StageDone)
+	}
+	if m, _ := a.Recap("month", "2026-10-10"); len(m.StageDone) != 4 {
+		t.Fatalf("за месяц все четыре вехи: %+v", m.StageDone)
 	}
 }
