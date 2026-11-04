@@ -104,7 +104,7 @@ export default {
         s += plane(920, 390, 2.4, -18);
         s += backpackProp(110, 878, 0.5, { open: false });
         s += pennant(560, 900, 190, 'Этап 1 ✓', '#D62828') + `<path d="M700 292 V256" stroke="#5C3D5E" stroke-width="4"/><path d="M700 256 l20 6 l-20 6z" fill="#E63946" stroke="${L}" stroke-width="1.5"/>`;
-        s += gopherOn(dressed({ hat: ['straps', 'prop'] }, { arms: 'up', eyes: 'happy', lift: 22, squash: 1.06, feet: 'jump' }), 330, 868, 320);
+        s += gopherOn(dressed({ hat: 'prop' }, { arms: 'up', eyes: 'happy', lift: 22, squash: 1.06, feet: 'jump' }), 330, 868, 320);
         s += clawdOn(690, 950, 0.88, { hat: 'prop', wave: true, jump: 34, eyes: 'happy' });
         s += flowers(rng, 50, 0, 800, 900, 1090, ['#FFD166', '#FF8FA3', '#FFFFFF']) + birds(rng, 4, 250, 980, 80, 260, '#8C3B5E');
         return s;

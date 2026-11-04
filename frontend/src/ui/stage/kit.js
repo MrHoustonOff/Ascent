@@ -310,3 +310,26 @@ export function ribbon(x, y, w, t, { c = '#E63946', ink = '#FFFFFF', fs = 34, r 
 // камень у тропы с надписью
 export const stone = (x, y, t, { c = '#CED4DA', ink = '#495057', fs = 22 } = {}) => { const w = t.length * fs * 0.64 + 34; return `<g transform="translate(${x} ${y})"><path d="M${-w / 2} 0 Q${-w / 2 - 6} -34 ${-w / 4} -44 Q0 -52 ${w / 4} -46 Q${w / 2 + 8} -36 ${w / 2} 0Z" fill="${c}" stroke="${L}" stroke-width="3"/>${txt(0, -14, t, fs, ink, 'text-anchor="middle" font-weight="800"', SVGM)}</g>`; };
 export const pennant = (x, y, h, t, c = '#E63946') => `<path d="M${x} ${y} V${y - h}" stroke="#2B1B17" stroke-width="6" stroke-linecap="round"/><path d="M${x + 3} ${y - h} L${x + 3 + h * 0.62} ${y - h + h * 0.16} L${x + 3} ${y - h + h * 0.32}Z" fill="${c}" stroke="${L}" stroke-width="3"/>${t ? txt(x + 10, y - h + h * 0.2, t, h * 0.11, '#fff', 'font-weight="900"') : ''}`;
+
+// ---------- склад, цех, техника ----------
+export const crate = (x, y, w, h, c, label = '', { ink = '#2B1B10', fs = 18, edge = '#0B2E2F', tape = true } = {}) =>
+  `<g transform="translate(${x} ${y})"><rect width="${w}" height="${h}" rx="4" fill="${c}" stroke="${edge}" stroke-width="3"/>` +
+  (tape ? `<path d="M0 ${h * 0.3} H${w}" stroke="${edge}" stroke-opacity=".3" stroke-width="2"/><rect x="${w / 2 - 16}" y="${h * 0.3 - 6}" width="32" height="12" fill="#fff" opacity=".35"/>` : '') +
+  (label ? txt(w / 2, h * 0.72, label, fs, ink, 'text-anchor="middle" font-weight="800"', SVGM) : '') + `</g>`;
+export function gear(x, y, r, teeth, color, { hole = '#00000033', rot = 0 } = {}) {
+  let d = '';
+  for (let i = 0; i < teeth * 2; i++) { const a = (i / (teeth * 2)) * Math.PI * 2 + rot, R = i % 2 ? r : r * 1.16; d += `${i ? 'L' : 'M'}${(x + Math.cos(a) * R).toFixed(1)} ${(y + Math.sin(a) * R).toFixed(1)} `; }
+  return `<path d="${d}Z" fill="${color}"/><circle cx="${x}" cy="${y}" r="${r * 0.35}" fill="${hole}"/>`;
+}
+export function conveyor(x0, x1, y, { h = 34, belt = '#343A40', frame = '#6C757D', legs = 160 } = {}) {
+  let s = `<rect x="${x0}" y="${y}" width="${x1 - x0}" height="${h}" rx="${h / 2}" fill="${belt}" stroke="${L}" stroke-width="3"/>`;
+  for (let x = x0 + h / 2; x < x1; x += 46) s += `<circle cx="${x}" cy="${y + h / 2}" r="${h * 0.32}" fill="${frame}" stroke="${L}" stroke-width="2"/>`;
+  for (let x = x0 + 40; x < x1; x += 220) s += `<rect x="${x}" y="${y + h}" width="16" height="${legs}" fill="${frame}" stroke="${L}" stroke-width="2"/>`;
+  return s;
+}
+export function forklift(x, y, s = 1, { c = '#FFB703', load = '' } = {}) { // x, y — точка на земле под задним колесом
+  return `<g transform="translate(${x} ${y}) scale(${s})">` +
+    `<rect x="-10" y="-120" width="150" height="80" rx="10" fill="${c}" stroke="${L}" stroke-width="4"/><path d="M10 -120 L20 -200 L110 -200 L118 -120" fill="none" stroke="${L}" stroke-width="7"/>` +
+    `<rect x="140" y="-230" width="12" height="230" fill="#495057" stroke="${L}" stroke-width="2"/><rect x="152" y="-40" width="90" height="10" fill="#495057" stroke="${L}" stroke-width="2"/>` +
+    load + `<circle cx="20" cy="-14" r="24" fill="#212529"/><circle cx="20" cy="-14" r="9" fill="#ADB5BD"/><circle cx="110" cy="-14" r="24" fill="#212529"/><circle cx="110" cy="-14" r="9" fill="#ADB5BD"/></g>`;
+}
