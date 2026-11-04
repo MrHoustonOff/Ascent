@@ -3,6 +3,7 @@ import { api } from './api.js';
 import { S, setUndo, emit } from './state.js';
 import { toast, toastError } from './ui/toast.js';
 import { showAchievements } from './ui/achwindow.js';
+import { showPaintings } from './ui/gallery.js';
 
 export function go(hash) {
   if (location.hash === hash) emit();
@@ -43,6 +44,7 @@ export function celebrate(p) {
   if (p.blockClosed) toast({ title: 'Блок закрыт', body: p.nextId ? 'Следующий — ' + p.nextId + '.' : '', kind: 'streak' });
   else if (p.themeClosed) toast({ title: 'Тема закрыта', body: 'Вы ответили на все вопросы темы.', kind: 'streak' });
   if ((p.achievements || []).length) showAchievements(p.achievements);
+  if ((p.paintings || []).length) showPaintings(p.paintings); // новая картина в галерее — после окон достижений
 }
 
 async function safe(fn) {

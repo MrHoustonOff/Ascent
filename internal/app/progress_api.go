@@ -141,10 +141,11 @@ type ClosedRef struct {
 }
 
 type ProgressDTO struct {
-	ThemeClosed  *ClosedRef `json:"themeClosed"`
-	BlockClosed  *ClosedRef `json:"blockClosed"`
-	NextID       string     `json:"nextId"`
-	Achievements []AchRef   `json:"achievements"`
+	ThemeClosed  *ClosedRef    `json:"themeClosed"`
+	BlockClosed  *ClosedRef    `json:"blockClosed"`
+	NextID       string        `json:"nextId"`
+	Achievements []AchRef      `json:"achievements"`
+	Paintings    []PaintingDTO `json:"paintings"` // картины галереи, открытые этим действием
 }
 
 // diff сравнивает состояние до и после и сообщает, что закрылось.
@@ -171,6 +172,7 @@ func (a *App) progressSince(before *snap) ProgressDTO {
 	if n := after.in.NextLesson(); n != nil {
 		r.NextID = n.ID
 	}
+	r.Paintings = a.newPaintings(before, after)
 	return r
 }
 

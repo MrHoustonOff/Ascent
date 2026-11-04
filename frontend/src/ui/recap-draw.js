@@ -1302,7 +1302,7 @@ export async function drawCard(card, d, { format, style, acc, seed, index, total
   const [W, H] = FORMATS[format];
   const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
   const g = cv.getContext('2d');
-  if (card.key === 'stage') { await drawStage(g, W, H, card.st); return cv; }
+  if (card.key === 'stage') { await drawStage(g, W, H, card.st, d); return cv; }
   if (card.key === 'gallery') { await drawGallery(g, W, H, card.kind, d); return cv; }
   if (card.key === 'custom') { if (card.card.kind) await drawList(g, W, H, card.card, acc, card.page || 0); else await drawCustom(g, W, H, card.card, acc); return cv; }
   const S = STYLES[style];

@@ -19,6 +19,7 @@ const P = {
   arrowR: '<path d="M3 8h10M9 4l4 4-4 4"/>',
   external: '<path d="M9 3h4v4M13 3L7.5 8.5M11 9.5V12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h2.5"/>',
   close: '<path d="M4 4l8 8M12 4l-8 8"/>',
+  frame: '<rect x="2.5" y="2.5" width="11" height="11" rx="1.4"/><rect x="4.6" y="4.6" width="6.8" height="6.8" rx=".6"/><path d="M4.6 10l2-2 1.6 1.6 1.2-1.2 2 2"/>',
   trophy: '<path d="M4.5 2.5h7v4a3.5 3.5 0 0 1-7 0z"/><path d="M4.5 4H2.5c0 2 1 3 2.2 3.2M11.5 4h2c0 2-1 3-2.2 3.2M8 10v2.5M5.5 13.5h5"/>',
   share: '<path d="M8 2.5v8M5 5.5l3-3 3 3"/><path d="M4.5 8H4a1.5 1.5 0 0 0-1.5 1.5v3A1.5 1.5 0 0 0 4 14h8a1.5 1.5 0 0 0 1.5-1.5v-3A1.5 1.5 0 0 0 12 8h-.5"/>',
   gauge: '<path d="M2.5 11.5a5.5 5.5 0 1 1 11 0"/><path d="M8 11.5l2.6-3.4"/><circle cx="8" cy="11.5" r=".9" fill="currentColor"/>',

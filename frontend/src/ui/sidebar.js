@@ -9,6 +9,7 @@ const SCREENS = [
   { id: 'speed', label: 'Мой ритм', icon: 'gauge', hash: '#/speed', key: 'Ctrl+3' },
   { id: 'stats', label: 'Статистика', icon: 'stats', hash: '#/stats', key: 'Ctrl+4' },
   { id: 'achievements', label: 'Достижения', icon: 'trophy', hash: '#/achievements', key: 'Ctrl+5', ach: true },
+  { id: 'gallery', label: 'Галерея', icon: 'frame', hash: '#/gallery', key: 'Ctrl+9' },
   { id: 'bank', label: 'Банк вопросов', icon: 'bank', hash: '#/bank', key: 'Ctrl+6' },
   { id: 'glossary', label: 'Словарь', icon: 'glossary', hash: '#/glossary', key: 'Ctrl+7' },
   { id: 'comments', label: 'Комментарии', icon: 'note', hash: '#/comments' },
@@ -36,7 +37,7 @@ export function renderSidebar(el, onNavigate) {
   el.append(h('div', { class: 'as-nav-label' }, 'Ascent'));
   for (const s of SCREENS) {
     const active = rt.name === s.id && !inPath;
-    el.append(h('button', { class: 'as-nav-item as-nav-item--screen' + (active ? ' is-active' : ''), title: s.label + ' (' + s.key + ')', onclick: () => { go(s.hash === '#/path' ? pathHash() : s.hash); onNavigate(); } },
+    el.append(h('button', { class: 'as-nav-item as-nav-item--screen' + (active ? ' is-active' : ''), title: s.key ? s.label + ' (' + s.key + ')' : s.label, onclick: () => { go(s.hash === '#/path' ? pathHash() : s.hash); onNavigate(); } },
       icon(s.icon), h('span', { class: 'as-nav-text' }, s.label),
       s.meta ? h('span', { class: 'as-nav-meta' }, tree.pct + ' %') : null,
       s.ach ? h('span', { class: 'as-nav-meta' }, tree.achNew ? h('span', { class: 'as-note-dot', style: { marginRight: '6px' }, title: 'Есть новые' }) : null, tree.achUnlocked + '/' + tree.achTotal) : null));

@@ -382,3 +382,33 @@ func TestRecapStageDone(t *testing.T) {
 		t.Fatalf("за месяц все четыре вехи: %+v", m.StageDone)
 	}
 }
+
+func TestGalleryPaintings(t *testing.T) {
+	a, _, now := newApp(t)
+	g, err := a.Gallery()
+	if err != nil || len(g) != 28 || g[0].ID != "stage-1-25" || g[0].Unlocked || g[0].Title != "Основы" {
+		t.Fatalf("%v %+v", err, g[:1])
+	}
+	ls := stageLessons(a.plan.Stages[0])
+	need := pctNeed(len(ls), 25)
+	*now = time.Date(2026, 10, 3, 12, 0, 0, 0, msk)
+	var last ProgressDTO
+	for _, l := range ls[:need] {
+		last, _ = a.CompleteLesson(l.ID)
+	}
+	if len(last.Paintings) != 1 || last.Paintings[0].ID != "stage-1-25" || last.Paintings[0].Date != "2026-10-03" {
+		t.Fatalf("новая картина: %+v", last.Paintings)
+	}
+	g, _ = a.Gallery()
+	if !g[0].Unlocked || g[1].Unlocked || g[0].When != "3 октября" {
+		t.Fatalf("%+v", g[:2])
+	}
+	// пройдено ранее (импорт) — открыто, но без даты
+	if _, err := a.MarkDoneUpTo(ls[len(ls)/2+2].ID); err != nil {
+		t.Fatal(err)
+	}
+	g, _ = a.Gallery()
+	if !g[1].Unlocked {
+		t.Fatalf("половина: %+v", g[1])
+	}
+}

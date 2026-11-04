@@ -16,13 +16,14 @@ import * as glossary from './screens/glossary.js';
 import * as comments from './screens/comments.js';
 import * as docs from './screens/docs.js';
 import * as achievements from './screens/achievements.js';
+import * as gallery from './screens/gallery.js';
 import * as speed from './screens/speed.js';
 import * as settings from './screens/settings.js';
 import { runOnboarding } from './screens/onboarding.js';
 import { openDoc } from './screens/docs.js';
 document.addEventListener('as-open-doc', (e) => openDoc(e.detail));
 
-const SCREENS = { today, path, speed, stats, achievements, bank, glossary, comments, docs, settings };
+const SCREENS = { today, path, speed, stats, achievements, gallery, bank, glossary, comments, docs, settings };
 let prevName = '';
 document.addEventListener('as-rerender', () => emit());
 const app = document.getElementById('app');
@@ -125,9 +126,9 @@ window.addEventListener('keydown', async (e) => {
   if (ctrl && e.key.toLowerCase() === 'b') { e.preventDefault(); toggleSidebar(); return; }
   if (ctrl && e.key.toLowerCase() === 'z' && !inField(e)) { if (await runUndo()) e.preventDefault(); return; }
   if (ctrl && e.key === ',') { e.preventDefault(); go('#/settings'); return; }
-  if (ctrl && /^[1-8]$/.test(e.key)) {
+  if (ctrl && /^[1-9]$/.test(e.key)) {
     e.preventDefault();
-    go(['#/today', pathHash(), '#/speed', '#/stats', '#/achievements', '#/bank', '#/glossary', '#/docs/00'][+e.key - 1]);
+    go(['#/today', pathHash(), '#/speed', '#/stats', '#/achievements', '#/bank', '#/glossary', '#/docs/00', '#/gallery'][+e.key - 1]);
     return;
   }
   if (e.key === 'Escape') { winEl.classList.remove('is-side-open'); document.dispatchEvent(new CustomEvent('as-escape')); }
