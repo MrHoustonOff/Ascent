@@ -1230,7 +1230,9 @@ export function planCards(d, opts) {
   else out.push({ key: 'summary', name: 'Сводка' });
   if (opts.mode === 'one') return out;
   // карточка периода: ритм недели, календарь месяца, весь путь
-  if (d.kind === 'week' && d.days.length === 7 && !d.empty) out.push({ key: 'week', name: 'Ритм недели' });
+  // ритм недели: переключается как доп. карточки, по умолчанию «всегда»; случайность берётся только в «случайно»
+  const wk = opts.toggles.week || 'on';
+  if (d.kind === 'week' && d.days.length === 7 && !d.empty && (wk === 'on' || (wk === 'auto' && rng() < 0.5))) out.push({ key: 'week', name: 'Ритм недели' });
   if (d.kind === 'month' && d.days.length) out.push({ key: 'month', name: 'Календарь' });
   if (d.kind === 'range' && d.days.length > 1 && d.days.length <= 42) out.push({ key: 'month', name: 'Календарь' });
   if (d.kind === 'all' && d.dayN > 0) out.push({ key: 'journey', name: 'Путь' });
