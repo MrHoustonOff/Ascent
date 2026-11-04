@@ -10,12 +10,12 @@ import s3 from './stage/s3.js';
 import s4 from './stage/s4.js';
 import s5 from './stage/s5.js';
 import s6 from './stage/s6.js';
-import { legacy } from './stage/legacy.js';
+import s7 from './stage/s7.js';
 import { GALLERY } from './stage/gallery.js';
 
 const FONT = '-apple-system, "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif';
 const SERIF = 'Georgia, "Times New Roman", serif';
-const STAGES = { ...legacy, 1: s1, 2: s2, 3: s3, 4: s4, 5: s5, 6: s6 };
+const STAGES = { 1: s1, 2: s2, 3: s3, 4: s4, 5: s5, 6: s6, 7: s7 };
 export const STAGE_INFO = Object.fromEntries(Object.entries(STAGES).map(([k, v]) => [k, { name: v.name }]));
 
 const imgCache = new Map();
