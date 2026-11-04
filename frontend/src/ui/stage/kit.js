@@ -82,7 +82,8 @@ export const items = {
   map: `<path d="M54 140 L80 134 L104 142 L146 134 L146 190 L104 198 L80 190 L54 196Z" fill="#F4E3B5" stroke="${L}" stroke-width="2.2"/><path d="M80 134 V190 M104 142 V198" stroke="${L}" stroke-opacity=".4" stroke-width="1.6"/>` +
     `<path d="M62 182 Q78 160 92 170 T130 150" stroke="#E63946" stroke-width="2.6" stroke-dasharray="4 4" fill="none"/><path d="M128 146 l6 8 l-8 2z" fill="#E63946"/>`,
   blueprint: `<rect x="56" y="150" width="88" height="34" rx="17" fill="#3A6EA5" stroke="${L}" stroke-width="2.2"/><ellipse cx="144" cy="167" rx="9" ry="17" fill="#5B8FC7" stroke="${L}" stroke-width="2"/><path d="M66 160 H128 M66 168 H120 M66 176 H130" stroke="#CFE3FF" stroke-width="2"/>`,
-  wrench: `<g transform="rotate(-28 100 162)"><rect x="92" y="122" width="16" height="74" rx="6" fill="#ADB5BD" stroke="${L}" stroke-width="2.2"/><path d="M84 104 a22 22 0 1 0 32 0 l-8 14 h-16z" fill="#CED4DA" stroke="${L}" stroke-width="2.2"/></g>`,
+  // ключ лежит поперёк живота (головка слева), ниже морды
+  wrench: `<g transform="rotate(-72 100 178)"><rect x="92" y="138" width="16" height="74" rx="6" fill="#ADB5BD" stroke="${L}" stroke-width="2.2"/><path d="M84 120 a22 22 0 1 0 32 0 l-8 14 h-16z" fill="#CED4DA" stroke="${L}" stroke-width="2.2"/></g>`,
   mug: `<rect x="76" y="138" width="46" height="50" rx="7" fill="#F8F9FA" stroke="${L}" stroke-width="2.2"/><path d="M122 148 q16 0 16 14 q0 14 -16 14" fill="none" stroke="${L}" stroke-width="5"/><path d="M122 148 q16 0 16 14 q0 14 -16 14" fill="none" stroke="#F8F9FA" stroke-width="2"/>` +
     `<text x="99" y="160" text-anchor="middle" font-size="9" font-weight="800" fill="#39D98A" ${SVGM}>on</text><text x="99" y="172" text-anchor="middle" font-size="9" font-weight="800" fill="#39D98A" ${SVGM}>call</text>` +
     `<path d="M88 132 q4 -10 0 -18 M100 132 q4 -10 0 -18 M112 132 q4 -10 0 -18" stroke="#ADB5BD" stroke-width="2.5" fill="none" stroke-linecap="round" opacity=".8"/>`,
