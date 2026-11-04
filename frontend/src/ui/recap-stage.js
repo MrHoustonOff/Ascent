@@ -9,6 +9,7 @@ const SERIF = 'Georgia, "Times New Roman", serif';
 const SVGF = 'font-family="Segoe UI, system-ui, sans-serif"';
 const SVGM = 'font-family="Cascadia Code, Consolas, monospace"';
 const L = '#2E2622'; // контур гофера
+const HERO = '<!--hero-->'; // граница слоёв сцены: фон | гофер (для «масла» их пишут по-разному)
 
 // ---------- помощники ----------
 function rngFrom(seed) {
@@ -127,7 +128,7 @@ function clawd(x, y, s, { jump = 0, wave = false } = {}) {
 // каждая сцена: pal (цвета текста), bg(W, H, rng) — фон на весь кадр, art(rng) — иллюстрация 1080×1100 (земля ≈ y 1000)
 const STAGES = {
   1: {
-    mottoOk: true, name: 'Рассвет у подножия', motto: 'Hello, World — позади. Путь начат.',
+    paint: true, mottoOk: true, name: 'Рассвет у подножия', motto: 'Hello, World — позади. Путь начат.',
     pal: { ink: '#2B1B17', muted: 'rgba(43,27,23,0.66)', acc: '#D62828', card: 'rgba(255,255,255,0.55)', stamp: '#D62828' },
     bg: (W, H, rng) => `<defs><linearGradient id="s1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFF4DC"/><stop offset=".55" stop-color="#FFD6A5"/><stop offset="1" stop-color="#FFADAD"/></linearGradient>` +
       `<radialGradient id="s1sun" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#FFF6C9"/><stop offset=".6" stop-color="#FFD166"/><stop offset="1" stop-color="#FFD166" stop-opacity="0"/></radialGradient></defs>` +
@@ -140,8 +141,8 @@ const STAGES = {
       `<path d="M0 780 Q200 700 420 760 T1080 720 V1100 H0Z" fill="#B5838D" opacity=".55"/>` +
       `<path d="M0 960 Q300 900 560 950 T1080 930 V1100 H0Z" fill="#8FB996"/><path d="M0 1010 Q360 970 700 1000 T1080 990 V1100 H0Z" fill="#6A994E"/>` +
       `<path d="M520 1100 Q560 1000 640 960 T820 800 T900 640" stroke="#FFF4DC" stroke-width="10" stroke-dasharray="2 22" stroke-linecap="round" fill="none" opacity=".9"/>` +
-      // доска с первой программой
-      `<g transform="translate(60 610)"><path d="M40 360 L80 0 M300 360 L260 0 M170 0 L170 380" stroke="#7F5539" stroke-width="12" stroke-linecap="round"/>` +
+      // доска с первой программой (и всё ниже — чёткий слой поверх масла)
+      HERO + `<g transform="translate(60 610)"><path d="M40 360 L80 0 M300 360 L260 0 M170 0 L170 380" stroke="#7F5539" stroke-width="12" stroke-linecap="round"/>` +
       `<rect x="0" y="40" width="340" height="230" rx="8" fill="#2D6A4F" stroke="#7F5539" stroke-width="12"/>` +
       `<text x="22" y="92" font-size="21" fill="#E9F5DB" ${SVGM}>package main</text><text x="22" y="128" font-size="21" fill="#E9F5DB" ${SVGM}>func main() {</text>` +
       `<text x="40" y="164" font-size="21" fill="#FFD166" ${SVGM}>fmt.Println(</text><text x="60" y="198" font-size="21" fill="#FFADAD" ${SVGM}>"Hello, World!")</text><text x="22" y="234" font-size="21" fill="#E9F5DB" ${SVGM}>}</text>` +
@@ -175,7 +176,7 @@ const STAGES = {
         `<g fill="#FFC857"><path d="M640 190 l-22 -6 l10 -16z"/><path d="M860 640 l2 -22 l16 12z"/><path d="M700 600 l-22 -2 l12 -16z"/></g>`;
       s += `<g transform="translate(860 330) rotate(8)"><rect x="0" y="0" width="16" height="700" fill="#BC8A5F" stroke="#0B2E2F" stroke-width="3"/><rect x="110" y="0" width="16" height="700" fill="#BC8A5F" stroke="#0B2E2F" stroke-width="3"/>${Array.from({ length: 9 }, (_, i) => `<rect x="10" y="${40 + i * 74}" width="106" height="12" fill="#DDA15E" stroke="#0B2E2F" stroke-width="2"/>`).join('')}</g>`;
       s += `<rect x="0" y="1000" width="1080" height="100" fill="#0B2E2F"/><path d="M0 1000 H1080" stroke="#7FD1AE" stroke-width="3" opacity=".5"/>`;
-      return s + gopherAt(gopherDressed(2), 330, 640, 340);
+      return s + HERO + gopherAt(gopherDressed(2), 330, 640, 340);
     },
   },
   3: {
@@ -200,7 +201,7 @@ const STAGES = {
       // мини-горутины бегут по кругу арены
       const run = { view: 'side', arms: [60, -70], feet: 'walk', tilt: 8 };
       s += gopherAt(run, 40, 820, 120) + gopherAt({ ...run, flip: true }, 920, 840, 110) + gopherAt(run, 150, 900, 90) + gopherAt({ ...run, flip: true }, 860, 920, 80);
-      return s + gopherAt(gopherDressed(3), 380, 640, 320);
+      return s + HERO + gopherAt(gopherDressed(3), 380, 640, 320);
     },
   },
   4: {
@@ -227,7 +228,7 @@ const STAGES = {
       s += `<g transform="translate(980 140) rotate(-20)"><rect x="-14" y="-10" width="28" height="20" fill="#ADB5BD" stroke="#050B1F" stroke-width="2"/><rect x="-60" y="-8" width="40" height="16" fill="#3A86FF" stroke="#050B1F" stroke-width="2"/><rect x="20" y="-8" width="40" height="16" fill="#3A86FF" stroke="#050B1F" stroke-width="2"/></g>`;
       // почтовый ящик
       s += `<g transform="translate(780 820)"><rect x="56" y="80" width="14" height="110" fill="#6C757D"/><path d="M0 40 Q0 0 60 0 L120 0 Q130 0 130 10 V90 H0Z" fill="#E63946" stroke="#050B1F" stroke-width="4"/><rect x="18" y="38" width="80" height="8" fill="#050B1F"/><path d="M118 10 V-30 L150 -20 L118 -10" fill="#FFD166" stroke="#050B1F" stroke-width="3"/></g>`;
-      return s + gopherAt(gopherDressed(4), 360, 640, 330);
+      return s + HERO + gopherAt(gopherDressed(4), 360, 640, 330);
     },
   },
   5: {
@@ -251,7 +252,7 @@ const STAGES = {
       s += cont(640, 916, '#E63946', 'db') + cont(840, 916, '#3A86FF', 'cache') + cont(740, 832, '#6A4C93', 'migrate') + cont(700, 748, '#2A9D8F', 'tests ✓');
       // земля с полосами
       s += `<rect x="0" y="1000" width="1080" height="100" fill="#1D3557"/>` + Array.from({ length: 24 }, (_, i) => `<path d="M${i * 60 - 40} 1100 L${i * 60} 1000 L${i * 60 + 30} 1000 L${i * 60 - 10} 1100Z" fill="#FFC300"/>`).join('');
-      return s + gopherAt(gopherDressed(5), 470, 680, 300);
+      return s + HERO + gopherAt(gopherDressed(5), 470, 680, 300);
     },
   },
   6: {
@@ -278,7 +279,7 @@ const STAGES = {
         Array.from({ length: 14 }, (_, i) => `<circle cx="${60 + i * 70}" cy="${920 + (i % 2) * 30}" r="10" fill="${i % 5 === 3 ? '#FFB020' : '#39D98A'}" opacity=".85"/>`).join('') +
         `<circle cx="960" cy="800" r="46" fill="#39D98A" opacity=".2"/><circle cx="960" cy="800" r="26" fill="#39D98A" stroke="#0B0F14" stroke-width="4"/><text x="960" y="770" text-anchor="middle" font-size="16" fill="#39D98A" ${SVGM}>ALL OK</text>`;
       s += `<rect x="0" y="1000" width="1080" height="100" fill="#0B0F14"/>`;
-      return s + gopherAt(gopherDressed(6), 390, 680, 310);
+      return s + HERO + gopherAt(gopherDressed(6), 390, 680, 310);
     },
   },
   7: {
@@ -302,7 +303,7 @@ const STAGES = {
       // флаг на вершине
       s += `<path d="M560 480 V250" stroke="#2B1B17" stroke-width="8" stroke-linecap="round"/><path d="M564 256 Q640 236 700 262 Q760 286 820 262 L820 360 Q760 384 700 360 Q640 336 564 356Z" fill="#00ADD8" stroke="#1B1340" stroke-width="4"/>` +
         `<text x="692" y="324" text-anchor="middle" font-size="40" font-weight="900" fill="#FFFFFF" ${SVGF}>7 / 7</text>`;
-      return s + gopherAt(gopherDressed(7), 360, 250, 230);
+      return s + HERO + gopherAt(gopherDressed(7), 360, 250, 230);
     },
   },
 };
@@ -324,9 +325,24 @@ export async function drawStage(g, W, H, x) {
   const st = STAGES[x.num] || STAGES[1], P = st.pal, u = W / 1080, sq = H === W;
   const rng = rngFrom(x.num * 977 + 13);
   const artT = sq ? `translate(${W - 0.54 * W + 40 * u} ${H - 0.54 * 1100 * u}) scale(${0.54 * u})` : `translate(0 ${H - 1100})`;
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">${st.bg(W, H, rng)}<g transform="${artT}">${st.art(rngFrom(x.num * 31 + 7))}</g></svg>`;
-  const img = await svgImage(svg);
-  if (img) g.drawImage(img, 0, 0, W, H);
+  const [sceneArt, heroArt = ''] = st.art(rngFrom(x.num * 31 + 7)).split(HERO);
+  const wrapSvg = (inner) => `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">${inner}</svg>`;
+  if (st.paint) { // масло: фон крупными мазками, гофер поверх мелкими, фактура холста и лак
+    const bgImg = await svgImage(wrapSvg(`${st.bg(W, H, rng)}<g transform="${artT}">${sceneArt}</g>`));
+    if (bgImg) g.drawImage(bgImg, 0, 0, W, H);
+    brushPass(g, 0, 0, W, H, Math.round(W * H / 45), 20 * u, 8 * u, 0.45, x.num * 7 + 1, true, 0.10);
+    brushPass(g, 0, 0, W, H, Math.round(W * H / 110), 11 * u, 4 * u, 0.55, x.num * 7 + 2, true, 0.08);
+    const heroImg = await svgImage(wrapSvg(`<g transform="${artT}">${heroArt}</g>`));
+    if (heroImg) g.drawImage(heroImg, 0, 0, W, H);
+    brushPass(g, 0, 0, W, H, Math.round(W * H / 420), 10 * u, 3 * u, 0.3, x.num * 7 + 3);
+    canvasWeave(g, 0, 0, W, H, u);
+    const v = g.createRadialGradient(W / 2, H * 0.45, W * 0.25, W / 2, H / 2, H * 0.75);
+    v.addColorStop(0, 'rgba(255,230,170,0)'); v.addColorStop(1, 'rgba(70,35,15,0.30)');
+    g.fillStyle = v; g.fillRect(0, 0, W, H);
+  } else {
+    const img = await svgImage(wrapSvg(`${st.bg(W, H, rng)}<g transform="${artT}">${sceneArt}${heroArt}</g>`));
+    if (img) g.drawImage(img, 0, 0, W, H);
+  }
 
   // шапка
   const pad = 80 * u;
@@ -417,20 +433,28 @@ function jobChars(W, H) {
   return s;
 }
 // мазки маслом: цвет берётся из картинки под мазком, направление — по полю
-function brushPass(g, x0, y0, w, h, n, len, width, alpha, seed) {
+function brushPass(g, x0, y0, w, h, n, len, width, alpha, seed, calm = false, relief = 0) {
   const rng = rngFrom(seed);
   const data = g.getImageData(x0, y0, w, h).data;
   g.save(); g.lineCap = 'round';
   for (let i = 0; i < n; i++) {
     const x = rng() * w, y = rng() * h;
     const k = ((y | 0) * w + (x | 0)) * 4;
-    const a = Math.sin(x * 0.006 + y * 0.002) * 0.9 + Math.cos(y * 0.008) * 0.6 + (rng() - 0.5) * 0.5;
+    const a = calm ? Math.sin(y * 0.005 + x * 0.003) * 0.32 + (rng() - 0.5) * 0.35
+      : Math.sin(x * 0.006 + y * 0.002) * 0.9 + Math.cos(y * 0.008) * 0.6 + (rng() - 0.5) * 0.5;
     const l = len * (0.5 + rng());
     const j = (rng() - 0.5) * 18;
     g.strokeStyle = `rgba(${Math.min(255, data[k] + j)},${Math.min(255, data[k + 1] + j)},${Math.min(255, data[k + 2] + j)},${alpha})`;
     g.lineWidth = width * (0.6 + rng() * 0.8);
-    g.beginPath(); g.moveTo(x0 + x - Math.cos(a) * l / 2, y0 + y - Math.sin(a) * l / 2);
-    g.quadraticCurveTo(x0 + x + Math.sin(a) * l * 0.15, y0 + y - Math.cos(a) * l * 0.15, x0 + x + Math.cos(a) * l / 2, y0 + y + Math.sin(a) * l / 2); g.stroke();
+    const ax = x0 + x - Math.cos(a) * l / 2, ay = y0 + y - Math.sin(a) * l / 2, bx = x0 + x + Math.cos(a) * l / 2, by = y0 + y + Math.sin(a) * l / 2;
+    const cx = x0 + x + Math.sin(a) * l * 0.15, cy = y0 + y - Math.cos(a) * l * 0.15;
+    g.beginPath(); g.moveTo(ax, ay); g.quadraticCurveTo(cx, cy, bx, by); g.stroke();
+    if (relief && rng() < 0.5) { // рельеф густой краски: светлая кромка сверху, тень снизу
+      const lw = g.lineWidth, o = lw * 0.32;
+      g.lineWidth = lw * 0.22;
+      g.strokeStyle = `rgba(255,250,235,${relief})`; g.beginPath(); g.moveTo(ax, ay - o); g.quadraticCurveTo(cx, cy - o, bx, by - o); g.stroke();
+      g.strokeStyle = `rgba(60,30,10,${relief * 0.7})`; g.beginPath(); g.moveTo(ax, ay + o); g.quadraticCurveTo(cx, cy + o, bx, by + o); g.stroke();
+    }
   }
   g.restore();
 }
@@ -480,7 +504,7 @@ export async function drawJob(g, W, H, d = {}) {
   g.font = `italic 800 ${(sq ? 72 : 108) * u}px ${SERIF}`; g.fillText('Нашёл работу!', W / 2, (sq ? 146 : 250) * u);
   // картина
   const t = (sq ? 46 : 64) * u;
-  const px = (sq ? 220 : 120) * u, py = (sq ? 210 : 360) * u, pw = W - 2 * px, ph = sq ? 640 * u : 1200 * u;
+  const px = (sq ? 220 : 120) * u, py = (sq ? 210 : 360) * u, pw = W - 2 * px, ph = sq ? 640 * u : H - py - t - 110 * u;
   goldFrame(g, px, py, pw, ph, t, u);
   const pw0 = Math.round(pw), ph0 = Math.round(ph), px0 = Math.round(px), py0 = Math.round(py);
   const scene = await svgImage(`<svg xmlns="http://www.w3.org/2000/svg" width="${pw0}" height="${ph0}" viewBox="0 0 ${pw0} ${ph0}">${jobScene(pw0, ph0, rngFrom(2026))}</svg>`);
@@ -502,16 +526,4 @@ export async function drawJob(g, W, H, d = {}) {
   // подпись художника в углу
   g.save(); g.fillStyle = 'rgba(60,30,15,0.75)'; g.font = `italic 700 ${22 * u}px ${SERIF}`; g.textAlign = 'right';
   g.fillText((d.nick || 'Гофер') + ' · 2026', px0 + pw0 - 24 * u, py0 + ph0 - 22 * u); g.restore();
-  // музейная табличка
-  const lw = (sq ? 520 : 640) * u, lh = (sq ? 112 : 170) * u, lx = W / 2 - lw / 2, ly = py + ph + t + (sq ? 22 : 70) * u;
-  g.save(); g.shadowColor = 'rgba(0,0,0,0.5)'; g.shadowBlur = 20 * u; g.shadowOffsetY = 8 * u;
-  const pl = g.createLinearGradient(lx, ly, lx, ly + lh); pl.addColorStop(0, '#F7EBD0'); pl.addColorStop(1, '#E2CFA6');
-  g.fillStyle = pl; g.fillRect(lx, ly, lw, lh); g.restore();
-  g.strokeStyle = '#B8862B'; g.lineWidth = 3 * u; g.strokeRect(lx + 8 * u, ly + 8 * u, lw - 16 * u, lh - 16 * u);
-  g.fillStyle = '#2B1B17'; g.textAlign = 'center';
-  g.font = `italic 700 ${(sq ? 30 : 40) * u}px ${SERIF}`; g.fillText('«Нашёл работу!»', W / 2, ly + (sq ? 50 : 70) * u);
-  g.font = `500 ${(sq ? 18 : 23) * u}px ${SERIF}`; g.fillStyle = '#5A4632';
-  g.fillText(`Гофер и Clawd. Холст, масло. ${d.dayN ? d.dayN + '-й день пути · ' : ''}7 этапов из 7`, W / 2, ly + (sq ? 84 : 116) * u);
-  if (!sq) { g.font = `500 ${21 * u}px ${SERIF}`; g.fillText('Собрание Ascent · Go — ROADMAP', W / 2, ly + 148 * u); }
-  g.textAlign = 'left';
 }
