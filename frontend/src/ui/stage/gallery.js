@@ -1,5 +1,5 @@
 // Особые картины галереи: передний/задний план (back, front) для холста маслом.
-import { L, SVGF, SVGM, SVGS, esc, txt, rngFrom, gopherAt, dressed, items, hats, clawd, CI, csign } from './kit.js';
+import { L, SVGF, SVGM, SVGS, esc, txt, rngFrom, gopherAt, dressed, items, hats, packs, clawd, CI, csign } from './kit.js';
 const stars = (rng, n, W, H, fill, rmax = 2.2) => Array.from({ length: n }, () => `<circle cx="${(rng() * W).toFixed(0)}" cy="${(rng() * H).toFixed(0)}" r="${(0.6 + rng() * rmax).toFixed(1)}" fill="${fill}" opacity="${(0.3 + rng() * 0.7).toFixed(2)}"/>`).join('');
 const confetti = (rng, W, H, n = 70) => Array.from({ length: n }, () => { const x = rng() * W, y = rng() * H, c = ['#E63946', '#FFD166', '#00ADD8', '#90BE6D', '#F28482', '#FFFFFF'][Math.floor(rng() * 6)]; return `<rect x="${x}" y="${y}" width="${8 + rng() * 10}" height="${4 + rng() * 6}" fill="${c}" transform="rotate(${rng() * 180} ${x} ${y})" opacity=".95"/>`; }).join('');
 
@@ -17,11 +17,11 @@ export const GALLERY = {
       // полки с книгами
       for (let r = 0; r < 3; r++) { const y = H * (0.4 + r * 0.1); s += `<rect x="${W * 0.62}" y="${y}" width="${W * 0.34}" height="10" fill="#6B4226"/>`; let x = W * 0.63; while (x < W * 0.95) { const bw = 14 + rng() * 18, bh = 50 + rng() * 40; s += `<rect x="${x}" y="${y - bh}" width="${bw}" height="${bh}" fill="${['#E63946', '#457B9D', '#E9C46A', '#2A9D8F', '#F4A261', '#A8DADC'][Math.floor(rng() * 6)]}"/>`; x += bw + 3; } }
       s += `<circle cx="${W * 0.7}" cy="${H * 0.66}" r="${W * 0.45}" fill="url(#gal)"/>`;
-      s += `<rect x="0" y="${H * 0.78}" width="${W}" height="${H * 0.22}" fill="#3B2A1E"/>`;
+      s += `<rect x="0" y="${H * 0.84}" width="${W}" height="${H * 0.16}" fill="#3B2A1E"/>`;
       return s;
     },
     front: (W, H) => {
-      const dy = H * 0.78;
+      const dy = H * 0.85;
       let s = `<g transform="translate(${W * 0.06} ${H * 0.06})"><rect width="${W * 0.5}" height="${H * 0.34}" rx="8" fill="#F8F9FA" stroke="#ADB5BD" stroke-width="10"/>`;
       const bw = W * 0.5, bh = H * 0.34;
       const tn = [[0.5, 0.14], [0.28, 0.34], [0.72, 0.34], [0.16, 0.56], [0.4, 0.56], [0.6, 0.56], [0.84, 0.56]];
@@ -29,9 +29,14 @@ export const GALLERY = {
       tn.forEach(([x, y], i) => { s += `<circle cx="${x * bw}" cy="${y * bh}" r="${bw * 0.045}" fill="${i ? '#FFFFFF' : '#FFD166'}" stroke="#264653" stroke-width="3"/><text x="${x * bw}" y="${y * bh + 6}" text-anchor="middle" font-size="${bw * 0.04}" font-weight="700" fill="#264653" ${SVGM}>${[8, 3, 10, 1, 6, 9, 14][i]}</text>`; });
       s += txt(bw * 0.06, bh * 0.8, 'O(n log n)', bw * 0.07, '#E63946', 'font-weight="800"', SVGM) + txt(bw * 0.55, bh * 0.8, 'BFS · DP · ⇄', bw * 0.055, '#2A9D8F', 'font-weight="700"', SVGM) +
         txt(bw * 0.06, bh * 0.93, 'dp[i] = max(dp[i-1], dp[i-2]+a[i])', bw * 0.042, '#457B9D', '', SVGM) + `</g>`;
+      // стикеры с первыми задачами
+      [['Two Sum', '✓', '#FFD166', -4], ['Скобки', '✓', '#90BE6D', 3], ['BFS: остров', '…', '#A8DADC', -2]].forEach(([t, m, c, r], i) => {
+        const x = W * (0.07 + (i % 2) * 0.2), y = H * (0.47 + i * 0.075), w = W * 0.25, h = H * 0.06;
+        s += `<g transform="rotate(${r} ${x + w / 2} ${y + h / 2})"><rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${c}" stroke="${L}" stroke-width="2"/><circle cx="${x + w / 2}" cy="${y + 6}" r="5" fill="#E63946"/>${txt(x + 12, y + h * 0.66, t, W * 0.026, '#1D3557', 'font-weight="800"')}${txt(x + w - 14, y + h * 0.68, m, W * 0.04, '#1D3557', 'text-anchor="end" font-weight="900"')}</g>`;
+      });
       // гофер за столом
-      const gw = W * 0.36;
-      s += gopherAt(dressed({ hat: ['glasses', 'pencil'] }, { arms: [0, 128], eyes: 'up', look: -0.5, tilt: 4 }), W * 0.3, dy - gw * 0.95, gw);
+      const gw = W * 0.4;
+      s += gopherAt(dressed({ hat: ['glasses', 'pencil'] }, { arms: [0, 128], eyes: 'up', look: -0.5, tilt: 4 }), W * 0.28, dy - gw * 0.98, gw);
       // стол (передний край закрывает низ гофера)
       s += `<rect x="0" y="${dy}" width="${W}" height="${H * 0.05}" fill="#8B5E3C" stroke="#4A2C17" stroke-width="4"/><rect x="0" y="${dy + H * 0.05}" width="${W}" height="${H * 0.17}" fill="#6B4226"/>`;
       // ноутбук с задачей
@@ -39,12 +44,12 @@ export const GALLERY = {
       s += `<g transform="translate(${lx} ${ly})"><path d="M0 ${H * 0.12} L${W * 0.26} ${H * 0.12} L${W * 0.28} ${H * 0.13} L${-W * 0.02} ${H * 0.13}Z" fill="#ADB5BD" stroke="${L}" stroke-width="2"/><rect x="${W * 0.01}" y="0" width="${W * 0.24}" height="${H * 0.12}" rx="6" fill="#212529" stroke="${L}" stroke-width="3"/>` +
         ['func twoSum(a []int, t int) {', '  seen := map[int]int{}', '  for i, x := range a {', '    if j, ok := seen[t-x]; ok {'].map((l, i) => txt(W * 0.022, H * (0.026 + i * 0.024), l, W * 0.016, ['#8BE9FD', '#F8F8F2', '#FF79C6', '#50FA7B'][i], '', SVGM)).join('') + `</g>`;
       // книги и лампа
-      const bx = W * 0.72;
+      const bx = W * 0.66;
       [['Алгоритмы', '#E63946'], ['Графы', '#457B9D'], ['DP', '#E9C46A']].forEach(([t, c], i) => { s += `<rect x="${bx + (i % 2) * 8}" y="${dy - (i + 1) * H * 0.028}" width="${W * 0.2}" height="${H * 0.026}" rx="3" fill="${c}" stroke="${L}" stroke-width="2"/>${txt(bx + 14 + (i % 2) * 8, dy - (i + 1) * H * 0.028 + H * 0.019, t, W * 0.024, '#fff', 'font-weight="800"')}`; });
       s += `<path d="M${W * 0.9} ${dy} L${W * 0.9} ${dy - H * 0.2} L${W * 0.8} ${dy - H * 0.26}" stroke="#343A40" stroke-width="8" fill="none"/><path d="M${W * 0.74} ${dy - H * 0.27} L${W * 0.84} ${dy - H * 0.29} L${W * 0.82} ${dy - H * 0.22}Z" fill="#E9C46A" stroke="${L}" stroke-width="3"/><ellipse cx="${W * 0.9}" cy="${dy}" rx="${W * 0.05}" ry="${H * 0.008}" fill="#343A40"/>`;
       // Clawd на столе сортирует столбики
-      const cs = W / 640;
-      s += clawd(W * 0.5, dy - 98 * cs, cs, { item: 'bars', both: true });
+      const cs = W / 820, top = dy - 3 * H * 0.028;
+      s += clawd(W * 0.67, top - 98 * cs, cs, { item: 'bars', both: true });
       return s;
     },
   },
@@ -75,7 +80,8 @@ export const GALLERY = {
       // подарки
       [[0.6, '#E63946'], [0.84, '#457B9D'], [0.7, '#90BE6D']].forEach(([fx, c], i) => { const w = W * 0.07, x = W * fx, y = base - w + (i === 2 ? 8 : 0); s += `<rect x="${x}" y="${y}" width="${w}" height="${w}" fill="${c}" stroke="${L}" stroke-width="2"/><rect x="${x + w / 2 - 5}" y="${y}" width="10" height="${w}" fill="#FFD166"/><rect x="${x}" y="${y + w / 2 - 5}" width="${w}" height="10" fill="#FFD166"/>`; });
       const gw = W * 0.4;
-      s += gopherAt(dressed({ hat: ['redscarf', 'santa'] }, { arms: 'hold', eyes: 'happy', look: 0.3, item: 'sparkler', lift: 6 }), W * 0.08, base - gw * 1.2 + H * 0.02, gw);
+      const spark = `<path d="M188 112 L214 -6" stroke="#6C757D" stroke-width="4"/>` + Array.from({ length: 14 }, (_, i) => { const a = i / 14 * Math.PI * 2; return `<path d="M${216 + Math.cos(a) * 8} ${-12 + Math.sin(a) * 8} L${216 + Math.cos(a) * (24 + (i % 3) * 8)} ${-12 + Math.sin(a) * (24 + (i % 3) * 8)}" stroke="${['#FFD166', '#FFFFFF', '#FFB703'][i % 3]}" stroke-width="2.6" stroke-linecap="round"/>`; }).join('') + `<circle cx="216" cy="-12" r="7" fill="#FFF6C9"/>`;
+      s += gopherAt(dressed({ hat: ['redscarf', 'santa', spark] }, { arms: 'wave', eyes: 'happy', look: 0.3, lift: 6 }), W * 0.08, base - gw * 1.2 + H * 0.02, gw);
       const cs = W / 620;
       s += clawd(W * 0.43, base - 98 * cs + H * 0.01, cs, { hat: 'santa', item: 'gift', jump: 10 });
       // снег
@@ -104,17 +110,17 @@ export const GALLERY = {
       // бумажные самолётики-отклики летят к городу
       [[0.36, 0.34, -12], [0.52, 0.26, -8], [0.68, 0.36, -16]].forEach(([fx, fy, r], i) => { const x = W * fx, y = H * fy; s += `<path d="M${x - W * 0.2} ${y + H * 0.08} Q${x - W * 0.1} ${y + H * 0.02} ${x - 20} ${y + 6}" stroke="#FFFFFF" stroke-width="3" stroke-dasharray="7 9" fill="none"/><g transform="translate(${x} ${y}) rotate(${r}) scale(${W / 900})"><path d="M-30 0 L40 -16 L10 20Z M10 20 L4 36 L18 14" fill="#FFFFFF" stroke="${L}" stroke-width="2.4" stroke-linejoin="round"/><text x="2" y="4" font-size="12" font-weight="800" fill="#E63946" ${SVGF}>CV</text></g>`; });
       // указатель
-      const px = W * 0.12, py = H * 0.5;
+      const px = W * 0.14, py = H * 0.5;
       s += `<rect x="${px - 8}" y="${py}" width="16" height="${H * 0.36}" fill="#7F5539" stroke="${L}" stroke-width="2"/>`;
-      [['Go-бэкенд →', '#FFD166', -4, 1], ['Junior', '#90BE6D', 5, -1], ['Удалёнка', '#A8DADC', -3, 1], ['Офис', '#F4A261', 4, -1]].forEach(([t, c, r, dir], i) => {
+      [['Go-бэкенд →', '#FFD166', -4, 1], ['Junior', '#90BE6D', 4, 1], ['Удалёнка', '#A8DADC', -3, 1], ['Офис', '#F4A261', 3, 1]].forEach(([t, c, r, dir], i) => {
         const y = py + 20 + i * H * 0.06, w = W * 0.25;
         const x0 = dir > 0 ? px - 10 : px - w + 10;
         s += `<g transform="rotate(${r} ${px} ${y})"><path d="M${x0} ${y} H${x0 + w} ${dir > 0 ? `l22 ${H * 0.022} l-22 ${H * 0.022}` : `v${H * 0.044}`} H${x0} ${dir < 0 ? `l-22 ${-H * 0.022}z` : 'z'}" fill="${c}" stroke="${L}" stroke-width="3"/>${txt(x0 + 16, y + H * 0.031, t, W * 0.032, '#2B1B17', 'font-weight="800"')}</g>`;
       });
       const gw = W * 0.38, gy = H * 0.9 - gw * 1.2;
-      s += gopherAt(dressed({ hat: [`<g stroke="${L}" stroke-width="2.2"><rect x="18" y="104" width="30" height="86" rx="12" fill="#2A9D8F"/><rect x="152" y="104" width="30" height="86" rx="12" fill="#2A9D8F"/></g>`] }, { arms: 'hold', eyes: 'happy', look: 0.6, item: 'resume', tilt: -3 }), W * 0.4, gy, gw);
-      const cs = W / 620;
-      s += clawd(W * 0.76, H * 0.9 - 98 * cs, cs, { hat: 'pack', item: 'compass', both: true });
+      s += gopherAt(dressed({ back: packs.front('#2A9D8F') }, { arms: 'hold', eyes: 'happy', look: 0.6, item: 'resume', tilt: -3 }), W * 0.5, gy, gw);
+      const cs = W / 720;
+      s += clawd(W * 0.24, H * 0.94 - 98 * cs, cs, { hat: 'pack', item: 'compass' });
       return s;
     },
   },
@@ -153,9 +159,9 @@ export const GALLERY = {
       const bubble = (x, y, w, h, t, tail) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${h / 2}" fill="#FFFFFF" stroke="${L}" stroke-width="3"/><path d="${tail}" fill="#FFFFFF" stroke="${L}" stroke-width="3"/><rect x="${x + 10}" y="${y + h - 14}" width="40" height="12" fill="#FFFFFF"/>${txt(x + w / 2, y + h * 0.64, t, h * 0.36, '#2B1B17', 'text-anchor="middle" font-weight="700"')}`;
       s += bubble(W * 0.5, H * 0.36, W * 0.44, H * 0.06, 'Расскажите о себе :)', `M${W * 0.78} ${H * 0.42 - 2} L${W * 0.8} ${H * 0.46} L${W * 0.74} ${H * 0.42 - 2}Z`);
       s += `<circle cx="${W * 0.36}" cy="${H * 0.43}" r="7" fill="#FFF" stroke="${L}" stroke-width="2.5"/><circle cx="${W * 0.33}" cy="${H * 0.46}" r="5" fill="#FFF" stroke="${L}" stroke-width="2.5"/>` +
-        `<ellipse cx="${W * 0.26}" cy="${H * 0.39}" rx="${W * 0.18}" ry="${H * 0.035}" fill="#FFFFFF" stroke="${L}" stroke-width="3"/>${txt(W * 0.26, H * 0.398, 'горутины… каналы… select…', H * 0.019, '#555', 'text-anchor="middle" font-style="italic"')}`;
+        `<ellipse cx="${W * 0.25}" cy="${H * 0.39}" rx="${W * 0.22}" ry="${H * 0.045}" fill="#FFFFFF" stroke="${L}" stroke-width="3"/>${txt(W * 0.25, H * 0.384, 'горутины…', H * 0.02, '#555', 'text-anchor="middle" font-style="italic"')}${txt(W * 0.25, H * 0.41, 'каналы… select…', H * 0.02, '#555', 'text-anchor="middle" font-style="italic"')}`;
       const cs = W / 700;
-      s += clawd(W * 0.4, H * 0.96 - 98 * cs, cs, { item: () => csign('ты справишься!', '#FFD166'), both: true, hat: 'tie' });
+      s += clawd(W * 0.4, H * 0.96 - 98 * cs, cs, { item: () => csign('ты справишься!', '#FFD166'), both: true });
       return s;
     },
   },
