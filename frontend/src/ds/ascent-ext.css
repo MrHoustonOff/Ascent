@@ -835,3 +835,4 @@ html,body{margin:0;height:100%;overflow:hidden;background:var(--surface-window)}
 .as-achwin__body{z-index:1}.as-achwin__glass{position:relative}
 
 .as-recap__stylesel{width:auto;min-width:200px}
+.as-recap__gallery{width:auto;min-width:220px;height:30px;padding:0 8px;font-size:13px}

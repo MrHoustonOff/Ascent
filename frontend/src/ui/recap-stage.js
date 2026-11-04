@@ -220,4 +220,3 @@ export async function drawGallery(g, W, H, kind = 'job', d = {}) {
   g.save(); g.fillStyle = 'rgba(40,20,10,0.75)'; g.font = `italic 700 ${22 * u}px ${SERIF}`; g.textAlign = 'right';
   g.fillText((d.nick || 'Гофер') + ' · ' + (String(d.date || '').slice(0, 4) || new Date().getFullYear()), px0 + pw0 - 24 * u, py0 + ph0 - 22 * u); g.restore();
 }
-export const drawJob = (g, W, H, d) => drawGallery(g, W, H, 'job', d);

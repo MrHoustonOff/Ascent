@@ -6,7 +6,7 @@ import { S } from '../state.js';
 import { h, clear, pluralRu } from './dom.js';
 import { openDialog } from './dialog.js';
 import { toast } from './toast.js';
-import { FORMATS, STYLES, STYLE_KEYS, EXTRA_CARDS, planCards, drawCard, listPages, rngFrom, pick } from './recap-draw.js';
+import { FORMATS, STYLES, STYLE_KEYS, EXTRA_CARDS, GALLERY_LIST, planCards, drawCard, listPages, rngFrom, pick } from './recap-draw.js';
 import { achCardPNG } from './achwindow.js';
 import { openEditor } from './recap-editor.js';
 import { openListEditor } from './recap-list.js';
@@ -49,7 +49,7 @@ export function openRecap() {
   const rnd = rngFrom(seed);
   const randStyle = pick(rnd, STYLE_KEYS);
   let todayStudy = '';
-  let job = false; // «Нашёл работу!» — разовая картина, не запоминается
+  let gallery = ''; // картина галереи для этих итогов: выбирается каждый раз, не запоминается
   let kind = 'day', date = '', data = null, list = [], canvases = [], buildNo = 0;
   // правки готовых страниц: id → { hidden, style }; сбрасываются при смене периода, формата или режима
   let over = {};
@@ -87,19 +87,19 @@ export function openRecap() {
         onclick: () => { p.toggles[k] = TOGGLE_NEXT[st]; savePrefs(p); drawToggles(); build(); },
       }, l, h('span', { class: 'as-recap__chipst' }, TOGGLE_TEXT[st])));
     }
-    // закрытый этап — только если в периоде он есть
+    // вехи этапа (25/50/75 % и закрытие) — только если в периоде они есть
     if (data?.stageDone?.length) {
-      const on = p.toggles.stage !== 'off';
+      const on = p.toggles.stage !== 'off', n = data.stageDone.length, x = data.stageDone[0];
       toggles.append(h('button', {
-        class: 'as-recap__chip is-' + (on ? 'on' : 'off'), title: 'Карточка «Этап закрыт» — свой мир и костюм гофера на каждый этап',
+        class: 'as-recap__chip is-' + (on ? 'on' : 'off'), title: 'Карточки этапа: своя картина на 25, 50, 75 % и закрытие',
         onclick: () => { p.toggles.stage = on ? 'off' : 'on'; savePrefs(p); drawToggles(); build(); },
-      }, data.stageDone.length > 1 ? 'Этапы закрыты' : `Этап ${data.stageDone[0].num} закрыт`, h('span', { class: 'as-recap__chipst' }, on ? 'есть' : 'нет')));
+      }, n > 1 ? 'Вехи этапов' : x.pct >= 100 ? `Этап ${x.num} закрыт` : `Этап ${x.num} · ${x.pct} %`, h('span', { class: 'as-recap__chipst' }, on ? 'есть' : 'нет')));
     }
-    // картина «Нашёл работу!»
-    toggles.append(h('button', {
-      class: 'as-recap__chip is-' + (job ? 'on' : 'off'), title: 'Картина «Нашёл работу!» первой карточкой (не запоминается между открытиями)',
-      onclick: () => { job = !job; drawToggles(); build(); },
-    }, 'Нашёл работу!', h('span', { class: 'as-recap__chipst' }, job ? 'есть' : 'нет')));
+    // картина из галереи — список, доступна всегда
+    const gsel = h('select', { class: 'as-input as-recap__gallery', 'aria-label': 'Картина', title: 'Картина маслом первой карточкой' },
+      [['', 'Картина: нет'], ...GALLERY_LIST.map(([k, t]) => [k, 'Картина: ' + t])].map(([k, t]) => h('option', { value: k, selected: k === gallery }, t)));
+    gsel.addEventListener('change', () => { gallery = gsel.value; build(); });
+    toggles.append(gsel);
     // «учу Go · день X» на первой карточке: считается от первой закрытой темы
     toggles.append(h('button', {
       class: 'as-recap__chip is-' + (p.dayX ? 'on' : 'off'), title: 'Надпись «учу Go · день X» на первой карточке',
@@ -192,7 +192,7 @@ export function openRecap() {
       if (data.anki && (data.anki.period_to < data.from || data.anki.period_from > data.date)) data.anki = null;
       if (kind === 'range') { fromInp.value = data.from; toInp.value = data.date; rFrom = data.from; rTo = data.date; }
       else if (!dateInp.value && kind !== 'all') dateInp.value = data.date;
-      const all = planCards(data, { mode: p.mode, toggles: p.toggles, job, seed, format: p.format, tasks: !!p.tasks });
+      const all = planCards(data, { mode: p.mode, toggles: p.toggles, gallery, seed, format: p.format, tasks: !!p.tasks });
       p.custom.forEach((c, i) => {
         if (!c.kind) { all.push({ key: 'custom', name: 'Своя карточка', card: c, ci: i }); return; }
         const n = listPages(c, p.format); // длинный список — несколько страниц
@@ -243,7 +243,7 @@ export function openRecap() {
           // «Показывать задачи» — темы раскрываются в свои задачи
           const tasksChk = c.key === 'themes' && data.themes.length ? h('label', { class: 'as-recap__chk', title: 'Показывать задачи каждой темы' },
             (() => { const i = h('input', { type: 'checkbox', checked: !!p.tasks }); i.addEventListener('change', () => { p.tasks = i.checked; savePrefs(p); reset(); build(); }); return i; })(), 'задачи') : null;
-          tools = h('div', { class: 'as-recap__customtools' }, arrows[0], tasksChk, notesBtn, c.key === 'stage' || c.key === 'job' ? null : bg,
+          tools = h('div', { class: 'as-recap__customtools' }, arrows[0], tasksChk, notesBtn, c.key === 'stage' || c.key === 'gallery' ? null : bg,
             h('button', { class: 'as-iconbtn as-recap__del', title: 'Удалить страницу', 'aria-label': 'Удалить страницу', onclick: () => { over[id] = { ...over[id], hidden: true }; build(); } }, '✕'), arrows[1]);
         }
         const page = h('div', { class: 'as-recap__custom', draggable: 'true', title: 'Перетащите, чтобы поменять порядок' }, img, tools);
