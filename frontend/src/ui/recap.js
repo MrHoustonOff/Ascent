@@ -113,12 +113,16 @@ export function openRecap() {
   }
   drawAnkiBtns();
 
+  // стилей много — выпадающий список вместо ряда кнопок
+  const styleSel = h('select', { class: 'as-input as-recap__stylesel', 'aria-label': 'Стиль' },
+    [['random', 'Стиль: случайно'], ...STYLE_KEYS.map((k) => [k, 'Стиль: ' + STYLES[k].label])].map(([k, l]) => h('option', { value: k, selected: k === p.style }, l)));
+  styleSel.addEventListener('change', () => { p.style = styleSel.value; savePrefs(p); build(); });
   const body = h('div', { class: 'as-recap__body' },
     h('div', { class: 'as-rowx' }, seg(KINDS, kind, (k) => { kind = k; drawDates(); reset(); build(); }), dates),
     h('div', { class: 'as-rowx' },
       seg([['story', '9:16'], ['square', '1:1']], p.format, (v) => { p.format = v; savePrefs(p); reset(); build(); }),
       seg([['carousel', 'Карусель'], ['one', 'Одна']], p.mode, (v) => { p.mode = v; savePrefs(p); reset(); build(); }),
-      seg([['random', 'Случайно'], ...STYLE_KEYS.map((k) => [k, STYLES[k].label])], p.style, (v) => { p.style = v; savePrefs(p); build(); })),
+      styleSel),
     toggles,
     preview,
     h('div', { class: 'as-rowx as-rowx--between' }, info,

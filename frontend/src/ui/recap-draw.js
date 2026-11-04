@@ -1,4 +1,4 @@
-// Рисование карточек итогов на canvas: 4 стиля × 2 формата, гофер с позой по итогам.
+// Рисование карточек итогов на canvas: 14 стилей × 2 формата, гофер с позой по итогам.
 // Случайность — через rng с зерном: одно открытие окна даёт одну и ту же раскладку при любых переключениях.
 import { gopherSVG, POSES } from './gopher.js';
 import { pluralRu } from './dom.js';
@@ -59,6 +59,148 @@ export const STYLES = {
       g.fillStyle = '#FBF7EF'; g.fillRect(0, 0, W, H);
       g.fillStyle = 'rgba(28,27,25,0.025)';
       for (let i = 0; i < 1400; i++) g.fillRect((i * 7919) % W, (i * 104729) % H, 2, 2);
+    },
+  },
+  blueprint: {
+    label: 'Чертёж', ink: '#EAF3FF', muted: '#9CC3FF', card: 'rgba(234,243,255,0.07)', line: 'rgba(156,195,255,0.45)', track: 'rgba(234,243,255,0.12)', rad: 6,
+    accents: ['#FFD166', '#7FE7FF', '#FF8FA3', '#B7F5A0'], font: FONT, head: MONO,
+    bg(g, W, H) {
+      const u = W / 1080;
+      g.fillStyle = '#0D3B78'; g.fillRect(0, 0, W, H);
+      for (let k = 0; k < 2; k++) {
+        const st = k ? 200 * u : 40 * u; g.strokeStyle = k ? 'rgba(255,255,255,0.16)' : 'rgba(255,255,255,0.07)'; g.lineWidth = (k ? 2 : 1) * u;
+        g.beginPath(); for (let x = 0; x <= W; x += st) { g.moveTo(x, 0); g.lineTo(x, H); } for (let y = 0; y <= H; y += st) { g.moveTo(0, y); g.lineTo(W, y); } g.stroke();
+      }
+      g.strokeStyle = 'rgba(234,243,255,0.55)'; g.lineWidth = 3 * u; g.strokeRect(36 * u, 36 * u, W - 72 * u, H - 72 * u);
+      g.lineWidth = 1.5 * u; g.strokeRect(48 * u, 48 * u, W - 96 * u, H - 96 * u);
+      g.setLineDash([10 * u, 8 * u]); g.beginPath(); g.moveTo(80 * u, 172 * u); g.lineTo(W - 80 * u, 172 * u); g.stroke(); g.setLineDash([]);
+    },
+  },
+  editor: {
+    label: 'Редактор', ink: '#F8F8F2', muted: '#7A86B8', card: '#282A36', line: 'rgba(189,147,249,0.35)', track: 'rgba(248,248,242,0.08)', rad: 12,
+    accents: ['#BD93F9', '#FF79C6', '#8BE9FD', '#50FA7B', '#F1FA8C'], font: MONO, head: MONO,
+    bg(g, W, H) {
+      const u = W / 1080;
+      g.fillStyle = '#1E1F29'; g.fillRect(0, 0, W, H);
+      g.fillStyle = '#191A21'; g.fillRect(0, 0, 58 * u, H);
+      g.fillStyle = 'rgba(122,134,184,0.45)'; g.font = `500 ${16 * u}px ${MONO}`; g.textAlign = 'right';
+      for (let i = 1, y = 60 * u; y < H - 20 * u; i++, y += 44 * u) g.fillText(String(i), 44 * u, y);
+      g.textAlign = 'left';
+      g.fillStyle = '#00ADD8'; g.fillRect(0, 0, W, 6 * u);
+      g.fillStyle = 'rgba(80,250,123,0.55)'; g.font = `500 ${20 * u}px ${MONO}`; g.fillText('$ go run . ✓', W - 230 * u, H - 30 * u);
+    },
+  },
+  ticket: {
+    label: 'Билет', ink: '#FFFFFF', muted: 'rgba(255,255,255,0.74)', card: 'rgba(255,255,255,0.15)', line: 'rgba(255,255,255,0.4)', track: 'rgba(255,255,255,0.18)',
+    accents: ['#FFD166', '#FFE8A3', '#FFB38A', '#B8FFDF'], font: FONT, head: FONT,
+    bg(g, W, H) {
+      const u = W / 1080;
+      const grd = g.createLinearGradient(0, 0, W * 0.3, H);
+      grd.addColorStop(0, '#00ADD8'); grd.addColorStop(1, '#00465C');
+      g.fillStyle = grd; g.fillRect(0, 0, W, H);
+      g.fillStyle = 'rgba(255,255,255,0.06)'; g.font = `900 ${300 * u}px ${FONT}`; g.save(); g.translate(W - 40 * u, H * 0.55); g.rotate(-Math.PI / 2); g.textAlign = 'center'; g.fillText('GO→', 0, 0); g.restore();
+      g.fillStyle = '#0B2A3A';
+      for (const y of [H - 120 * u]) { blob(g, 0, y, 30 * u); blob(g, W, y, 30 * u); }
+      g.strokeStyle = 'rgba(255,255,255,0.45)'; g.lineWidth = 3 * u; g.setLineDash([14 * u, 12 * u]);
+      g.beginPath(); g.moveTo(44 * u, H - 120 * u); g.lineTo(W - 44 * u, H - 120 * u); g.stroke(); g.setLineDash([]);
+      g.fillStyle = 'rgba(255,255,255,0.8)';
+      for (let i = 0, x = W / 2 - 160 * u; x < W / 2 + 160 * u; i++) { const w = ((i * 7) % 3 + 1) * 2.5 * u; g.fillRect(x, H - 52 * u, w, 26 * u); x += w + (((i * 5) % 3) + 1) * 3 * u; }
+    },
+  },
+  pixel: {
+    label: 'Аркада', ink: '#FFFFFF', muted: '#A99BE0', card: 'rgba(255,255,255,0.08)', line: 'rgba(255,255,255,0.5)', track: 'rgba(255,255,255,0.12)', rad: 0,
+    accents: ['#FFE14D', '#4FD08F', '#FF5C8A', '#4CC9EA'], font: MONO, head: MONO,
+    bg(g, W, H) {
+      const u = W / 1080, p = 12 * u;
+      g.fillStyle = '#140C2E'; g.fillRect(0, 0, W, H);
+      for (let i = 0; i < 90; i++) { const x = Math.floor(((i * 7919) % W) / p) * p, y = Math.floor(((i * 104729) % H) / p) * p; g.fillStyle = i % 9 ? 'rgba(255,255,255,0.35)' : '#FFE14D'; g.fillRect(x, y, p * (i % 7 ? 0.5 : 1), p * (i % 7 ? 0.5 : 1)); }
+      g.fillStyle = '#FFFFFF';
+      const b = 30 * u; g.fillRect(b, b + p, p, H - 2 * b - 2 * p); g.fillRect(W - b - p, b + p, p, H - 2 * b - 2 * p); g.fillRect(b + p, b, W - 2 * b - 2 * p, p); g.fillRect(b + p, H - b - p, W - 2 * b - 2 * p, p);
+      g.fillStyle = '#E8417A'; g.fillRect(b + p, H - b - 2 * p, W - 2 * b - 2 * p, p);
+    },
+  },
+  gazette: {
+    label: 'Газета', ink: '#1B1B1B', muted: '#5E5A50', card: 'rgba(27,27,27,0.05)', line: 'rgba(27,27,27,0.8)', track: 'rgba(27,27,27,0.1)', rad: 2,
+    accents: ['#9B1C1C', '#1F3A5F', '#2F5D3A'], font: SERIF, head: SERIF,
+    bg(g, W, H) {
+      const u = W / 1080;
+      g.fillStyle = '#F3EEE2'; g.fillRect(0, 0, W, H);
+      speckle(g, W, H, 'rgba(60,50,30,0.05)', 1600, 2);
+      g.fillStyle = '#1B1B1B';
+      g.fillRect(80 * u, 160 * u, W - 160 * u, 4 * u); g.fillRect(80 * u, 170 * u, W - 160 * u, 1.5 * u);
+      g.fillRect(80 * u, H - 112 * u, W - 160 * u, 1.5 * u); g.fillRect(80 * u, H - 106 * u, W - 160 * u, 4 * u);
+      g.font = `italic 700 ${28 * u}px ${SERIF}`; g.textAlign = 'center'; g.fillText('The Gopher Times', W / 2, H - 70 * u); g.textAlign = 'left';
+    },
+  },
+  receipt: {
+    label: 'Чек', ink: '#222222', muted: '#6F6A62', card: 'rgba(34,34,34,0.05)', line: 'rgba(34,34,34,0.5)', track: 'rgba(34,34,34,0.1)', rad: 4,
+    accents: ['#E4572E', '#2B59C3', '#1B998B'], font: MONO, head: MONO,
+    bg(g, W, H) {
+      const u = W / 1080, x0 = 44 * u, x1 = W - 44 * u, top = 30 * u, bot = H - 26 * u, z = 18 * u;
+      g.fillStyle = '#D9D4CB'; g.fillRect(0, 0, W, H);
+      g.save(); g.shadowColor = 'rgba(0,0,0,0.18)'; g.shadowBlur = 24 * u; g.shadowOffsetY = 8 * u;
+      g.fillStyle = '#FFFFFF'; g.beginPath(); g.moveTo(x0, top); g.lineTo(x1, top); g.lineTo(x1, bot);
+      for (let x = x1, i = 0; x > x0; x -= z, i++) g.lineTo(Math.max(x0, x - z), bot - (i % 2 ? 0 : z * 0.8));
+      g.closePath(); g.fill(); g.restore();
+      g.strokeStyle = 'rgba(34,34,34,0.45)'; g.lineWidth = 2 * u; g.setLineDash([8 * u, 8 * u]);
+      for (const y of [168 * u, H - 112 * u]) { g.beginPath(); g.moveTo(80 * u, y); g.lineTo(W - 80 * u, y); g.stroke(); }
+      g.setLineDash([]);
+    },
+  },
+  wrapped: {
+    label: 'Неон', ink: '#FFFFFF', muted: 'rgba(255,255,255,0.72)', card: 'rgba(255,255,255,0.12)', line: 'rgba(255,255,255,0.3)', track: 'rgba(255,255,255,0.16)',
+    accents: ['#FFE14D', '#7CF5D2', '#FF9EC7', '#9EE7FF'], font: FONT, head: FONT,
+    bg(g, W, H) {
+      g.fillStyle = '#1A0B2E'; g.fillRect(0, 0, W, H);
+      for (const [x, y, r, c] of [[0.15, 0.12, 0.8, '#FF3D8B'], [0.9, 0.55, 0.9, '#6A4BFF'], [0.2, 0.95, 0.7, '#00C2D1']]) {
+        const gr = g.createRadialGradient(W * x, H * y, 0, W * x, H * y, W * r);
+        gr.addColorStop(0, hexA(c, 0.75)); gr.addColorStop(1, hexA(c, 0));
+        g.fillStyle = gr; g.fillRect(0, 0, W, H);
+      }
+      speckle(g, W, H, 'rgba(255,255,255,0.05)', 1800, 2);
+    },
+  },
+  github: {
+    label: 'Коммиты', ink: '#E6EDF3', muted: '#8B949E', card: '#161B22', line: '#30363D', track: '#21262D', rad: 12,
+    accents: ['#39D353', '#F0B72F', '#58A6FF', '#DB61A2'], font: FONT, head: FONT,
+    bg(g, W, H, acc) {
+      const u = W / 1080, s = 30 * u, gap = 8 * u;
+      g.fillStyle = '#0D1117'; g.fillRect(0, 0, W, H);
+      const lv = [0, 0, 0.05, 0.09, 0.14];
+      for (let y = 0, j = 0; y < H; y += s + gap, j++) for (let x = 0, i = 0; x < W; x += s + gap, i++) {
+        const a = lv[(i * 31 + j * 17 + ((i * j) % 7)) % 5]; if (!a) continue;
+        g.fillStyle = hexA('#39D353', a); rr(g, x, y, s, s, 6 * u); g.fill();
+      }
+      const v = g.createLinearGradient(0, 0, 0, H); v.addColorStop(0, 'rgba(13,17,23,0.9)'); v.addColorStop(0.5, 'rgba(13,17,23,0.75)'); v.addColorStop(1, 'rgba(13,17,23,0.4)');
+      g.fillStyle = v; g.fillRect(0, 0, W, H);
+    },
+  },
+  swiss: {
+    label: 'Плакат', ink: '#111111', muted: '#555555', card: 'rgba(17,17,17,0.06)', line: '#111111', track: 'rgba(17,17,17,0.1)', rad: 0,
+    accents: ['#E3261F', '#1E4FD8', '#111111'], font: 'Helvetica, Arial, ' + FONT, head: 'Helvetica, Arial, ' + FONT,
+    bg(g, W, H) {
+      const u = W / 1080;
+      g.fillStyle = '#F4F1EA'; g.fillRect(0, 0, W, H);
+      g.save(); g.beginPath(); g.rect(0, 0, W, H - 110 * u); g.clip();
+      g.fillStyle = 'rgba(227,38,31,0.92)'; blob(g, W * 0.94, H * (H === W ? 0.86 : 0.84), W * 0.34); g.restore();
+      g.fillStyle = '#111111'; g.fillRect(80 * u, 166 * u, W - 160 * u, 6 * u); g.fillRect(80 * u, H - 110 * u, W - 160 * u, 6 * u);
+    },
+  },
+  topo: {
+    label: 'Восхождение', ink: '#EAFFF6', muted: '#7FE0B8', card: 'rgba(234,255,246,0.07)', line: 'rgba(127,224,184,0.4)', track: 'rgba(234,255,246,0.12)',
+    accents: ['#FFD166', '#7FE0B8', '#FF8F6B'], font: FONT, head: FONT,
+    bg(g, W, H) {
+      const u = W / 1080, cx = W * 0.78, cy = H * 0.22;
+      g.fillStyle = '#0F2A24'; g.fillRect(0, 0, W, H);
+      g.strokeStyle = 'rgba(127,224,184,0.16)'; g.lineWidth = 2 * u;
+      for (let k = 0; k < 22; k++) {
+        const r = (40 + k * 60) * u; g.beginPath();
+        for (let a = 0; a <= 64; a++) { const t = a / 64 * Math.PI * 2, w = 1 + 0.12 * Math.sin(t * 3 + k * 0.7) + 0.06 * Math.sin(t * 5 + k); const x = cx - k * 6 * u + Math.cos(t) * r * 1.2 * w, y = cy + k * 18 * u + Math.sin(t) * r * w; a ? g.lineTo(x, y) : g.moveTo(x, y); }
+        g.stroke();
+      }
+      g.strokeStyle = 'rgba(255,209,102,0.45)'; g.lineWidth = 4 * u; g.setLineDash([14 * u, 12 * u]);
+      g.beginPath(); g.moveTo(W * 0.06, H * 0.97); g.bezierCurveTo(W * 0.3, H * 0.7, W * 0.2, H * 0.45, W * 0.55, H * 0.35); g.quadraticCurveTo(W * 0.72, H * 0.29, cx, cy); g.stroke(); g.setLineDash([]);
+      g.fillStyle = '#FFD166'; g.beginPath(); g.moveTo(cx, cy - 26 * u); g.lineTo(cx + 22 * u, cy + 12 * u); g.lineTo(cx - 22 * u, cy + 12 * u); g.closePath(); g.fill();
     },
   },
 };
@@ -165,7 +307,7 @@ function title(g, S, u, text, x, y, size = 64) {
   g.fillStyle = S.ink; g.font = `800 ${size * u}px ${S.head}`; g.fillText(text, x, y);
 }
 function tile(g, S, acc, u, x, y, w, h, n, label, hl) {
-  g.fillStyle = S.card; rr(g, x, y, w, h, 32 * u); g.fill();
+  g.fillStyle = S.card; rr(g, x, y, w, h, (S.rad ?? 32) * u); g.fill();
   g.fillStyle = hl ? acc : S.ink; g.font = `800 ${Math.min(76, h * 0.42 / u) * u}px ${S.font}`; g.fillText(String(n), x + 32 * u, y + h * 0.56);
   g.fillStyle = S.muted; g.font = `400 ${26 * u}px ${S.font}`; g.fillText(label, x + 32 * u, y + h * 0.82);
 }
