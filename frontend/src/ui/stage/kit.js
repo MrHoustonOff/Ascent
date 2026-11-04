@@ -20,8 +20,10 @@ export const stars = (rng, n, x0, y0, w, h, fill = '#FFFFFF', rmax = 2.2) => Arr
 
 // ---------- персонажи ----------
 // гофер внутри сцены: x, y — левый верх рамки 200×240, w — ширина
+// flip: CSS-отражение вложенного svg в картинке не работает — отражаем группой
 export function gopherAt(opts, x, y, w) {
-  return gopherSVG({ ...opts, width: w }).replace('<svg ', `<svg x="${x}" y="${y}" height="${w * 1.2}" `);
+  const svg = gopherSVG({ ...opts, flip: false, width: w }).replace('<svg ', `<svg x="${x}" y="${y}" height="${w * 1.2}" `);
+  return opts.flip ? `<g transform="translate(${2 * x + w} 0) scale(-1 1)">${svg}</g>` : svg;
 }
 // гофер, стоящий ногами на земле gy, по центру cx
 export const gopherOn = (opts, cx, gy, w) => gopherAt(opts, cx - w / 2, gy - w * 1.2 * 0.94 + (opts.lift || 0) * 0, w);
