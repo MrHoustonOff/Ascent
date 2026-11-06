@@ -14,6 +14,8 @@ import { openListEditor } from './recap-list.js';
 import { openNotes } from './recap-notes.js';
 import { openAnkiImport } from './recap-anki.js';
 import { parseAnki, ankiInfo } from './anki.js';
+import { parsePractice, practiceInfo } from './recap-practice.js';
+import { openPracticeImport } from './recap-practice-import.js';
 
 const KINDS = [['day', 'День'], ['week', 'Неделя'], ['month', 'Месяц'], ['range', 'Период'], ['all', 'Весь путь']];
 const TOGGLE_NEXT = { auto: 'on', on: 'off', off: 'auto' };
@@ -25,6 +27,13 @@ function loadPrefs() {
 }
 // итоги Anki: последний загруженный JSON (настройка anki_recap)
 function loadAnki() { const r = parseAnki(S.settings.anki_recap || ''); return r.ok ? r.data : null; }
+// итоги практики: последний загруженный ответ /практика (настройка practice_recap)
+function loadPractice() { const r = parsePractice(S.settings.practice_recap || ''); return r.ok ? r.data : null; }
+function savePractice(x) {
+  const v = x ? JSON.stringify(x) : '';
+  S.settings.practice_recap = v;
+  api.SetSetting('practice_recap', v).catch(() => {});
+}
 function saveAnki(a) {
   const v = a ? JSON.stringify(a) : '';
   S.settings.anki_recap = v;
@@ -146,6 +155,21 @@ export function openRecap() {
     saveAnki(a); drawAnkiBtns(); reset(); build();
   }
   drawAnkiBtns();
+  // кнопка «Данные практики»: как у Anki — когда данные есть, их даты и ✕ убрать
+  const pracBtns = h('div', { class: 'as-recap__anki' });
+  const drawPracBtns = () => {
+    clear(pracBtns);
+    const x = loadPractice();
+    pracBtns.append(h('button', { class: 'as-btn as-btn--secondary as-btn--sm', title: 'Вставить ответ /практика или прикрепить файл', onclick: importPractice },
+      x ? `Практика · ${practiceInfo(x).short} · ${x.total.count}` : 'Данные практики'));
+    if (x) pracBtns.append(h('button', { class: 'as-iconbtn', title: 'Убрать данные практики', 'aria-label': 'Убрать данные практики', onclick: () => { savePractice(null); drawPracBtns(); reset(); build(); } }, '✕'));
+  };
+  async function importPractice() {
+    const x = await openPracticeImport();
+    if (!x) return;
+    savePractice(x); drawPracBtns(); reset(); build();
+  }
+  drawPracBtns();
 
   // стилей много — выпадающий список вместо ряда кнопок
   const styleSel = h('select', { class: 'as-input as-recap__stylesel', 'aria-label': 'Стиль' },
@@ -160,7 +184,7 @@ export function openRecap() {
     toggles,
     preview,
     h('div', { class: 'as-rowx as-rowx--between' }, info,
-      h('div', { class: 'as-rowx' }, ankiBtns,
+      h('div', { class: 'as-rowx' }, ankiBtns, pracBtns,
         h('button', { class: 'as-btn as-btn--secondary as-btn--sm', onclick: () => edit(null, 'list') }, '＋ Список'),
         h('button', { class: 'as-btn as-btn--secondary as-btn--sm', onclick: () => edit(null) }, '＋ Своя карточка'))));
 
@@ -208,9 +232,12 @@ export function openRecap() {
       data.anki = loadAnki();
       // Anki — только если его период пересекается с периодом итогов (вчерашний JSON в сегодняшних итогах не нужен)
       if (data.anki && (data.anki.period_to < data.from || data.anki.period_from > data.date)) data.anki = null;
+      // практика — так же: только если её даты пересекаются с периодом итогов
+      data.practice = loadPractice();
+      if (data.practice && (data.practice.range.to < data.from || data.practice.range.from > data.date)) data.practice = null;
       if (kind === 'range') { fromInp.value = data.from; toInp.value = data.date; rFrom = data.from; rTo = data.date; }
       else if (!dateInp.value && kind !== 'all') dateInp.value = data.date;
-      const all = planCards(data, { mode: p.mode, toggles: p.toggles, gallery, seed, format: p.format, tasks: !!p.tasks });
+      const all = planCards(data, { mode: p.mode, toggles: p.toggles, gallery, seed, format: p.format, tasks: !!p.tasks, practiceMode: p.practiceMode });
       p.custom.forEach((c, i) => {
         if (!c.kind) { all.push({ key: 'custom', name: 'Своя карточка', card: c, ci: i }); return; }
         const n = listPages(c, p.format); // длинный список — несколько страниц
@@ -257,12 +284,15 @@ export function openRecap() {
           const bg = h('select', { class: 'as-input as-recap__bgsel', 'aria-label': 'Фон страницы', title: 'Фон этой страницы' },
             STYLE_KEYS.map((k) => h('option', { value: k, selected: k === (over[id]?.style || style) }, STYLES[k].label)));
           bg.addEventListener('change', () => { over[id] = { ...over[id], style: bg.value }; build(); });
+          const pracSel = c.key === 'practice' && c.page === 0 ? h('select', { class: 'as-input as-recap__bgsel', 'aria-label': 'Вид карточки практики', title: 'Подробно — всё; сжато — название, вид и время' },
+            [['full', 'Подробно'], ['short', 'Сжато']].map(([k, l]) => h('option', { value: k, selected: k === (p.practiceMode === 'short' ? 'short' : 'full') }, l))) : null;
+          if (pracSel) pracSel.addEventListener('change', () => { p.practiceMode = pracSel.value; savePrefs(p); reset(); build(); });
           const notesBtn = c.key === 'themes' && data.themes.length
             ? h('button', { class: 'as-btn as-btn--secondary as-btn--sm', title: 'Комментарии к пройденным темам', onclick: editNotes }, 'Редактировать') : null;
           // «Показывать задачи» — темы раскрываются в свои задачи
           const tasksChk = c.key === 'themes' && data.themes.length ? h('label', { class: 'as-recap__chk', title: 'Показывать задачи каждой темы' },
             (() => { const i = h('input', { type: 'checkbox', checked: !!p.tasks }); i.addEventListener('change', () => { p.tasks = i.checked; savePrefs(p); reset(); build(); }); return i; })(), 'задачи') : null;
-          tools = h('div', { class: 'as-recap__customtools' }, arrows[0], tasksChk, notesBtn, c.key === 'stage' || c.key === 'gallery' || c.key === 'occasion' ? null : bg,
+          tools = h('div', { class: 'as-recap__customtools' }, arrows[0], tasksChk, notesBtn, pracSel, c.key === 'stage' || c.key === 'gallery' || c.key === 'occasion' ? null : bg,
             c.locked ? h('span', { class: 'as-recap__lock', title: 'Особый день — эта карточка остаётся' }, '♥') :
             h('button', { class: 'as-iconbtn as-recap__del', title: 'Удалить страницу', 'aria-label': 'Удалить страницу', onclick: () => { over[id] = { ...over[id], hidden: true }; build(); } }, '✕'), arrows[1]);
         }

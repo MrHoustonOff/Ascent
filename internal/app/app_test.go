@@ -412,3 +412,15 @@ func TestGalleryPaintings(t *testing.T) {
 		t.Fatalf("половина: %+v", g[1])
 	}
 }
+
+func TestPracticeSettingStored(t *testing.T) {
+	a, _, _ := newApp(t)
+	js := `{"range":{"from":"2026-11-06","to":"2026-11-06"},"practices":[],"total":{"count":0,"duration_min":0,"planned_min":0}}`
+	if err := a.SetSetting("practice_recap", js); err != nil {
+		t.Fatal(err)
+	}
+	set, _ := a.Settings()
+	if set["practice_recap"] != js {
+		t.Fatalf("%q", set["practice_recap"])
+	}
+}

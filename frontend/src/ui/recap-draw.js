@@ -6,6 +6,7 @@ import { achBadge } from './achicons.js';
 import { ankiInfo } from './anki.js';
 import { drawStage, drawGallery, GALLERY_LIST } from './recap-stage.js';
 import { occasionFor } from './outfits.js';
+import { cardPractice, practicePages } from './recap-practice.js';
 export { GALLERY_LIST };
 
 export const FONT = '-apple-system, "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif';
@@ -1299,6 +1300,10 @@ export function planCards(d, opts) {
   const chosen = [...auto].sort(() => rng() - 0.5).slice(0, n);
   for (const [k, name] of EXTRA_CARDS) if (on.includes(k) || chosen.includes(k)) out.push({ key: k, name });
   if (d.anki) out.push({ key: 'anki', name: 'Anki' }); // итоги Anki, если загружены
+  if (d.practice) { // итоги практики (/практика): длинный список — несколько страниц
+    const mode = opts.practiceMode === 'short' ? 'short' : 'full', n = practicePages(d.practice, mode, opts.format);
+    for (let k = 0; k < n; k++) out.push({ key: 'practice', name: n > 1 ? `Практика ${k + 1}` : 'Практика', from: k, page: k, mode });
+  }
   // достижения: немного — строками с описанием, много — сеткой плиток, не влезло — на несколько страниц
   const fmt = opts.format === 'square' ? 'square' : 'story', na = d.achievements.length;
   if (na <= ACH_ROWS[fmt]) out.push({ key: 'ach', name: 'Достижения', from: 0, count: na });
@@ -1325,6 +1330,10 @@ async function drawCardIn(card, d, { format, style, acc, seed, index, total, ful
   const rng = rngFrom(seed * 31 + index * 7 + 1);
   const c = { S, acc, d, rng, layout: Math.floor(rng() * 3), full, dayX, tasks };
   if (card.key === 'anki') { await cardAnki(g, W, H, c, index + 1, total); return cv; } // своя рамка
+  if (card.key === 'practice') { // своя рамка, гофер — в наряде дня, если он есть
+    await cardPractice(g, W, H, { S, acc, d, gopher: (pose, cx, b, hh, rot) => drawGopher(g, pose, cx, b, hh, rot) }, d.practice, card.mode, card.page, index + 1, total);
+    return cv;
+  }
   frame(g, W, H, S, acc, d, index + 1, total);
   if (outfit && (card.key === 'summary' || card.key === 'quiet')) { // подпись наряда внизу по центру
     const u = W / 1080;

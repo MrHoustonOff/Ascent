@@ -83,8 +83,8 @@ type RecapDTO struct {
 type RecapStageDone struct {
 	Num        int    `json:"num"`
 	Title      string `json:"title"`
-	From       string `json:"from"`       // «5 сентября» — первый урок этапа
-	To         string `json:"to"`         // «18 октября» — день закрытия
+	From       string `json:"from"` // «5 сентября» — первый урок этапа
+	To         string `json:"to"`   // «18 октября» — день закрытия
 	FromISO    string `json:"fromIso"`
 	ToISO      string `json:"toIso"`
 	Days       int    `json:"days"`       // календарных дней от первого урока до закрытия, включительно

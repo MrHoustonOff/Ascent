@@ -144,6 +144,7 @@ var Defaults = map[string]string{
 	"recap_prefs":       "",    // выбор в окне итогов (JSON)
 	"theme_notes":       "",    // комментарии к пройденным темам для итогов (JSON: id темы → текст)
 	"anki_recap":        "",    // последние итоги Anki для карточки в итогах (JSON расширения «Итоги периода»)
+	"practice_recap":    "",    // последние итоги практики для карточки в итогах (JSON ответа /практика)
 }
 
 const DefaultHermesTemplate = "Тема {theme_id} {theme_title}\n{brief}\nУрок {lesson_id} — {lesson_title}{stars}\n{arrows}"
