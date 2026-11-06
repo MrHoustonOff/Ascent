@@ -25,7 +25,8 @@ export async function render(root, arg) {
 
   const wall = h('div', { class: 'as-galwall' },
     section('Гофер и Клавд', 'история дружбы', all.filter((p) => ['meet', 'colleagues', 'friends'].includes(p.id))),
-    section('Особые случаи', 'выбираются в итогах', all.filter((p) => p.kind === 'special' && !['meet', 'colleagues', 'friends'].includes(p.id))),
+    section('Особые дни', 'дни рождения', all.filter((p) => p.occasion)),
+    section('Особые случаи', 'выбираются в итогах', all.filter((p) => p.kind === 'special' && !p.occasion && !['meet', 'colleagues', 'friends'].includes(p.id))),
     ...STAGE_TITLES.map((t, i) => {
       const list = all.filter((p) => p.num === i + 1), n = list.filter((p) => p.unlocked).length;
       return section(`Этап ${i + 1} · ${t}`, `${n} из 4`, list, true);

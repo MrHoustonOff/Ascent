@@ -219,10 +219,11 @@ export const OUTFITS = [
     hat: partyHat('#00ADD8', '#FFFFFF', '#FFD166') + bowTie('#00ADD8') +
       [[24, 10, '#FF5CA8'], [178, 0, '#FFD166'], [16, 60, '#90BE6D'], [186, 54, '#B794F4'], [170, -40, '#00ADD8'], [30, -34, '#F4A261']].map(([x, y, c], i) => `<rect x="${x}" y="${y}" width="10" height="5" fill="${c}" transform="rotate(${i * 37} ${x} ${y})"/>`).join('') },
   { id: 'birthday', name: 'Именинник', pool: 'bday',
-    back: `<path d="M152 116 Q170 40 150 -40 M162 116 Q196 30 196 -20 M144 118 Q134 40 110 -6" fill="none" stroke="#6C757D" stroke-width="2"/>` +
-      `<g ${S}><ellipse cx="150" cy="-70" rx="26" ry="32" fill="#FF5CA8"/><ellipse cx="200" cy="-46" rx="24" ry="30" fill="#FFD166"/><ellipse cx="110" cy="-32" rx="22" ry="28" fill="#4CC9F0"/></g>` +
-      `<g fill="#FFFFFF" opacity=".55"><ellipse cx="141" cy="-82" rx="6" ry="10"/><ellipse cx="192" cy="-58" rx="5" ry="9"/><ellipse cx="102" cy="-42" rx="5" ry="8"/></g>`,
-    hat: partyHat('#B794F4', '#FFD166', '#FF5CA8') + bowTie('#E63946') + star(32, -6, 8) + star(166, 30, 6, '#FF8FA3') },
+    // шары — прямо за головой (не шире ушей): на карточках рядом с гофером текст
+    back: `<path d="M44 -2 Q40 40 50 80 M156 -2 Q160 40 150 80" fill="none" stroke="#6C757D" stroke-width="2"/>` +
+      `<g ${S}><ellipse cx="40" cy="-26" rx="20" ry="25" fill="#FF5CA8"/><ellipse cx="160" cy="-26" rx="20" ry="25" fill="#FFD166"/></g>` +
+      `<g fill="#FFFFFF" opacity=".5"><ellipse cx="34" cy="-34" rx="5" ry="8"/><ellipse cx="154" cy="-34" rx="5" ry="8"/></g>`,
+    hat: partyHat('#B794F4', '#FFD166', '#FF5CA8') + bowTie('#E63946') + star(30, 34, 7) + star(170, 30, 6, '#FF8FA3') },
 ];
 export const OUTFIT = Object.fromEntries(OUTFITS.map((o) => [o.id, o.same ? { ...OUTFITS.find((x) => x.id === o.same), id: o.id, name: o.name, pool: o.pool } : o]));
 export const OUTFIT_COUNT = OUTFITS.filter((o) => !o.same).length;
@@ -264,5 +265,5 @@ export function outfitFor(iso) {
 }
 
 // ---------- особые дни: неубираемые/особые карточки в итогах дня ----------
-export const OCCASIONS = { '11-25': { id: 'bday-love', locked: true }, '12-22': { id: 'bday-mom', locked: false } };
+export const OCCASIONS = { '11-25': { id: 'bday-love', locked: true }, '12-02': { id: 'bday-me', locked: false }, '12-22': { id: 'bday-mom', locked: false } };
 export const occasionFor = (iso) => OCCASIONS[md(String(iso || '0000-00-00'))] || null;

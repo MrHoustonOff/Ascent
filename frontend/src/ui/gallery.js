@@ -7,7 +7,7 @@ import { toast } from './toast.js';
 import { PAINTINGS, PAINTING, paintingCanvas, drawPaintingCard, paintingAspect } from './recap-stage.js';
 import { go } from '../actions.js';
 
-const THUMB_W = 360, THUMB_V = 'gal.thumb.v1.';
+const THUMB_W = 360, THUMB_V = 'gal.thumb.v2.'; // версия: поднять, когда меняются сцены
 const thumbs = new Map(); // id → Promise<dataURL>
 const today = () => new Date().toISOString().slice(0, 10);
 const ctx = () => ({ nick: S.settings?.nick || '', date: today() });
@@ -35,7 +35,7 @@ export function thumbURL(id) {
 export async function galleryState() {
   const st = await api.Gallery();
   const byId = Object.fromEntries((st || []).map((p) => [p.id, p]));
-  return PAINTINGS.filter((p) => !p.hidden).map((p) => p.kind === 'stage' ? { ...p, ...byId[p.id], title: p.title } : { ...p, unlocked: true, always: true });
+  return PAINTINGS.map((p) => p.kind === 'stage' ? { ...p, ...byId[p.id], title: p.title } : { ...p, unlocked: true, always: true });
 }
 const seen = () => new Set(lsGet('gal.seen', []));
 export const isNew = (p) => p.unlocked && !p.always && !seen().has(p.id);

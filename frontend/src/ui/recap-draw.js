@@ -412,16 +412,17 @@ async function cardSummary(g, W, H, c) {
     kicker(80 * u, 280 * u + o); big(64 * u, 590 * u + o, 300);
     tiles(800 * u + o);
     W_LOWER.w = W - 480 * u; lower(1060 * u + o, 360 * u - o / 2); W_LOWER.w = 0;
-    await drawGopher(g, pose, W - 210 * u, H - 120 * u, 450 * u, -0.06);
+    await drawGopher(g, pose, W - 210 * u, H - 120 * u, (OUTFIT_NOW ? 370 : 450) * u, -0.06); // в наряде меньше: убор не заходит на полоску прогресса
   } else if (lay === 1) {
     if (dx) dayBadge(g, S, acc, u, d, W / 2, 186 * u, 'center', 66);
-    await drawGopher(g, pose, W / 2, 760 * u + o, 500 * u - o / 2);
+    // гофер прямо под плашкой: в наряде (шляпы, шары) — чуть меньше, чтобы убор не упирался в «день X»
+    await drawGopher(g, pose, W / 2, 760 * u + o, (OUTFIT_NOW ? 400 : 500) * u - o / 2);
     kicker(W / 2, 860 * u + o, 'center'); big(W / 2, 1090 * u + o, 230, 'center');
     tiles(1280 * u + o, 170 * u); lower(1500 * u + o, 260 * u - o);
   } else {
     if (dx) dayBadge(g, S, acc, u, d, 80 * u, 186 * u, 'left', 66);
     kicker(80 * u, 280 * u + o); big(64 * u, 600 * u + o, 320);
-    await drawGopher(g, pose, W - 250 * u, 760 * u + o, 520 * u, 0.05, true);
+    await drawGopher(g, pose, W - 250 * u, 760 * u + o, (OUTFIT_NOW ? 450 : 520) * u, 0.05, true); // в наряде меньше: убор не к счётчику страниц
     tiles(860 * u + o); lower(1130 * u + o, 380 * u - o / 2);
   }
 }

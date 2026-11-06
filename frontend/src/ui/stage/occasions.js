@@ -1,9 +1,11 @@
-// Особые карточки семейных дней в итогах дня (холст 840×1386, back — фон маслом, front — чётко):
-// 25 ноября — день рождения невесты: голубой и розовый гоферы; 22 декабря — день рождения мамы.
+// Особые дни (холст 840×1386, back — фон маслом, front — чётко): карточки в итогах дня и картины в галерее.
+// 25 ноября — день рождения Дашульки: голубой и розовый гоферы; 2 декабря — день рождения хозяина: только гофер-именинник
+// и Clawd с тортом; 22 декабря — день рождения мамы.
 import {
   L, SVGF, txt, rngFrom, gopherAt, dressed, clawd, CI,
   sky, glow, sun, cloud, hill, flowers, windowAt, floorPlanks, rug, ribbon, stars,
 } from './kit.js';
+import { OUTFIT } from '../outfits.js';
 
 const heart = (x, y, s, c = '#FF5C8A', op = 1) => `<path d="M${x} ${y + 8 * s} C${x - 22 * s} ${y - 8 * s} ${x - 12 * s} ${y - 26 * s} ${x} ${y - 14 * s} C${x + 12 * s} ${y - 26 * s} ${x + 22 * s} ${y - 8 * s} ${x} ${y + 8 * s}Z" fill="${c}" stroke="${L}" stroke-width="${Math.max(1.5, 2 * s)}" opacity="${op}"/>`;
 // гофер другого цвета: тело и уши перекрашиваются целиком
@@ -32,9 +34,45 @@ const pinkBow = `<path d="M130 22 L106 8 L108 36Z M130 22 L154 8 L152 36Z" fill=
 const shawl = `<path d="M28 118 Q100 150 172 118 L176 150 Q100 186 24 150Z" fill="#B794F4" stroke="${L}" stroke-width="2.4"/><path d="M40 146 l-4 18 M60 158 l-2 18 M82 166 l-1 18 M118 166 l1 18 M140 158 l2 18 M160 146 l4 18" stroke="#7B5CB8" stroke-width="3"/>`;
 const momGlasses = `<g fill="none" stroke="#7B2CBF" stroke-width="3.5"><circle cx="67" cy="72" r="35"/><circle cx="133" cy="72" r="35"/><path d="M96 58 Q100 52 104 58"/></g><path d="M32 70 Q20 110 40 140 M168 70 Q180 110 160 140" fill="none" stroke="#C9A227" stroke-width="2"/>`;
 
+const flags = (x0, y0, x1, y1, sag, n, colors) => {
+  const mx = (x0 + x1) / 2, my = Math.max(y0, y1) + sag;
+  let t = `<path d="M${x0} ${y0} Q${mx} ${my} ${x1} ${y1}" stroke="#5C4033" stroke-width="3" fill="none"/>`;
+  for (let i = 0; i < n; i++) { const a = (i + 0.2) / n, b = (i + 0.8) / n, P = (u) => [(1 - u) * (1 - u) * x0 + 2 * (1 - u) * u * mx + u * u * x1, (1 - u) * (1 - u) * y0 + 2 * (1 - u) * u * my + u * u * y1]; const [ax, ay] = P(a), [bx, by] = P(b); t += `<path d="M${ax} ${ay} L${bx} ${by} L${(ax + bx) / 2} ${(ay + by) / 2 + 46}Z" fill="${colors[i % colors.length]}" stroke="${L}" stroke-width="2"/>`; }
+  return t;
+};
+
 export const OCCASION_SCENES = {
+  'bday-me': {
+    title: 'С днём рождения!', wall: ['#2B2E5C', '#1B1D3D'], frame: 'gold', ink: '#FFF0C8',
+    story: '2 декабря: гофер-именинник и Clawd с тортом. Только они вдвоём.',
+    back: (W, H, rng) => {
+      let s = sky(W, H, [[0, '#FFE9C7'], [1, '#F7CFA0']]);
+      const out = sky(W * 0.6, H * 0.26, [[0, '#1B2350'], [1, '#3B4A86']]) + stars(rng, 40, 0, 0, W * 0.6, H * 0.18, '#FFFFFF', 1.4) +
+        [[0.2, 0.08, '#FFD166'], [0.5, 0.05, '#FF5CA8'], [0.8, 0.1, '#4CC9F0']].map(([fx, fy, c]) => Array.from({ length: 16 }, (_, i) => { const a = i / 16 * Math.PI * 2, x = W * 0.6 * fx, y = H * fy; return `<path d="M${x + Math.cos(a) * 8} ${y + Math.sin(a) * 8} L${x + Math.cos(a) * 34} ${y + Math.sin(a) * 34}" stroke="${c}" stroke-width="3" stroke-linecap="round"/>`; }).join('')).join('') +
+        hill(H * 0.22, 8, '#E8EEFA', { x0: -10, x1: W * 0.6 + 10, bottom: H * 0.26 }) +
+        Array.from({ length: 30 }, () => `<circle cx="${(rng() * W * 0.6).toFixed(0)}" cy="${(rng() * H * 0.26).toFixed(0)}" r="${(1.5 + rng() * 2).toFixed(1)}" fill="#FFFFFF" opacity=".85"/>`).join('');
+      s += windowAt(W * 0.2, H * 0.1, W * 0.6, H * 0.26, out, { part: 'glass' });
+      s += glow(W / 2, H * 0.55, 380, '#FFE29A', 0.45) + floorPlanks(H * 0.8, W, '#A0703F', '#7F5539', H) + rug(W / 2, H * 0.9, W * 0.46, 56, '#2A9D8F', '#FFD166');
+      return s;
+    },
+    front: (W, H) => {
+      const rng = rngFrom(212);
+      let s = windowAt(W * 0.2, H * 0.1, W * 0.6, H * 0.26, '', { frame: '#7F5539', part: 'frame' });
+      s += flags(-10, H * 0.04, W + 10, H * 0.05, 70, 12, ['#E63946', '#FFD166', '#4CC9F0', '#90BE6D', '#B794F4', '#FF8FA3']);
+      s += balloon(W * 0.08, H * 0.2, '#FF5C8A', 1.1) + balloon(W * 0.15, H * 0.27, '#FFD166', 0.95) + balloon(W * 0.9, H * 0.19, '#4CC9F0', 1.1) + balloon(W * 0.84, H * 0.27, '#90BE6D', 0.95);
+      // именинник крупно, рядом Clawd с тортом
+      const fy = H * 0.9, mw = W * 0.5;
+      s += `<ellipse cx="${W * 0.4}" cy="${fy}" rx="${mw * 0.34}" ry="16" fill="#5C4033" opacity=".25"/>`;
+      s += gopherAt({ arms: 'up', eyes: 'happy', look: 0.5, lift: 12, squash: 1.04, feet: 'jump', extra: OUTFIT.birthday.hat, back: OUTFIT.birthday.back }, W * 0.4 - mw / 2, fy - mw * 1.2 * 0.94, mw);
+      const cs = W / 520, cx = W * 0.79, cy = H * 0.93;
+      s += clawd(cx - 60 * cs, cy - 98 * cs, cs, { both: true, eyes: 'happy' });
+      s += cake(cx, cy - 98 * cs + 16 * cs, 0.85, 4, { c1: '#E0F4FA', c2: '#4CC9F0', top: '#FFFFFF' });
+      s += Array.from({ length: 70 }, () => { const x = rng() * W, y = rng() * H * 0.7, c = ['#E63946', '#FFD166', '#4CC9F0', '#90BE6D', '#FF8FA3', '#FFFFFF'][Math.floor(rng() * 6)]; return `<rect x="${x.toFixed(0)}" y="${y.toFixed(0)}" width="${(8 + rng() * 8).toFixed(0)}" height="${(4 + rng() * 5).toFixed(0)}" fill="${c}" transform="rotate(${(rng() * 180).toFixed(0)} ${x.toFixed(0)} ${y.toFixed(0)})"/>`; }).join('');
+      return s;
+    },
+  },
   'bday-love': {
-    title: 'С днём рождения, любимая!', wall: ['#6B2E4F', '#45182F'], frame: 'gold', ink: '#FFE8F0',
+    title: 'С днём рождения, Дашулька!', wall: ['#6B2E4F', '#45182F'], frame: 'gold', ink: '#FFE8F0',
     story: '25 ноября: голубой и розовый гоферы, торт со свечами и сердце на двоих.',
     back: (W, H, rng) => sky(W, H, [[0, '#FFD6E7'], [0.45, '#FFC2D4'], [0.75, '#FFDCC2'], [1, '#FFE8D6']]) +
       sun(W * 0.5, H * 0.42, 70, { core: '#FFF6E8', color: '#FFC2D4', rays: 18, rayOp: 0.08 }) +
@@ -81,7 +119,14 @@ export const OCCASION_SCENES = {
       // гирлянда и ветка ели над окном
       s += `<path d="M${W * 0.44} ${H * 0.07} Q${W * 0.71} ${H * 0.12} ${W * 0.98} ${H * 0.07}" stroke="#2D6A4F" stroke-width="16" fill="none" stroke-linecap="round"/>` +
         Array.from({ length: 10 }, (_, i) => { const t = (i + 0.5) / 10, x = W * (0.44 + 0.54 * t), y = H * (0.07 + 0.05 * 4 * t * (1 - t)) + 10; return glow(x, y, 16, ['#FFD166', '#FF5C8A', '#4CC9F0'][i % 3], 0.8) + `<circle cx="${x}" cy="${y}" r="6" fill="${['#FFD166', '#FF5C8A', '#4CC9F0'][i % 3]}" stroke="${L}" stroke-width="1.5"/>`; }).join('');
-      s += ribbon(W * 0.26, H * 0.1, W * 0.44, 'Любимой маме', { c: '#B794F4', ink: '#FFFFFF', fs: 30, r: -4 });
+      // семейный портрет на стене: мама и сын в овальной раме
+      const fx = W * 0.22, fy = H * 0.2, frw = W * 0.17, frh = H * 0.1;
+      s += `<defs><clipPath id="momph"><ellipse cx="${fx}" cy="${fy}" rx="${frw}" ry="${frh}"/></clipPath></defs>` +
+        `<path d="M${fx} ${fy - frh - 40} L${fx - 40} ${fy - frh} M${fx} ${fy - frh - 40} L${fx + 40} ${fy - frh}" stroke="#7F5539" stroke-width="3"/><circle cx="${fx}" cy="${fy - frh - 42}" r="5" fill="#C9A227"/>` +
+        `<ellipse cx="${fx}" cy="${fy}" rx="${frw}" ry="${frh}" fill="#FFF3E0"/>` +
+        `<g clip-path="url(#momph)">` + tinted({ eyes: 'happy', look: 0.4, extra: momGlasses }, fx - frw * 0.95, fy - frh * 0.7, frw * 1.05, '#C9B6E8') + gopherAt({ eyes: 'happy', look: -0.4 }, fx - frw * 0.05, fy - frh * 0.55, frw * 0.95) + `</g>` +
+        `<ellipse cx="${fx}" cy="${fy}" rx="${frw}" ry="${frh}" fill="none" stroke="#C9A227" stroke-width="12"/><ellipse cx="${fx}" cy="${fy}" rx="${frw}" ry="${frh}" fill="none" stroke="${L}" stroke-width="2.5"/>` +
+        `<ellipse cx="${fx}" cy="${fy}" rx="${frw - 8}" ry="${frh - 8}" fill="none" stroke="#FFE7A3" stroke-width="2"/>`;
       // стол с тортом
       const ty = H * 0.62;
       s += `<path d="M${W * 0.3} ${ty} L${W * 0.7} ${ty} L${W * 0.74} ${ty + 30} L${W * 0.26} ${ty + 30}Z" fill="#FFF3E0" stroke="${L}" stroke-width="3"/><rect x="${W * 0.32}" y="${ty + 30}" width="14" height="${H * 0.14}" fill="#7F5539"/><rect x="${W * 0.66}" y="${ty + 30}" width="14" height="${H * 0.14}" fill="#7F5539"/>` +
