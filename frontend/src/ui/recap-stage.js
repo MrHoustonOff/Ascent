@@ -13,6 +13,7 @@ import s6 from './stage/s6.js';
 import s7 from './stage/s7.js';
 import { GALLERY } from './stage/gallery.js';
 import { FRIENDS } from './stage/friends.js';
+import { OCCASION_SCENES } from './stage/occasions.js';
 
 const FONT = '-apple-system, "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif';
 const SERIF = 'Georgia, "Times New Roman", serif';
@@ -33,18 +34,19 @@ const STORY = {
 };
 
 // каталог: все картины галереи в порядке показа
-const SPECIAL = { ...FRIENDS, ...GALLERY };
+const SPECIAL = { ...FRIENDS, ...GALLERY, ...OCCASION_SCENES };
 const special = (id) => ({ id, kind: 'special', title: SPECIAL[id].title, sub: '', frame: SPECIAL[id].frame, wall: SPECIAL[id].wall, ink: SPECIAL[id].ink, story: SPECIAL[id].story || STORY[id] || '', native: GAL_NATIVE, ref: 840 });
 export const PAINTINGS = [
   ...['meet', 'colleagues', 'friends'].map(special),
   ...['algo', 'newyear', 'search', 'interview', 'job'].map(special),
+  ...['bday-love', 'bday-mom'].map((id) => ({ ...special(id), hidden: true })), // особые карточки дней, не в галерее
   ...STAGE_TITLES.flatMap((t, i) => PCTS.map((pct, k) => {
     const act = STAGES[i + 1].acts[k];
     return { id: `stage-${i + 1}-${pct}`, kind: 'stage', num: i + 1, pct, title: t, sub: PCT_SUB[pct], act: act.title, frame: PCT_FRAME[pct], wall: [STAGE_WALLS[i]], ink: '#F3E3C0', story: act.story, native: STAGE_NATIVE, ref: 880 };
   })),
 ];
 export const PAINTING = Object.fromEntries(PAINTINGS.map((p) => [p.id, p]));
-export const GALLERY_LIST = PAINTINGS.filter((p) => p.kind === 'special').map((p) => [p.id, p.title]);
+export const GALLERY_LIST = PAINTINGS.filter((p) => p.kind === 'special' && !p.hidden).map((p) => [p.id, p.title]);
 
 const imgCache = new Map();
 function svgImage(s) {
@@ -200,7 +202,7 @@ export async function drawPaintingCard(g, W, H, id, d = {}) {
   if (ph > room) { ph = room; pw = ph * paintingAspect(p.id); }
   const top = Math.max(0, (H - (titleH + 2 * t + ph + subH)) / 2);
   g.textAlign = 'center'; g.fillStyle = p.ink;
-  g.font = `600 ${(sq ? 20 : 26) * u}px ${FONT}`; g.fillText('A S C E N T  ·  Г А Л Е Р Е Я', W / 2, top + (sq ? 50 : 90) * u);
+  g.font = `600 ${(sq ? 20 : 26) * u}px ${FONT}`; g.fillText(p.hidden ? 'A S C E N T  ·  О С О Б Ы Й   Д Е Н Ь' : 'A S C E N T  ·  Г А Л Е Р Е Я', W / 2, top + (sq ? 50 : 90) * u);
   let fs = (sq ? 66 : 100) * u; g.font = `italic 800 ${fs}px ${SERIF}`;
   while (g.measureText(p.title).width > W - 100 * u && fs > 44 * u) { fs -= 4 * u; g.font = `italic 800 ${fs}px ${SERIF}`; }
   g.fillText(p.title, W / 2, top + (sq ? 120 : 210) * u);

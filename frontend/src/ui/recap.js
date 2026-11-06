@@ -8,6 +8,7 @@ import { openDialog } from './dialog.js';
 import { toast } from './toast.js';
 import { FORMATS, STYLES, STYLE_KEYS, EXTRA_CARDS, GALLERY_LIST, planCards, drawCard, listPages, rngFrom, pick } from './recap-draw.js';
 import { achCardPNG } from './achwindow.js';
+import { outfitFor } from './outfits.js';
 import { openEditor } from './recap-editor.js';
 import { openListEditor } from './recap-list.js';
 import { openNotes } from './recap-notes.js';
@@ -100,6 +101,14 @@ export function openRecap() {
       [['', 'Картина: нет'], ...GALLERY_LIST.map(([k, t]) => [k, 'Картина: ' + t])].map(([k, t]) => h('option', { value: k, selected: k === gallery }, t)));
     gsel.addEventListener('change', () => { gallery = gsel.value; build(); });
     toggles.append(gsel);
+    // наряд дня для гофера — только в итогах дня: «случайно» (наряд по дате, в праздники — праздничный) или «нет»
+    if (kind === 'day') {
+      const on = p.outfit !== 'off', o = data ? outfitFor(data.date) : null;
+      toggles.append(h('button', {
+        class: 'as-recap__chip is-' + (on ? 'auto' : 'off'), title: 'Наряд дня для гофера: случайный на каждый день, в праздники — праздничный',
+        onclick: () => { p.outfit = on ? 'off' : 'random'; savePrefs(p); drawToggles(); build(); },
+      }, on && o ? 'Наряд · ' + o.name : 'Наряд дня', h('span', { class: 'as-recap__chipst' }, on ? 'случайно' : 'нет')));
+    }
     // «учу Go · день X» на первой карточке: считается от первой закрытой темы
     toggles.append(h('button', {
       class: 'as-recap__chip is-' + (p.dayX ? 'on' : 'off'), title: 'Надпись «учу Go · день X» на первой карточке',
@@ -199,17 +208,18 @@ export function openRecap() {
         for (let k = 0; k < n; k++) all.push({ key: 'custom', name: n > 1 ? `Список ${k + 1}` : 'Список', card: c, ci: i, page: k });
       });
       const hidden = all.filter((c) => over[cardId(c)]?.hidden).length;
-      list = all.filter((c) => !over[cardId(c)]?.hidden);
+      list = all.filter((c) => c.locked || !over[cardId(c)]?.hidden); // особая карточка 25 ноября не убирается
       if (order.length) { // переставленные — в своём порядке, новые — следом в исходном
         const rank = (c, i) => { const k = order.indexOf(cardId(c)); return k >= 0 ? k : 1000 + i; };
         list = list.map((c, i) => [rank(c, i), c]).sort((a, b) => a[0] - b[0]).map((x) => x[1]);
       }
       const style = styleNow(), acc = accent();
+      const outfit = kind === 'day' && p.outfit !== 'off' ? outfitFor(data.date) : null;
       const out = [];
       for (let i = 0; i < list.length; i++) {
         const st = over[cardId(list[i])]?.style || style; // свой фон у страницы
         const a = st === style ? acc : pick(rngFrom(seed + 5), STYLES[st].accents);
-        out.push(await drawCard(list[i], data, { format: p.format, style: st, acc: a, seed, index: i, total: list.length, full: p.mode === 'one', dayX: p.dayX, tasks: !!p.tasks }));
+        out.push(await drawCard(list[i], data, { format: p.format, style: st, acc: a, seed, index: i, total: list.length, full: p.mode === 'one', dayX: p.dayX, tasks: !!p.tasks, outfit }));
         if (my !== buildNo) return;
       }
       canvases = out;
@@ -243,7 +253,8 @@ export function openRecap() {
           // «Показывать задачи» — темы раскрываются в свои задачи
           const tasksChk = c.key === 'themes' && data.themes.length ? h('label', { class: 'as-recap__chk', title: 'Показывать задачи каждой темы' },
             (() => { const i = h('input', { type: 'checkbox', checked: !!p.tasks }); i.addEventListener('change', () => { p.tasks = i.checked; savePrefs(p); reset(); build(); }); return i; })(), 'задачи') : null;
-          tools = h('div', { class: 'as-recap__customtools' }, arrows[0], tasksChk, notesBtn, c.key === 'stage' || c.key === 'gallery' ? null : bg,
+          tools = h('div', { class: 'as-recap__customtools' }, arrows[0], tasksChk, notesBtn, c.key === 'stage' || c.key === 'gallery' || c.key === 'occasion' ? null : bg,
+            c.locked ? h('span', { class: 'as-recap__lock', title: 'Особый день — эта карточка остаётся' }, '♥') :
             h('button', { class: 'as-iconbtn as-recap__del', title: 'Удалить страницу', 'aria-label': 'Удалить страницу', onclick: () => { over[id] = { ...over[id], hidden: true }; build(); } }, '✕'), arrows[1]);
         }
         const page = h('div', { class: 'as-recap__custom', draggable: 'true', title: 'Перетащите, чтобы поменять порядок' }, img, tools);
@@ -256,7 +267,7 @@ export function openRecap() {
       });
       if (hidden) preview.append(h('button', { class: 'as-btn as-btn--ghost as-btn--sm as-recap__restore', onclick: () => { for (const k in over) if (over[k].hidden) delete over[k].hidden; build(); } }, `Вернуть удалённые (${hidden})`));
       const n = out.length;
-      info.textContent = `${data.title} · ${data.period} · ${n} ${pluralRu(n, 'картинка', 'картинки', 'картинок')} · ${STYLES[style].label.toLowerCase()}`;
+      info.textContent = `${data.title} · ${data.period} · ${n} ${pluralRu(n, 'картинка', 'картинки', 'картинок')} · ${STYLES[style].label.toLowerCase()}` + (outfit ? ` · наряд: ${outfit.name.toLowerCase()}` : '');
     } catch (e) { console.error(e); clear(preview); preview.append(h('div', { class: 'as-recap__loading' }, 'Не удалось собрать итоги.')); }
   }
 

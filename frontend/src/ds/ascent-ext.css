@@ -911,3 +911,4 @@ html,body{margin:0;height:100%;overflow:hidden;background:var(--surface-window)}
 .as-galsec__row.is-grid .as-galitem__plate{min-width:0;width:min(100%,220px)}
 .is-narrow .as-galsec__row.is-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
 .as-paintwin .as-btn--ghost,.as-galview .as-btn--ghost{color:#F3E3C0}
+.as-recap__lock{display:inline-grid;place-items:center;width:var(--hit-min);height:var(--hit-min);color:#FF5C8A;font-size:18px}

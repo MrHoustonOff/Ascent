@@ -5,6 +5,7 @@ import { pluralRu } from './dom.js';
 import { achBadge } from './achicons.js';
 import { ankiInfo } from './anki.js';
 import { drawStage, drawGallery, GALLERY_LIST } from './recap-stage.js';
+import { occasionFor } from './outfits.js';
 export { GALLERY_LIST };
 
 export const FONT = '-apple-system, "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif';
@@ -247,26 +248,32 @@ export const EXTRAS = {
 const POSE_EXTRA = { sleep: 'zzz', run: 'run', cheer: 'jump', jump: 'jump', oops: 'sweat', proud: 'sparkle' };
 export const POSE_KEYS = Object.keys(POSES);
 
+// наряд дня: пока рисуется карточка итогов дня, все гоферы на ней — в этом наряде
+let OUTFIT_NOW = null;
 const gcache = new Map();
 function gopherImage(pose) {
-  if (gcache.has(pose)) return gcache.get(pose);
+  const key = pose + '|' + (OUTFIT_NOW ? OUTFIT_NOW.id : '');
+  if (gcache.has(key)) return gcache.get(key);
   const p = POSES[pose] || POSES.idle;
-  let s = gopherSVG({ ...p.opts, extra: EXTRAS[POSE_EXTRA[pose]] || '', width: 560 });
-  // запас вокруг: поднятые лапки, линии движения и «z» выходят за 200×240
-  s = s.replace('viewBox="0 0 200 240"', 'viewBox="-40 -70 280 340"').replace('width="560"', 'width="560" height="680"');
+  const o = OUTFIT_NOW;
+  let s = gopherSVG({ ...p.opts, extra: (o?.hat || '') + (EXTRAS[POSE_EXTRA[pose]] || ''), back: o?.back || '', width: 560 });
+  // запас вокруг: поднятые лапки, линии движения и «z» выходят за 200×240; у нарядов — шляпы, шары и крылья ещё дальше
+  const vb = o ? [-60, -140, 320, 410] : [-40, -70, 280, 340];
+  const pw = 560, ph = Math.round(pw * vb[3] / vb[2]);
+  s = s.replace('viewBox="0 0 200 240"', `viewBox="${vb.join(' ')}"`).replace('width="560"', `width="${pw}" height="${ph}"`);
   const img = new Image();
-  const pr = new Promise((res) => { img.onload = () => res(img); img.onerror = () => res(null); });
+  const pr = new Promise((res) => { img.onload = () => res({ img, vb }); img.onerror = () => res(null); });
   img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(s);
-  gcache.set(pose, pr);
+  gcache.set(key, pr);
   return pr;
 }
 // гофер: центр по x, низ ножек по y, высота тела h (px), поворот (рад), зеркально
 export async function drawGopher(g, pose, cx, bottom, h, rot = 0, flip = false) {
-  const img = await gopherImage(pose);
-  if (!img) return;
-  const k = h / 240;
+  const r = await gopherImage(pose);
+  if (!r) return;
+  const { img, vb } = r, k = h / 240;
   g.save(); g.translate(cx, bottom - 120 * k); g.rotate(rot); if (flip) g.scale(-1, 1);
-  g.drawImage(img, -140 * k, -190 * k, 280 * k, 340 * k);
+  g.drawImage(img, (vb[0] - 100) * k, (vb[1] - 120) * k, vb[2] * k, vb[3] * k);
   g.restore();
 }
 
@@ -1228,12 +1235,14 @@ const draws = { week: cardWeek, month: cardMonth, journey: cardJourney, heat: ca
 export function planCards(d, opts) {
   const rng = rngFrom(opts.seed);
   const out = [];
+  // особый день (25 ноября, 22 декабря) — своя карточка первой; 25 ноября её не убрать
+  const occ = d.kind === 'day' ? occasionFor(d.date) : null;
+  if (occ) out.push({ key: 'occasion', name: occ.locked ? 'Особый день ♥' : 'Особый день', from: 0, occ: occ.id, locked: occ.locked });
   if (d.empty) out.push({ key: 'quiet', name: 'Отдых' });
   else out.push({ key: 'summary', name: 'Сводка' });
-  // «Нашёл работу!» — картина, включается чипом; «Этап закрыт» — сразу за сводкой, если этап закрыт в периоде
-  // картина галереи (выбирается из списка, доступна всегда) — первой; вехи этапов — сразу за сводкой
+  // картина галереи (выбирается из списка, доступна всегда) — первой (после особого дня); вехи этапов — сразу за сводкой
   const gi = GALLERY_LIST.findIndex(([k]) => k === opts.gallery);
-  if (gi >= 0) out.unshift({ key: 'gallery', name: GALLERY_LIST[gi][1], from: gi, kind: opts.gallery });
+  if (gi >= 0) out.splice(occ ? 1 : 0, 0, { key: 'gallery', name: GALLERY_LIST[gi][1], from: gi, kind: opts.gallery });
   if (opts.toggles.stage !== 'off') for (const x of d.stageDone || []) out.push({ key: 'stage', name: x.pct >= 100 ? `Этап ${x.num} закрыт` : `Этап ${x.num} · ${x.pct} %`, from: x.num * 1000 + (x.pct || 100), st: x });
   if (opts.mode === 'one') return out;
   // карточка периода: ритм недели, календарь месяца, весь путь
@@ -1297,19 +1306,30 @@ export function planCards(d, opts) {
 }
 
 // рисует одну карточку; style — ключ, layout — номер раскладки
-export async function drawCard(card, d, { format, style, acc, seed, index, total, full, dayX = true, tasks = false }) {
+// outfit — наряд дня (итоги дня): на время отрисовки все гоферы карточки в нём
+export async function drawCard(card, d, opts) {
+  OUTFIT_NOW = opts.outfit || null;
+  try { return await drawCardIn(card, d, opts); } finally { OUTFIT_NOW = null; }
+}
+async function drawCardIn(card, d, { format, style, acc, seed, index, total, full, dayX = true, tasks = false, outfit = null }) {
   if (!LOGO.complete) await LOGO.decode().catch(() => {});
   const [W, H] = FORMATS[format];
   const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
   const g = cv.getContext('2d');
   if (card.key === 'stage') { await drawStage(g, W, H, card.st, d); return cv; }
   if (card.key === 'gallery') { await drawGallery(g, W, H, card.kind, d); return cv; }
+  if (card.key === 'occasion') { await drawGallery(g, W, H, card.occ, d); return cv; }
   if (card.key === 'custom') { if (card.card.kind) await drawList(g, W, H, card.card, acc, card.page || 0); else await drawCustom(g, W, H, card.card, acc); return cv; }
   const S = STYLES[style];
   const rng = rngFrom(seed * 31 + index * 7 + 1);
   const c = { S, acc, d, rng, layout: Math.floor(rng() * 3), full, dayX, tasks };
   if (card.key === 'anki') { await cardAnki(g, W, H, c, index + 1, total); return cv; } // своя рамка
   frame(g, W, H, S, acc, d, index + 1, total);
+  if (outfit && (card.key === 'summary' || card.key === 'quiet')) { // подпись наряда внизу по центру
+    const u = W / 1080;
+    g.textAlign = 'center'; g.fillStyle = S.muted; g.font = `500 ${24 * u}px ${S.font}`;
+    g.fillText('наряд дня · ' + outfit.name.toLowerCase(), W / 2, H - (S === STYLES.gazette ? 130 : 70) * u); g.textAlign = 'left'; // у «Газеты» внизу по центру её шапка
+  }
   const sq = H === W;
   if (card.segs) c.segs = card.segs.map((x) => ({ ...x, t: d.themes[x.ti] }));
   if (card.key === 'summary') await cardSummary(g, W, H, c);

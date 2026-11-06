@@ -35,7 +35,7 @@ export function thumbURL(id) {
 export async function galleryState() {
   const st = await api.Gallery();
   const byId = Object.fromEntries((st || []).map((p) => [p.id, p]));
-  return PAINTINGS.map((p) => p.kind === 'stage' ? { ...p, ...byId[p.id], title: p.title } : { ...p, unlocked: true, always: true });
+  return PAINTINGS.filter((p) => !p.hidden).map((p) => p.kind === 'stage' ? { ...p, ...byId[p.id], title: p.title } : { ...p, unlocked: true, always: true });
 }
 const seen = () => new Set(lsGet('gal.seen', []));
 export const isNew = (p) => p.unlocked && !p.always && !seen().has(p.id);
