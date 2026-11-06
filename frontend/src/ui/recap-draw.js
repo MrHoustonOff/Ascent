@@ -1234,8 +1234,12 @@ const extraOk = {
 const draws = { week: cardWeek, month: cardMonth, journey: cardJourney, heat: cardHeat, tracks: cardTracks, compare: cardCompare, mountain: cardMountain, forecast: cardForecast };
 
 // plan: какие карточки рисовать. opts = { mode, toggles, seed }
+// хеш строки — для зёрен, привязанных к карточке, а не к её месту в списке
+export function hashStr(t) { let x = 2166136261; for (let i = 0; i < t.length; i++) x = Math.imul(x ^ t.charCodeAt(i), 16777619); return x >>> 0; }
+// «случайно» у каждой карточки своё: переключение одной не перетасовывает остальные
+const coin = (seed, k) => rngFrom((seed ^ hashStr(k)) >>> 0)() < 0.5;
+
 export function planCards(d, opts) {
-  const rng = rngFrom(opts.seed);
   const out = [];
   // особый день (25 ноября, 22 декабря) — своя карточка первой; 25 ноября её не убрать
   const occ = d.kind === 'day' ? occasionFor(d.date) : null;
@@ -1250,7 +1254,7 @@ export function planCards(d, opts) {
   // карточка периода: ритм недели, календарь месяца, весь путь
   // ритм недели: переключается как доп. карточки, по умолчанию «всегда»; случайность берётся только в «случайно»
   const wk = opts.toggles.week || 'on';
-  if (d.kind === 'week' && d.days.length === 7 && !d.empty && (wk === 'on' || (wk === 'auto' && rng() < 0.5))) out.push({ key: 'week', name: 'Ритм недели' });
+  if (d.kind === 'week' && d.days.length === 7 && !d.empty && (wk === 'on' || (wk === 'auto' && coin(opts.seed, 'week')))) out.push({ key: 'week', name: 'Ритм недели' });
   if (d.kind === 'month' && d.days.length) out.push({ key: 'month', name: 'Календарь' });
   if (d.kind === 'range' && d.days.length > 1 && d.days.length <= 42) out.push({ key: 'month', name: 'Календарь' });
   if (d.kind === 'all' && d.dayN > 0) out.push({ key: 'journey', name: 'Путь' });
@@ -1295,9 +1299,7 @@ export function planCards(d, opts) {
   // доп. карточки: включённые — всегда, авто — случайное число случайных
   const ok = EXTRA_CARDS.map(([k]) => k).filter((k) => extraOk[k](d));
   const on = ok.filter((k) => opts.toggles[k] === 'on');
-  const auto = ok.filter((k) => (opts.toggles[k] || 'auto') === 'auto');
-  const n = auto.length ? Math.floor(rng() * (auto.length + 1)) : 0;
-  const chosen = [...auto].sort(() => rng() - 0.5).slice(0, n);
+  const chosen = ok.filter((k) => (opts.toggles[k] || 'auto') === 'auto' && coin(opts.seed, k));
   for (const [k, name] of EXTRA_CARDS) if (on.includes(k) || chosen.includes(k)) out.push({ key: k, name });
   if (d.anki) out.push({ key: 'anki', name: 'Anki' }); // итоги Anki, если загружены
   if (d.practice) { // итоги практики (/практика): длинный список — несколько страниц
@@ -1311,13 +1313,23 @@ export function planCards(d, opts) {
   return out;
 }
 
+// номер страницы «3 / 9» в правом верхнем углу — рисуется поверх готовой карточки (её можно переставить без перерисовки)
+export const hasPageNo = (card) => !['stage', 'gallery', 'occasion', 'custom'].includes(card.key);
+export function drawPageNo(g, W, style, page, total) {
+  if (total <= 1) return;
+  const S = STYLES[style] || STYLES.night, u = W / 1080;
+  g.save(); g.textBaseline = 'alphabetic'; g.textAlign = 'right'; g.fillStyle = S.muted; g.font = `500 ${26 * u}px ${S.font}`;
+  g.fillText(`${page} / ${total}`, W - 80 * u, 118 * u); g.restore();
+}
+
 // рисует одну карточку; style — ключ, layout — номер раскладки
+// salt — зерно раскладки этой карточки (по её id); без него — по месту в списке
 // outfit — наряд дня (итоги дня): на время отрисовки все гоферы карточки в нём
 export async function drawCard(card, d, opts) {
   OUTFIT_NOW = opts.outfit || null;
   try { return await drawCardIn(card, d, opts); } finally { OUTFIT_NOW = null; }
 }
-async function drawCardIn(card, d, { format, style, acc, seed, index, total, full, dayX = true, tasks = false, outfit = null }) {
+async function drawCardIn(card, d, { format, style, acc, seed, index = 0, total = 1, salt, full, dayX = true, tasks = false, outfit = null }) {
   if (!LOGO.complete) await LOGO.decode().catch(() => {});
   const [W, H] = FORMATS[format];
   const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
@@ -1327,7 +1339,7 @@ async function drawCardIn(card, d, { format, style, acc, seed, index, total, ful
   if (card.key === 'occasion') { await drawGallery(g, W, H, card.occ, d); return cv; }
   if (card.key === 'custom') { if (card.card.kind) await drawList(g, W, H, card.card, acc, card.page || 0); else await drawCustom(g, W, H, card.card, acc); return cv; }
   const S = STYLES[style];
-  const rng = rngFrom(seed * 31 + index * 7 + 1);
+  const rng = rngFrom(seed * 31 + (salt ?? index) * 7 + 1);
   const c = { S, acc, d, rng, layout: Math.floor(rng() * 3), full, dayX, tasks };
   if (card.key === 'anki') { await cardAnki(g, W, H, c, index + 1, total); return cv; } // своя рамка
   if (card.key === 'practice') { // своя рамка, гофер — в наряде дня, если он есть
