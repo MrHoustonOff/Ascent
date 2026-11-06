@@ -8,7 +8,7 @@ import { openDialog } from './dialog.js';
 import { toast } from './toast.js';
 import { FORMATS, STYLES, STYLE_KEYS, EXTRA_CARDS, GALLERY_LIST, planCards, drawCard, listPages, rngFrom, pick } from './recap-draw.js';
 import { achCardPNG } from './achwindow.js';
-import { outfitFor } from './outfits.js';
+import { outfitFor, OUTFITS, OUTFIT } from './outfits.js';
 import { openEditor } from './recap-editor.js';
 import { openListEditor } from './recap-list.js';
 import { openNotes } from './recap-notes.js';
@@ -51,6 +51,7 @@ export function openRecap() {
   const randStyle = pick(rnd, STYLE_KEYS);
   let todayStudy = '';
   let gallery = ''; // картина галереи для этих итогов: выбирается каждый раз, не запоминается
+  let outfitPick = ''; // наряд, выбранный руками, — для этих итогов, пока окно открыто
   let kind = 'day', date = '', data = null, list = [], canvases = [], buildNo = 0;
   // правки готовых страниц: id → { hidden, style }; сбрасываются при смене периода, формата или режима
   let over = {};
@@ -101,13 +102,21 @@ export function openRecap() {
       [['', 'Картина: нет'], ...GALLERY_LIST.map(([k, t]) => [k, 'Картина: ' + t])].map(([k, t]) => h('option', { value: k, selected: k === gallery }, t)));
     gsel.addEventListener('change', () => { gallery = gsel.value; build(); });
     toggles.append(gsel);
-    // наряд дня для гофера — только в итогах дня: «случайно» (наряд по дате, в праздники — праздничный) или «нет»
+    // наряд дня для гофера — только в итогах дня: «случайно» (по дате, в праздники — праздничный), «нет» или любой из списка
     if (kind === 'day') {
-      const on = p.outfit !== 'off', o = data ? outfitFor(data.date) : null;
-      toggles.append(h('button', {
-        class: 'as-recap__chip is-' + (on ? 'auto' : 'off'), title: 'Наряд дня для гофера: случайный на каждый день, в праздники — праздничный',
-        onclick: () => { p.outfit = on ? 'off' : 'random'; savePrefs(p); drawToggles(); build(); },
-      }, on && o ? 'Наряд · ' + o.name : 'Наряд дня', h('span', { class: 'as-recap__chipst' }, on ? 'случайно' : 'нет')));
+      const o = data ? outfitFor(data.date) : null;
+      const GROUPS = [['На каждый день', ['regular', 'summer']], ['Новый год', ['ny']], ['Хэллоуин', ['halloween']], ['Праздники', ['feb14', 'feb23', 'mar8', 'apr1', 'sep1', 'progday', 'goday', 'bday']]];
+      const cur = outfitPick || (p.outfit === 'off' ? 'off' : 'random');
+      const opt = (v, t) => h('option', { value: v, selected: v === cur }, t);
+      const osel = h('select', { class: 'as-input as-recap__gallery', 'aria-label': 'Наряд гофера', title: 'Наряд гофера на картинках дня' },
+        opt('random', 'Наряд: случайно' + (o ? ` (${o.name.toLowerCase()})` : '')), opt('off', 'Наряд: нет'),
+        GROUPS.map(([label, pools]) => h('optgroup', { label }, OUTFITS.filter((x) => !x.same && pools.includes(x.pool)).map((x) => opt(x.id, 'Наряд: ' + x.name)))));
+      osel.addEventListener('change', () => {
+        const v = osel.value;
+        if (v === 'random' || v === 'off') { outfitPick = ''; p.outfit = v; savePrefs(p); } else outfitPick = v;
+        build();
+      });
+      toggles.append(osel);
     }
     // «учу Go · день X» на первой карточке: считается от первой закрытой темы
     toggles.append(h('button', {
@@ -214,7 +223,7 @@ export function openRecap() {
         list = list.map((c, i) => [rank(c, i), c]).sort((a, b) => a[0] - b[0]).map((x) => x[1]);
       }
       const style = styleNow(), acc = accent();
-      const outfit = kind === 'day' && p.outfit !== 'off' ? outfitFor(data.date) : null;
+      const outfit = kind !== 'day' ? null : outfitPick ? OUTFIT[outfitPick] : p.outfit !== 'off' ? outfitFor(data.date) : null;
       const out = [];
       for (let i = 0; i < list.length; i++) {
         const st = over[cardId(list[i])]?.style || style; // свой фон у страницы
