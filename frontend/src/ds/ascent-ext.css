@@ -865,7 +865,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:var(--surface-window)}
 .as-recap__gallery{width:auto;min-width:220px;height:30px;padding:0 8px;font-size:13px}
 
 /* ---------- Галерея: стена, рамы, просмотр, окно «Новая картина» ---------- */
-.as-galframe{--h:236px;--ar:.6;position:relative;display:inline-block;padding:13px;border-radius:3px;box-shadow:0 14px 30px rgba(0,0,0,.5),inset 0 0 0 2px rgba(255,255,255,.28),inset 0 0 0 6px rgba(0,0,0,.18),inset 0 0 0 8px rgba(255,255,255,.18);transition:transform .25s ease,box-shadow .25s ease}
+.as-galframe{--h:236px;--ar:.6;position:relative;display:inline-block;padding:13px;border-radius:3px;box-shadow:0 14px 30px rgba(0,0,0,.5),inset 0 0 0 2px rgba(255,255,255,.28),inset 0 0 0 6px rgba(0,0,0,.18),inset 0 0 0 8px rgba(255,255,255,.18);transition:transform .25s ease}
 .as-galframe.is-gold{background:linear-gradient(135deg,#8C6A1F,#F3D27A 22%,#B8862B 42%,#FFE7A3 62%,#A87A26 82%,#6E5115)}
 .as-galframe.is-silver{background:linear-gradient(135deg,#5E6670,#E9EEF2 22%,#9AA4AE 42%,#FFFFFF 62%,#8A949E 82%,#4A525B)}
 .as-galframe.is-wood{background:linear-gradient(135deg,#4A2C17,#9C6B3F 22%,#6B4226 42%,#B98551 62%,#5C3A20 82%,#3B2312)}
@@ -882,6 +882,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:var(--surface-window)}
 .as-galframe.is-win{--h:290px}
 
 .as-galwall{margin-top:18px;padding:30px 34px 40px;border-radius:18px;color:#F3E3C0;background:radial-gradient(ellipse at 50% -10%,rgba(255,236,190,.22),transparent 60%),repeating-linear-gradient(90deg,rgba(255,255,255,.035) 0 18px,rgba(0,0,0,.035) 18px 36px),#1E352F;box-shadow:inset 0 0 0 1px rgba(255,255,255,.06),inset 0 -40px 60px rgba(0,0,0,.35)}
+.as-galsec{content-visibility:auto;contain-intrinsic-size:auto 420px}
 .as-galsec+.as-galsec{margin-top:40px;padding-top:28px;border-top:1px solid rgba(243,227,192,.14)}
 .as-galsec__head{display:flex;align-items:baseline;gap:14px;margin-bottom:22px}
 .as-galsec__title{margin:0;font:italic 700 26px/1.2 Georgia,serif;color:#F3E3C0}
@@ -889,7 +890,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:var(--surface-window)}
 .as-galsec__row{display:flex;flex-wrap:wrap;align-items:flex-end;gap:34px 30px}
 .as-galitem{position:relative;display:flex;flex-direction:column;align-items:center;gap:14px;padding:0;border:0;background:none;color:inherit;cursor:pointer;font:inherit}
 .as-galitem::before{content:"";position:absolute;left:50%;top:-30px;width:150%;height:70%;transform:translateX(-50%);background:radial-gradient(ellipse at 50% 0,rgba(255,236,190,.16),transparent 70%);pointer-events:none}
-.as-galitem:not(.is-locked):hover .as-galframe{transform:translateY(-4px) scale(1.02);box-shadow:0 22px 40px rgba(0,0,0,.6),inset 0 0 0 2px rgba(255,255,255,.3),inset 0 0 0 6px rgba(0,0,0,.18),inset 0 0 0 8px rgba(255,255,255,.18)}
+.as-galitem:not(.is-locked):hover .as-galframe{transform:translateY(-4px) scale(1.02)}
 .as-galitem:not(.is-locked):hover .as-galframe__shine{background-position:150% 0}
 .as-galitem:focus-visible{outline:none}.as-galitem:focus-visible .as-galframe{outline:3px solid var(--accent);outline-offset:4px}
 .as-galitem.is-locked{cursor:default}
@@ -900,7 +901,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:var(--surface-window)}
 .as-galitem__new{position:absolute;top:-8px;left:-8px;z-index:2;padding:3px 9px;border-radius:999px;background:var(--accent);color:#fff;font:700 11px/1.3 var(--font-sans);box-shadow:0 4px 10px rgba(0,0,0,.4);animation:as-gal-pop 1.6s ease-in-out infinite}
 @keyframes as-gal-pop{50%{transform:scale(1.08)}}
 
-.as-galview__scrim{z-index:75;background:rgba(8,10,12,.86);backdrop-filter:blur(4px)}
+.as-galview__scrim{z-index:75;background:rgba(8,10,12,.92)}
 .as-galview{position:relative;display:flex;align-items:center;gap:40px;max-width:calc(100vw - 48px);max-height:calc(100vh - 32px);color:#F3E3C0;animation:as-fade .2s ease}
 .as-galview__close{position:absolute;top:-6px;right:-6px;color:#F3E3C0}
 .as-galview__meta{width:320px;flex:none}
@@ -917,7 +918,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:var(--surface-window)}
 .is-narrow .as-galframe.is-big{--h:min(calc(100vh - 360px),560px)}
 .is-narrow .as-galview__meta{width:min(520px,100%)}
 
-.as-paintwin__scrim{z-index:72;background:rgba(8,10,12,.7);backdrop-filter:blur(3px)}
+.as-paintwin__scrim{z-index:72;background:rgba(8,10,12,.8)}
 .as-paintwin{position:relative;width:min(440px,calc(100vw - 32px));max-height:calc(100vh - 32px);overflow:hidden;padding:26px 26px 22px;border-radius:24px;text-align:center;color:#F3E3C0;background:radial-gradient(ellipse at 50% 0,rgba(255,236,190,.3),transparent 60%),repeating-linear-gradient(90deg,rgba(255,255,255,.035) 0 16px,rgba(0,0,0,.035) 16px 32px),#1E352F;box-shadow:0 30px 80px #000a,inset 0 0 0 2px rgba(233,196,106,.6),inset 0 0 0 8px rgba(0,0,0,.25);animation:as-achwin-in .5s cubic-bezier(.2,1.3,.4,1) both}
 .as-paintwin__rays{position:absolute;left:50%;top:44%;width:900px;height:900px;margin:-450px 0 0 -450px;background:repeating-conic-gradient(from 0deg,rgba(255,226,154,.12) 0 8deg,transparent 8deg 22deg);animation:as-paintwin-spin 24s linear infinite;pointer-events:none}
 @keyframes as-paintwin-spin{to{transform:rotate(360deg)}}

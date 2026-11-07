@@ -31,6 +31,39 @@ export function thumbURL(id) {
   return pr;
 }
 
+// ---------- крупная картина для просмотра ----------
+// рисуется под размер экрана один раз и хранится в IndexedDB (в localStorage столько не влезает);
+// пока рисуется — видна миниатюра, интерфейс не замирает: мазки идут кусками
+const bigs = new Map(); // ключ → Promise<objectURL|''>
+let dbp = null;
+function db() {
+  if (!dbp) dbp = new Promise((res, rej) => {
+    const r = indexedDB.open('ascent-gallery', 1);
+    r.onupgradeneeded = () => r.result.createObjectStore('big');
+    r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+  });
+  return dbp;
+}
+const idb = async (mode, fn) => { const d = await db(); return new Promise((res, rej) => { const q = fn(d.transaction('big', mode).objectStore('big')); q.onsuccess = () => res(q.result); q.onerror = () => rej(q.error); }); };
+export function bigURL(id, w, still = () => true) {
+  const key = THUMB_V + 'big.' + id + '.' + w + (id === 'newyear' ? '.' + today().slice(0, 4) : '');
+  if (bigs.has(key)) return bigs.get(key);
+  const pr = (async () => {
+    const hit = await idb('readonly', (st) => st.get(key)).catch(() => null);
+    if (hit) return URL.createObjectURL(hit);
+    const cv = await enqueue(() => (still() ? paintingCanvas(id, w, ctx()) : null));
+    if (!cv) { bigs.delete(key); return ''; }
+    const blob = await new Promise((r) => cv.toBlob(r, 'image/jpeg', 0.9));
+    if (!blob) return '';
+    idb('readwrite', (st) => st.put(blob, key)).catch(() => {});
+    return URL.createObjectURL(blob);
+  })();
+  bigs.set(key, pr);
+  return pr;
+}
+// ширина крупной картины: по рамке на экране с учётом плотности пикселей, ступенями — чтобы кэш не дробился
+const bigW = (el) => Math.min(1080, Math.max(480, Math.ceil(((el?.clientWidth || 450) * (window.devicePixelRatio || 1)) / 120) * 120));
+
 // ---------- открыто / новое ----------
 export async function galleryState() {
   const st = await api.Gallery();
@@ -86,8 +119,18 @@ export function openPainting(id, list) {
   function paint() {
     const p = items[i]; markSeen(p.id);
     const big = h('div', { class: 'as-galview__art' }, framed(p, { size: 'big' }));
-    // крупнее миниатюры — дорисовываем в высоком разрешении
-    paintingCanvas(p.id, 960, ctx()).then((cv) => { const img = big.querySelector('img'); if (cv && img && view && items[i] === p) img.src = cv.toDataURL('image/jpeg', 0.9); });
+    // сразу — миниатюра; крупная — после открытия (из кэша мгновенно, впервые — дорисовывается без зависаний)
+    const cur = () => view && items[i] === p;
+    requestAnimationFrame(() => setTimeout(() => {
+      if (!cur()) return;
+      const w = bigW(big.querySelector('.as-galframe__canvas'));
+      bigURL(p.id, w, cur).then((u) => {
+        const img = big.querySelector('img');
+        if (u && img && cur()) { img.src = u; img.classList.add('is-sharp'); }
+        // соседние — заранее, чтобы стрелки листали без ожидания
+        if (cur()) for (const d of [1, -1]) { const q = items[(i + d + items.length) % items.length]; if (q !== p) bigURL(q.id, w, () => !!view); }
+      });
+    }, 160));
     const meta = h('div', { class: 'as-galview__meta' },
       h('div', { class: 'as-galview__kicker' }, p.kind === 'stage' ? `Этап ${p.num} из 7 · картина ${[25, 50, 75, 100].indexOf(p.pct) + 1} из 4` : 'Постоянная картина'),
       h('h2', { class: 'as-galview__title' }, p.title),

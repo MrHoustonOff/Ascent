@@ -67,11 +67,15 @@ function wrapText(g, text, maxW) {
 
 // ---------- масло ----------
 // мазки: цвет берётся из картинки под мазком; поле направлений — пологие волны (calm) или вихри
-function brushPass(g, x0, y0, w, h, n, len, width, alpha, seed, calm = false, relief = 0) {
+// пауза, чтобы интерфейс успевал отвечать, пока пишется картина (мазки берут цвет из снимка — результат тот же)
+const breathe = () => new Promise((r) => { const ch = new MessageChannel(); ch.port1.onmessage = () => r(); ch.port2.postMessage(0); });
+async function brushPass(g, x0, y0, w, h, n, len, width, alpha, seed, calm = false, relief = 0) {
   const rng = rngFrom(seed);
   const data = g.getImageData(x0, y0, w, h).data;
   g.save(); g.lineCap = 'round';
+  let t0 = performance.now();
   for (let i = 0; i < n; i++) {
+    if ((i & 1023) === 1023 && performance.now() - t0 > 24) { g.restore(); await breathe(); g.save(); g.lineCap = 'round'; t0 = performance.now(); }
     const x = rng() * w, y = rng() * h;
     const k = ((y | 0) * w + (x | 0)) * 4;
     const a = calm ? Math.sin(y * 0.005 + x * 0.003) * 0.32 + (rng() - 0.5) * 0.35
@@ -105,11 +109,11 @@ async function paintOil(g, x0, y0, w, h, back, front, seed, u, { calm = true, vw
   const wrap = (inner) => `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${vw} ${vh}" preserveAspectRatio="none">${inner}</svg>`;
   const bi = await svgImage(wrap(back));
   if (bi) g.drawImage(bi, x0, y0, w, h);
-  brushPass(g, x0, y0, w, h, Math.round(w * h / 45), 20 * u, 8 * u, 0.45, seed + 1, calm, 0.1);
-  brushPass(g, x0, y0, w, h, Math.round(w * h / 110), 11 * u, 4 * u, 0.55, seed + 2, calm, 0.08);
+  await brushPass(g, x0, y0, w, h, Math.round(w * h / 45), 20 * u, 8 * u, 0.45, seed + 1, calm, 0.1);
+  await brushPass(g, x0, y0, w, h, Math.round(w * h / 110), 11 * u, 4 * u, 0.55, seed + 2, calm, 0.08);
   const fi = await svgImage(wrap(front));
   if (fi) g.drawImage(fi, x0, y0, w, h);
-  brushPass(g, x0, y0, w, h, Math.round(w * h / 420), 10 * u, 3 * u, 0.3, seed + 3, calm);
+  await brushPass(g, x0, y0, w, h, Math.round(w * h / 420), 10 * u, 3 * u, 0.3, seed + 3, calm);
   canvasWeave(g, x0, y0, w, h, u);
   const v = g.createRadialGradient(x0 + w / 2, y0 + h * 0.45, w * 0.25, x0 + w / 2, y0 + h / 2, Math.max(w, h) * 0.75);
   v.addColorStop(0, 'rgba(255,230,170,0)'); v.addColorStop(1, 'rgba(70,35,15,0.3)');
