@@ -5,6 +5,7 @@ import { icon, stateDot } from '../ui/icons.js';
 import { go, openId, copy, startLesson, completeLesson, undoLesson, setCheck, setChecksAll, setMarker } from '../actions.js';
 import { checkbox, qRow } from './today.js';
 import { openNote } from '../ui/note.js';
+import { openThemeCopy } from '../ui/theme-copy.js';
 import { konspektPanel, kbar, isOpen, setOpen } from '../ui/konspekt.js';
 
 let keyHandler = null;
@@ -94,7 +95,8 @@ async function themeScreen(root, t, focusLesson) {
       h('div', { class: 'body', style: { textWrap: 'pretty' } }, t.brief.map((p, i) => h('p', { style: { margin: i ? '8px 0 0' : '0' } }, rich(p))))) : null,
     h('div', { class: 'as-actions' },
       h('button', { class: 'as-btn as-btn--secondary', onclick: () => copy('theme_start', t.id) }, icon('copy'), 'Скопировать бриф и следующий урок'),
-      h('button', { class: 'as-btn as-btn--ghost', onclick: () => copy('theme_check', t.id) }, 'Скопировать проверку темы')),
+      h('button', { class: 'as-btn as-btn--ghost', onclick: () => copy('theme_check', t.id) }, 'Скопировать проверку темы'),
+      h('button', { class: 'as-btn as-btn--ghost', title: 'Выбрать уроки, вопросы и бриф — одним текстом', onclick: () => openThemeCopy(t) }, icon('copy'), 'Скопировать тему…')),
     h('section', { class: 'as-section' },
       h('div', { class: 'as-section__head' },
         h('h2', { class: 'as-h2' }, 'Уроки'),

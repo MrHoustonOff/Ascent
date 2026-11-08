@@ -940,3 +940,25 @@ html,body{margin:0;height:100%;overflow:hidden;background:var(--surface-window)}
 .is-narrow .as-galsec__row.is-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
 .as-paintwin .as-btn--ghost,.as-galview .as-btn--ghost{color:#F3E3C0}
 .as-recap__lock{display:inline-grid;place-items:center;width:var(--hit-min);height:var(--hit-min);color:#FF5C8A;font-size:18px}
+
+/* ---------- скопировать тему ---------- */
+.as-dialog.as-tcopy-dlg{width:min(980px,calc(100vw - 48px))}
+.as-tcopy{display:grid;grid-template-columns:minmax(0,360px) minmax(0,1fr);gap:20px;min-height:0;height:min(560px,calc(100vh - 220px))}
+.as-tcopy__side{display:flex;flex-direction:column;gap:8px;min-height:0}
+.as-tcopy__parts{display:flex;flex-wrap:wrap;gap:6px 14px;margin-bottom:8px}
+.as-tcopy__opt{display:inline-flex;align-items:center;gap:6px;font:500 13.5px/20px var(--font-sans);color:var(--ink)}
+.as-tcopy__opt input,.as-tcopy__lesson input{accent-color:var(--accent);margin:0}
+.as-tcopy__head{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.as-tcopy__quick{display:flex;gap:10px}
+.as-tcopy__lessons{display:flex;flex-direction:column;overflow:auto;min-height:0;border:1px solid var(--line);border-radius:10px;padding:4px}
+.as-tcopy__lesson{display:grid;grid-template-columns:auto auto minmax(0,1fr) auto;align-items:center;gap:8px;padding:6px 8px;border-radius:7px;font:400 13.5px/18px var(--font-sans);color:var(--ink)}
+.as-tcopy__lesson:hover{background:var(--hover-wash)}
+.as-tcopy__lesson.is-done .as-tcopy__lt{color:var(--ink-muted)}
+.as-tcopy__lid{font:500 12px/16px var(--font-mono);color:var(--ink-subtle);white-space:nowrap}
+.as-tcopy__lt{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.as-tcopy__lq{font:500 11.5px/16px var(--font-sans);color:var(--ink-subtle);white-space:nowrap}
+.as-tcopy__view{display:flex;flex-direction:column;gap:8px;min-height:0}
+.as-tcopy__count{font:400 12px/16px var(--font-sans);color:var(--ink-subtle)}
+.as-tcopy__pre{flex:1;min-height:0;margin:0;overflow:auto;padding:12px 14px;border-radius:10px;background:var(--surface-sunken);border:1px solid var(--line);font:400 12.5px/1.5 var(--font-mono);color:var(--ink);white-space:pre-wrap;word-break:break-word}
+.as-tcopy__pre.is-empty{color:var(--ink-subtle)}
+.is-narrow .as-tcopy{grid-template-columns:1fr;height:auto}.is-narrow .as-tcopy__pre{max-height:300px}

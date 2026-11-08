@@ -424,3 +424,23 @@ func TestPracticeSettingStored(t *testing.T) {
 		t.Fatalf("%q", set["practice_recap"])
 	}
 }
+
+func TestCopyTheme(t *testing.T) {
+	a, h, _ := newApp(t)
+	all := ThemeCopyOpts{Brief: true, Lessons: []string{"ФУНД-1.2.1"}, Questions: true, Checks: true}
+	txt, err := a.CopyTheme("ФУНД-1.2", all)
+	if err != nil || !strings.HasPrefix(txt, "Тема ФУНД-1.2 ") || strings.Count(txt, "Тема ФУНД-1.2") != 1 ||
+		!strings.Contains(txt, "Урок ФУНД-1.2.1 — ") || !strings.Contains(txt, "\n\nВопросы:\n- ") || !strings.Contains(txt, "Должен уметь ответить по теме:\n1. ") {
+		t.Fatal(txt, err)
+	}
+	if h.clip == txt {
+		t.Fatal("предпросмотр не должен трогать буфер")
+	}
+	all.Clip = true
+	if txt, _ = a.CopyTheme("ФУНД-1.2", all); h.clip != txt {
+		t.Fatal("не скопировано")
+	}
+	if txt, _ = a.CopyTheme("ФУНД-1.2", ThemeCopyOpts{}); txt != "" {
+		t.Fatal(txt)
+	}
+}
