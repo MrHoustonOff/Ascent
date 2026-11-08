@@ -219,7 +219,7 @@ func comeback(c *ctx) (time.Time, bool) {
 func milestone(c *ctx) (time.Time, bool) {
 	ms := c.in.S.MilestoneStage
 	if ms < 1 {
-		ms = 3
+		ms = 5
 	}
 	var best time.Time
 	for n := 1; n <= ms; n++ {
@@ -370,7 +370,7 @@ var Defs = []Def{
 	{ID: "x_early", Group: "special", Icon: "sunrise", Tier: "streak", Name: "Жаворонок", Desc: "Тема закрыта утром, между пятью и девятью часами.", eval: firstWhere(func(c *ctx, cl closure) bool { h := hourOf(c, cl.at); return h >= 5 && h < 9 })},
 	{ID: "x_weekend", Group: "special", Icon: "calendar", Tier: "streak", Name: "Выходные с пользой", Desc: "Темы закрыты и в субботу, и в воскресенье одной недели.", eval: weekend},
 	{ID: "x_back", Group: "special", Icon: "gopher", Tier: "streak", Name: "С возвращением", Desc: "Тема закрыта после паузы в три дня и больше. Пропуск — не провал.", eval: comeback},
-	{ID: "x_mile", Group: "special", Icon: "gopher", Tier: "success", Name: "Можно на собесы", Desc: "Закрыты все этапы до вехи. Можно пробовать себя на собеседованиях стажёра.", eval: milestone},
+	{ID: "x_mile", Group: "special", Icon: "gopher", Tier: "success", Name: "Можно на собесы", Desc: "Закрыты все этапы до вехи. Можно идти на собеседования джуна.", eval: milestone},
 }
 
 func init() {

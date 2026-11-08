@@ -962,3 +962,36 @@ html,body{margin:0;height:100%;overflow:hidden;background:var(--surface-window)}
 .as-tcopy__pre{flex:1;min-height:0;margin:0;overflow:auto;padding:12px 14px;border-radius:10px;background:var(--surface-sunken);border:1px solid var(--line);font:400 12.5px/1.5 var(--font-mono);color:var(--ink);white-space:pre-wrap;word-break:break-word}
 .as-tcopy__pre.is-empty{color:var(--ink-subtle)}
 .is-narrow .as-tcopy{grid-template-columns:1fr;height:auto}.is-narrow .as-tcopy__pre{max-height:300px}
+
+/* ---------- веха «можно на собесы» ---------- */
+.as-navmile{display:flex;align-items:center;gap:8px;margin:4px 12px 4px 18px;font:700 10.5px/16px var(--font-sans);letter-spacing:.07em;text-transform:uppercase;color:var(--accent-ink)}
+.as-navmile::before,.as-navmile::after{content:"";flex:1;border-top:1.5px dashed color-mix(in srgb,var(--accent) 55%,transparent)}
+.as-navmile.is-passed{color:var(--success-ink,#1f7a4d)}.as-navmile.is-passed::before,.as-navmile.is-passed::after{border-top-color:color-mix(in srgb,var(--success,#3DBE7A) 60%,transparent)}
+.as-navmile.is-soft{margin:2px 18px 2px 24px;font:500 10px/14px var(--font-sans);letter-spacing:.05em;color:var(--ink-subtle);opacity:.6}
+.as-navmile.is-soft::before,.as-navmile.is-soft::after{border-top:1px dotted var(--line-strong)}
+.as-mscard{gap:12px;cursor:default}
+.as-mscard:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.as-mscard__row{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.as-mscard__title{margin:0;font:700 16px/22px var(--font-sans);color:var(--ink)}
+.as-mscard__pct{font:800 24px/28px var(--font-sans);color:var(--accent-ink);font-variant-numeric:tabular-nums}
+.as-mscard__track{position:relative;display:flex;gap:3px;margin:4px 26px 20px 0}
+.as-mscard__seg{position:relative;flex-basis:0;height:10px;border-radius:3px;background:var(--surface-sunken)}
+.as-mscard__seg:first-child{border-radius:99px 3px 3px 99px}.as-mscard__seg:last-of-type{border-radius:3px 99px 99px 3px}
+.as-mscard__seg i{position:absolute;inset:0 auto 0 0;border-radius:inherit;background:var(--accent)}
+.as-mscard__lab{position:absolute;left:50%;top:15px;transform:translateX(-50%);font:500 11px/14px var(--font-sans);color:var(--ink-subtle);white-space:nowrap}
+.as-mscard__flag{position:absolute;right:-22px;top:-5px;font:18px/1 var(--font-sans);color:var(--ink)}
+.as-mscard__foot{display:flex;flex-wrap:wrap;gap:4px 18px;font:400 13px/18px var(--font-sans);color:var(--ink-muted)}
+.as-mscard__foot b{color:var(--ink);font-weight:600}
+.as-mscard.is-passed .as-mscard__pct{color:var(--success-ink,#1f7a4d)}
+.as-msban{position:relative;display:flex;align-items:center;gap:22px;padding:20px 24px 20px 152px;border-radius:20px;color:#fff;overflow:hidden;min-height:124px;background:radial-gradient(ellipse at 90% -20%,rgba(255,255,255,.25),transparent 55%),linear-gradient(120deg,#0E7490,#164E63 60%,#1E3A5F)}
+.as-msban.is-passed{background:radial-gradient(ellipse at 90% -20%,rgba(255,255,255,.28),transparent 55%),linear-gradient(120deg,#15803D,#166534 60%,#14532D)}
+.as-msban__g{position:absolute;left:22px;bottom:-30px;width:116px}.as-msban__g svg{display:block;width:100%;height:auto}
+.as-msban__flags{position:absolute;right:0;top:0;bottom:0;width:160px;opacity:.18;background:repeating-conic-gradient(#fff 0 25%,transparent 0 50%) 0 0/18px 18px;-webkit-mask:linear-gradient(90deg,transparent,#000);mask:linear-gradient(90deg,transparent,#000);pointer-events:none}
+.as-msban__text{position:relative;min-width:0}
+.as-msban__k{font:700 11px/14px var(--font-sans);letter-spacing:.14em;text-transform:uppercase;opacity:.75}
+.as-msban__t{margin:4px 0 0;font:800 24px/29px var(--font-sans);color:#fff}
+.as-msban__p{margin:6px 0 0;font:400 14px/20px var(--font-sans);opacity:.9;text-wrap:pretty}
+.as-msban__ring{position:relative;margin-left:auto;flex:none;width:86px;height:86px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(#7FE0B8 var(--p),rgba(255,255,255,.16) 0)}
+.as-msban__ring span{display:grid;place-items:center;width:68px;height:68px;border-radius:50%;background:#164E63;font:800 19px/1 var(--font-sans)}
+.as-msban.is-passed .as-msban__ring span{background:#166534}
+.is-narrow .as-msban{padding-left:24px}.is-narrow .as-msban__g{display:none}

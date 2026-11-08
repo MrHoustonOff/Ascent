@@ -3,6 +3,7 @@ import { S } from '../state.js';
 import { h, rich, countUp, gem, idTag, markerLabel, starChip } from '../ui/dom.js';
 import { icon, stateDot, FLAME, CHECK_GLYPH, DASH_GLYPH } from '../ui/icons.js';
 import { openRecap } from '../ui/recap.js';
+import { milestoneCard } from '../ui/milestone.js';
 import { konspektPanel, kbar, isOpen, setOpen } from '../ui/konspekt.js';
 import { go, openId, copy, startLesson, completeLesson, setCheck, setChecksAll, setMarker, rest, refresh } from '../actions.js';
 
@@ -18,6 +19,7 @@ export async function render(root) {
       h('h1', { class: 'large-title', style: { margin: '4px 0 0' } }, t.greeting),
       h('p', { class: 'as-lead' }, t.status),
       t.motd && !t.fresh ? h('p', { class: 'as-motd' }, t.motd) : null),
+    t.fresh ? null : milestoneCard(t.forecast),
     hero.el,
     h('div', { class: 'as-grid2' }, streakCard({ ...t.streak, fresh: t.fresh }), ringCard(t.ring)),
     forecastCard(t.forecast),

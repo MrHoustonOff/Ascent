@@ -56,6 +56,7 @@ func New(dataDir string, host Host, now func() time.Time, loc *time.Location) (*
 	s.Now = now
 	a := &App{st: s, host: host, Now: now, Loc: loc, dir: dataDir, log: func(string, ...any) {}}
 	a.log = func(f string, args ...any) {}
+	migrateMilestone(s)
 	if err := a.loadPlan(); err != nil {
 		return nil, err
 	}
@@ -63,6 +64,19 @@ func New(dataDir string, host Host, now func() time.Time, loc *time.Location) (*
 		a.log("backup: %v", err)
 	}
 	return a, nil
+}
+
+// веха «можно на собесы» переехала с этапа 3 на этап 5: старое значение 3 поднимаем один раз,
+// другой номер, выбранный вручную, не трогаем
+func migrateMilestone(s *store.Store) {
+	set, err := s.Settings()
+	if err != nil || set["milestone_moved"] != "" {
+		return
+	}
+	if set["milestone_stage"] == "3" {
+		_ = s.SetSetting("milestone_stage", "5")
+	}
+	_ = s.SetSetting("milestone_moved", "1")
 }
 
 // SetLogger и Shutdown — функции пакета, а не методы: методы App целиком уходят во фронтенд.
@@ -160,7 +174,7 @@ func (a *App) snap() (*snap, error) {
 			DayStartHour:   atoi(set["day_start_hour"], 4),
 			RestPerWeek:    atoi(set["rest_per_week"], 1),
 			ProjectDays:    atoi(set["project_days"], 4),
-			MilestoneStage: atoi(set["milestone_stage"], 3),
+			MilestoneStage: atoi(set["milestone_stage"], 5),
 			MilestoneDate:  set["milestone_target"],
 		},
 	}

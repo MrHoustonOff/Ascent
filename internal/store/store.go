@@ -127,7 +127,8 @@ var Defaults = map[string]string{
 	"day_start_hour":    "4",
 	"rest_per_week":     "1",
 	"project_days":      "4",
-	"milestone_stage":   "3",
+	"milestone_stage":   "5",
+	"milestone_moved":   "", // веха перенесена с этапа 3 на этап 5 (один раз для старых данных)
 	"milestone_target":  "",
 	"hermes_template":   DefaultHermesTemplate,
 	"hermes_with_brief": "1",

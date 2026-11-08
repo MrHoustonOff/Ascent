@@ -444,3 +444,33 @@ func TestCopyTheme(t *testing.T) {
 		t.Fatal(txt)
 	}
 }
+
+func TestMilestoneMovedToStage5(t *testing.T) {
+	dir := t.TempDir()
+	now := time.Date(2026, 10, 25, 21, 0, 0, 0, msk)
+	open := func() *App {
+		a, err := New(dir, &fakeHost{}, func() time.Time { return now }, msk)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return a
+	}
+	a := open()
+	if v, _ := a.st.Settings(); v["milestone_stage"] != "5" {
+		t.Fatal("новая база: веха не на этапе 5", v["milestone_stage"])
+	}
+	_ = a.st.SetSetting("milestone_stage", "3")
+	_ = a.st.SetSetting("milestone_moved", "")
+	Shutdown(a)
+	a = open()
+	if v, _ := a.st.Settings(); v["milestone_stage"] != "5" {
+		t.Fatal("старое значение 3 не поднято", v["milestone_stage"])
+	}
+	_ = a.st.SetSetting("milestone_stage", "3") // выбрано вручную после переноса — остаётся
+	Shutdown(a)
+	a = open()
+	defer Shutdown(a)
+	if v, _ := a.st.Settings(); v["milestone_stage"] != "3" {
+		t.Fatal("ручной выбор перезаписан", v["milestone_stage"])
+	}
+}

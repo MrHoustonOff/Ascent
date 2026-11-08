@@ -4,6 +4,7 @@ import { h, pluralRu } from '../ui/dom.js';
 import { icon } from '../ui/icons.js';
 import { toast } from '../ui/toast.js';
 import { weekCards, weeksRange } from './stats.js';
+import { milestoneBanner } from '../ui/milestone.js';
 
 // Темп: без норм и целей. Средняя считается сама; к желаемой дате — мягкая подсказка.
 export async function render(root) {
@@ -21,6 +22,9 @@ export async function render(root) {
     return 'Мой ритм';
   }
 
+  const mr = (d.rows || []).find((r) => r.key === 'milestone');
+  const ban = milestoneBanner(mr && mr.date ? mr.date : '');
+  if (ban) root.append(ban);
   const trendIcon = { up: 'arrowUp', down: 'arrowDown', flat: 'arrowR' }[d.trend];
   root.append(h('section', { class: 'as-card as-card--lg as-speedhero' },
     h('div', { class: 'as-speedhero__now' },

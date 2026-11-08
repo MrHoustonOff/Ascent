@@ -2,6 +2,7 @@ import { h, clear, idTag } from './dom.js';
 import { icon, stateDot } from './icons.js';
 import { S, lsGet, lsSet } from '../state.js';
 import { go } from '../actions.js';
+import { navMarks } from './milestone.js';
 
 const SCREENS = [
   { id: 'today', label: 'Сегодня', icon: 'today', hash: '#/today', key: 'Ctrl+1' },
@@ -55,7 +56,7 @@ export function renderSidebar(el, onNavigate) {
       onclick: () => { if (open.has(st.id)) toggle(st.id); else { toggle(st.id, true); go('#/path/' + st.id); } },
     }, h('span', { class: 'as-stage__num' }, String(st.num)), h('span', { class: 'as-nav-text' }, shortStage(st.title)),
       h('span', { class: 'as-nav-meta' }, st.pct + ' %'), icon('chevR', 'as-nav-chev')));
-    el.append(grp);
+    el.append(grp, ...navMarks(st.num)); // вехи между этапами
     if (!isOpen) continue;
     const body = h('div', { class: 'as-stage__body' });
     grp.append(body);
